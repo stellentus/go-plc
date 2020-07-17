@@ -56,6 +56,7 @@ func (plc *PLC) Close() error {
 	return nil
 }
 
+// StatusForTag returns the error status of the requested tag.
 func (plc *PLC) StatusForTag(name string) error {
 	id, err := plc.getID(name)
 	if err != nil {
@@ -64,6 +65,7 @@ func (plc *PLC) StatusForTag(name string) error {
 	return newError(C.plc_tag_status(id))
 }
 
+// ReadTag reads the requested tag into the provided value.
 func (plc *PLC) ReadTag(name string, value interface{}) error {
 	id, err := plc.getID(name)
 	if err != nil {
@@ -118,7 +120,7 @@ func (plc *PLC) ReadTag(name string, value interface{}) error {
 	return nil
 }
 
-// Write writes the provided tag and value.
+// WriteTag writes the provided tag and value.
 func (plc *PLC) WriteTag(name string, value interface{}) error {
 	id, err := plc.getID(name)
 	if err != nil {

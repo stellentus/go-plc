@@ -17,6 +17,7 @@ func (err errorCode) Error() string {
 	return C.GoString(cstr)
 }
 
+// Pending is an error indicating the PLC has not yet provided a result for the non-blocking request.
 type Pending struct {
 	errorCode
 }
