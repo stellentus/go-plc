@@ -1,17 +1,23 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/stellentus/go-plc"
 )
 
+var addr = flag.String("address", "192.168.29.121", "Hostname or IP address of the PLC")
+var path = flag.String("path", "1,0", "Path to the PLC at the provided host or IP")
+var tagName = flag.String("tagName", "Enable_RampDown", "Name of the boolean tag to toggle")
+
 func main() {
-	connectionInfo := "protocol=ab_eip&gateway=192.168.29.121&path=1,0&cpu=LGX"
-	tagName := "Enable_RampDown"
+	flag.Parse()
+
+	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=LGX", *addr, *path)
 	timeout := 5000
 
-	fmt.Println("Attempting test connection to", connectionInfo, "using", tagName)
+	fmt.Println("Attempting test connection to", connectionInfo, "using", *tagName)
 
 	testPLC, err := plc.New(connectionInfo, timeout)
 	if err != nil {
@@ -24,7 +30,7 @@ func main() {
 		}
 	}()
 
-	err = testPLC.StatusForTag(tagName)
+	err = testPLC.StatusForTag(*tagName)
 	if err != nil {
 		if _, ok := err.(plc.Pending); ok {
 			panic("ERROR: PLC is not ready to communicate yet.")
@@ -37,26 +43,26 @@ func main() {
 
 	// Read. If non-zero, value is true. Otherwise, it's false.
 	var isOn bool
-	err = testPLC.ReadTag(tagName, &isOn)
+	err = testPLC.ReadTag(*tagName, &isOn)
 	if err != nil {
 		panic("ERROR: Unable to read the data because " + err.Error())
 	}
-	fmt.Printf("%s is %v\n", tagName, isOn)
+	fmt.Printf("%s is %v\n", *tagName, isOn)
 
 	// Toggle the bool state
 	isOn = !isOn
-	err = testPLC.WriteTag(tagName, isOn)
+	err = testPLC.WriteTag(*tagName, isOn)
 	if err != nil {
 		panic("ERROR: Unable to write the data because " + err.Error())
 	}
 
 	// Confirm that it was toggled as expected
 	var newIsOn bool
-	err = testPLC.ReadTag(tagName, &newIsOn)
+	err = testPLC.ReadTag(*tagName, &newIsOn)
 	if err != nil {
 		panic("ERROR: Unable to read the data because " + err.Error())
 	}
-	fmt.Printf("%s is %v\n", tagName, newIsOn)
+	fmt.Printf("%s is %v\n", *tagName, newIsOn)
 
 	if isOn == newIsOn {
 		fmt.Printf("SUCCESS! Bool switched from %v to %v as expected\n", !isOn, newIsOn)
