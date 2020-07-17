@@ -9,6 +9,7 @@ package plc
 import "C"
 import (
 	"fmt"
+	"strings"
 	"unsafe"
 )
 
@@ -172,4 +173,109 @@ func (plc *PLC) WriteTag(name string, value interface{}) error {
 
 func CheckRequiredVersion(major, minor, patch int) error {
 	return newError(C.plc_tag_check_lib_version(C.int(major), C.int(minor), C.int(patch)))
+}
+
+// GetAllTags gets a list of all tags available on the PLC.
+func (plc *PLC) GetAllTags() ([]Tag, error) {
+	id, err := plc.getID("@tags")
+	if err != nil {
+		return nil, err
+	}
+
+	tags, programs, err := plc.getList(id, "")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, progName := range programs {
+		progID, err := plc.getID(progName + ".@tags")
+		if err != nil {
+			return nil, err
+		}
+
+		progTags, _, err := plc.getList(progID, "")
+		if err != nil {
+			return nil, err
+		}
+		tags = append(tags, progTags...)
+	}
+
+	return tags, nil
+}
+
+// GetAllPrograms gets a list of all programs on the PLC.
+func (plc *PLC) GetAllPrograms() ([]string, error) {
+	id, err := plc.getID("@tags")
+	if err != nil {
+		return nil, err
+	}
+
+	_, programs, err := plc.getList(id, "")
+	if err != nil {
+		return nil, err
+	}
+
+	return programs, nil
+}
+
+func (plc *PLC) getList(id C.int32_t, prefix string) ([]Tag, []string, error) {
+	if err := newError(C.plc_tag_read(id, plc.timeout)); err != nil {
+		return nil, nil, err
+	}
+
+	tags := []Tag{}
+	programNames := []string{}
+
+	offset := C.int(0)
+	for {
+		tag := Tag{}
+		offset += 4
+
+		tag.tagType = C.plc_tag_get_uint16(id, offset)
+		offset += 2
+
+		tag.elementSize = C.plc_tag_get_uint16(id, offset)
+		offset += 2
+
+		tag.addDimension(int(C.plc_tag_get_uint32(id, offset)))
+		offset += 4
+		tag.addDimension(int(C.plc_tag_get_uint32(id, offset)))
+		offset += 4
+		tag.addDimension(int(C.plc_tag_get_uint32(id, offset)))
+		offset += 4
+
+		nameLength := int(C.plc_tag_get_uint16(id, offset))
+		offset += 2
+
+		tagBytes := make([]byte, nameLength)
+		for i := 0; i < nameLength; i++ {
+			tagBytes = append(tagBytes, byte(C.plc_tag_get_int8(id, offset)))
+			offset++
+		}
+
+		if prefix != "" {
+			tag.name = prefix + "." + string(tagBytes)
+		} else {
+			tag.name = string(tagBytes)
+		}
+
+		if strings.HasPrefix(tag.name, "Program:") {
+			programNames = append(programNames, tag.name)
+		} else if (tag.tagType & SystemTagBit) == SystemTagBit {
+			// Do nothing for system tags
+		} else {
+			numDimensions := int((tag.tagType & TagDimensionMask) >> 13)
+			if numDimensions != len(tag.dimensions) {
+				return nil, nil, fmt.Errorf("Tag '%s' claims to have %d dimensions but has %d", tag.name, numDimensions, len(tag.dimensions))
+			}
+
+			tags = append(tags, tag)
+		}
+
+		if offset >= C.plc_tag_get_size(id) {
+			break
+		}
+	}
+
+	return tags, programNames, nil
 }
