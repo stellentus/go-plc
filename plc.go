@@ -72,7 +72,6 @@ func (plc *PLC) ReadTag(name string, value interface{}) error {
 		return err
 	}
 
-	// Read. If non-zero, value is true. Otherwise, it's false.
 	if err := newError(C.plc_tag_read(id, plc.timeout)); err != nil {
 		return err
 	}
