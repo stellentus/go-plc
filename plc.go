@@ -66,6 +66,18 @@ func (plc *PLC) StatusForTag(name string) error {
 	return newError(C.plc_tag_status(id))
 }
 
+func tagWithIndex(name string, index int) string {
+	// Array tags can be read by adding the index to the string, e.g. "EXAMPLE[0]"
+	// Perhaps this should have error checking on index<0.
+	return fmt.Sprintf("%s[%d]", name, index)
+}
+
+// ReadTagAtIndex reads the requested array tag at the given index into the provided value.
+func (plc *PLC) ReadTagAtIndex(name string, index int, value interface{}) error {
+	name = tagWithIndex(name, index)
+	return plc.ReadTag(name, value)
+}
+
 // ReadTag reads the requested tag into the provided value.
 func (plc *PLC) ReadTag(name string, value interface{}) error {
 	id, err := plc.getID(name)
@@ -118,6 +130,12 @@ func (plc *PLC) ReadTag(name string, value interface{}) error {
 	}
 
 	return nil
+}
+
+// WriteTagAtIndex writes the requested array tag at the given index with the provided value.
+func (plc *PLC) WriteTagAtIndex(name string, index int, value interface{}) error {
+	name = tagWithIndex(name, index)
+	return plc.WriteTag(name, value)
 }
 
 // WriteTag writes the provided tag and value.

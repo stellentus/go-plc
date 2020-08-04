@@ -10,6 +10,7 @@ import (
 var addr = flag.String("address", "192.168.29.121", "Hostname or IP address of the PLC")
 var path = flag.String("path", "1,0", "Path to the PLC at the provided host or IP")
 var tagName = flag.String("tagName", "Enable_RampDown", "Name of the boolean tag to toggle")
+var index = flag.Int("index", -1, "Array index to access, or -1 if not an array")
 
 func main() {
 	flag.Parse()
@@ -43,7 +44,11 @@ func main() {
 
 	// Read. If non-zero, value is true. Otherwise, it's false.
 	var isOn bool
-	err = testPLC.ReadTag(*tagName, &isOn)
+	if *index >= 0 {
+		err = testPLC.ReadTagAtIndex(*tagName, *index, &isOn)
+	} else {
+		err = testPLC.ReadTag(*tagName, &isOn)
+	}
 	if err != nil {
 		panic("ERROR: Unable to read the data because " + err.Error())
 	}
@@ -51,14 +56,22 @@ func main() {
 
 	// Toggle the bool state
 	isOn = !isOn
-	err = testPLC.WriteTag(*tagName, isOn)
+	if *index >= 0 {
+		err = testPLC.WriteTagAtIndex(*tagName, *index, isOn)
+	} else {
+		err = testPLC.WriteTag(*tagName, isOn)
+	}
 	if err != nil {
 		panic("ERROR: Unable to write the data because " + err.Error())
 	}
 
 	// Confirm that it was toggled as expected
 	var newIsOn bool
-	err = testPLC.ReadTag(*tagName, &newIsOn)
+	if *index >= 0 {
+		err = testPLC.ReadTagAtIndex(*tagName, *index, &newIsOn)
+	} else {
+		err = testPLC.ReadTag(*tagName, &newIsOn)
+	}
 	if err != nil {
 		panic("ERROR: Unable to read the data because " + err.Error())
 	}
