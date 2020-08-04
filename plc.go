@@ -126,7 +126,7 @@ func (plc *PLC) ReadTag(name string, value interface{}) error {
 		result := C.plc_tag_get_float64(id, offset)
 		*val = float64(result)
 	default:
-		fmt.Printf("Type %T is unknown and can't be read (%v)\n", val, val)
+		return fmt.Errorf("Type %T is unknown and can't be read (%v)", val, val)
 	}
 
 	return nil
@@ -175,7 +175,7 @@ func (plc *PLC) WriteTag(name string, value interface{}) error {
 	case float64:
 		err = newError(C.plc_tag_set_float64(id, offset, C.double(val)))
 	default:
-		fmt.Printf("Type %T is unknown and can't be written (%v)\n", val, val)
+		err = fmt.Errorf("Type %T is unknown and can't be written (%v)", val, val)
 	}
 	if err != nil {
 		return err
