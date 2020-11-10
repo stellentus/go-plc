@@ -43,6 +43,7 @@ func (plc *PLC) getID(tagName string) (C.int32_t, error) {
 	if id < 0 {
 		return id, newError(id)
 	}
+	plc.ids[tagName] = id
 	return id, nil
 }
 
