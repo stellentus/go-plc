@@ -74,6 +74,7 @@ func tagWithIndex(name string, index int) string {
 }
 
 // ReadTagAtIndex reads the requested array tag at the given index into the provided value.
+// It's provided to be faster than ReadTag when only a single array element is needed.
 func (plc *PLC) ReadTagAtIndex(name string, index int, value interface{}) error {
 	name = tagWithIndex(name, index)
 	return plc.ReadTag(name, value)
@@ -134,6 +135,9 @@ func (plc *PLC) ReadTag(name string, value interface{}) error {
 }
 
 // WriteTagAtIndex writes the requested array tag at the given index with the provided value.
+// It's provided to be faster than WriteTag when only a single array element is needed. (Otherwise
+// would be necessary to read into an entire slice, edit one element, and re-write the slice,
+// which is not atomic.)
 func (plc *PLC) WriteTagAtIndex(name string, index int, value interface{}) error {
 	name = tagWithIndex(name, index)
 	return plc.WriteTag(name, value)
