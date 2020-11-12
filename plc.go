@@ -268,7 +268,7 @@ func (plc *PLC) getList(id C.int32_t, prefix string) ([]Tag, []string, error) {
 
 		tagBytes := make([]byte, nameLength)
 		for i := 0; i < nameLength; i++ {
-			tagBytes = append(tagBytes, byte(C.plc_tag_get_int8(id, offset)))
+			tagBytes[i] = byte(C.plc_tag_get_int8(id, offset))
 			offset++
 		}
 
