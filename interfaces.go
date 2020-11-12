@@ -1,5 +1,10 @@
 package plc
 
+type ReadWriter interface {
+	Reader
+	Writer
+}
+
 // Reader writes values from a PLC.
 type Reader interface {
 	// ReadTag reads the requested tag into the provided value.
