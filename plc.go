@@ -13,43 +13,45 @@ import (
 	"unsafe"
 )
 
-type PLC struct {
+// Device manages a connection to actual PLC hardware.
+type Device struct {
 	conConf string
 	ids     map[string]C.int32_t
 	timeout C.int
 }
 
-// New creates a new PLC.
-func New(conConf string, timeout int) (PLC, error) {
-	plc := PLC{
+// NewDevice creates a new Device.
+// The conConf string provides IP and other connection configuration (see libplctag for options).
+func NewDevice(conConf string, timeout int) (Device, error) {
+	dev := Device{
 		conConf: conConf,
 		ids:     make(map[string]C.int32_t),
 		timeout: C.int(timeout),
 	}
 
-	return plc, nil
+	return dev, nil
 }
 
-func (plc *PLC) getID(tagName string) (C.int32_t, error) {
-	id, ok := plc.ids[tagName]
+func (dev *Device) getID(tagName string) (C.int32_t, error) {
+	id, ok := dev.ids[tagName]
 	if ok {
 		return id, nil
 	}
 
-	cattrib_str := C.CString(plc.conConf + "&name=" + tagName) // can also specify elem_size=1&elem_count=1
+	cattrib_str := C.CString(dev.conConf + "&name=" + tagName) // can also specify elem_size=1&elem_count=1
 	defer C.free(unsafe.Pointer(cattrib_str))
 
-	id = C.plc_tag_create(cattrib_str, plc.timeout)
+	id = C.plc_tag_create(cattrib_str, dev.timeout)
 	if id < 0 {
 		return id, newError(id)
 	}
-	plc.ids[tagName] = id
+	dev.ids[tagName] = id
 	return id, nil
 }
 
-// Close should be called on the PLC to clean up its resources.
-func (plc *PLC) Close() error {
-	for _, id := range plc.ids {
+// Close should be called on the Device to clean up its resources.
+func (dev *Device) Close() error {
+	for _, id := range dev.ids {
 		err := newError(C.plc_tag_destroy(id))
 		if err != nil {
 			return err
@@ -59,8 +61,8 @@ func (plc *PLC) Close() error {
 }
 
 // StatusForTag returns the error status of the requested tag.
-func (plc *PLC) StatusForTag(name string) error {
-	id, err := plc.getID(name)
+func (dev *Device) StatusForTag(name string) error {
+	id, err := dev.getID(name)
 	if err != nil {
 		return err
 	}
@@ -75,19 +77,19 @@ func tagWithIndex(name string, index int) string {
 
 // ReadTagAtIndex reads the requested array tag at the given index into the provided value.
 // It's provided to be faster than ReadTag when only a single array element is needed.
-func (plc *PLC) ReadTagAtIndex(name string, index int, value interface{}) error {
+func (dev *Device) ReadTagAtIndex(name string, index int, value interface{}) error {
 	name = tagWithIndex(name, index)
-	return plc.ReadTag(name, value)
+	return dev.ReadTag(name, value)
 }
 
 // ReadTag reads the requested tag into the provided value.
-func (plc *PLC) ReadTag(name string, value interface{}) error {
-	id, err := plc.getID(name)
+func (dev *Device) ReadTag(name string, value interface{}) error {
+	id, err := dev.getID(name)
 	if err != nil {
 		return err
 	}
 
-	if err := newError(C.plc_tag_read(id, plc.timeout)); err != nil {
+	if err := newError(C.plc_tag_read(id, dev.timeout)); err != nil {
 		return err
 	}
 
@@ -138,14 +140,14 @@ func (plc *PLC) ReadTag(name string, value interface{}) error {
 // It's provided to be faster than WriteTag when only a single array element is needed. (Otherwise
 // would be necessary to read into an entire slice, edit one element, and re-write the slice,
 // which is not atomic.)
-func (plc *PLC) WriteTagAtIndex(name string, index int, value interface{}) error {
+func (dev *Device) WriteTagAtIndex(name string, index int, value interface{}) error {
 	name = tagWithIndex(name, index)
-	return plc.WriteTag(name, value)
+	return dev.WriteTag(name, value)
 }
 
 // WriteTag writes the provided tag and value.
-func (plc *PLC) WriteTag(name string, value interface{}) error {
-	id, err := plc.getID(name)
+func (dev *Device) WriteTag(name string, value interface{}) error {
+	id, err := dev.getID(name)
 	if err != nil {
 		return err
 	}
@@ -187,7 +189,7 @@ func (plc *PLC) WriteTag(name string, value interface{}) error {
 	}
 
 	// Read. If non-zero, value is true. Otherwise, it's false.
-	if err := newError(C.plc_tag_write(id, plc.timeout)); err != nil {
+	if err := newError(C.plc_tag_write(id, dev.timeout)); err != nil {
 		return err
 	}
 
@@ -198,25 +200,25 @@ func CheckRequiredVersion(major, minor, patch int) error {
 	return newError(C.plc_tag_check_lib_version(C.int(major), C.int(minor), C.int(patch)))
 }
 
-// GetAllTags gets a list of all tags available on the PLC.
-func (plc *PLC) GetAllTags() ([]Tag, error) {
-	id, err := plc.getID("@tags")
+// GetAllTags gets a list of all tags available on the Device.
+func (dev *Device) GetAllTags() ([]Tag, error) {
+	id, err := dev.getID("@tags")
 	if err != nil {
 		return nil, err
 	}
 
-	tags, programs, err := plc.getList(id, "")
+	tags, programs, err := dev.getList(id, "")
 	if err != nil {
 		return nil, err
 	}
 
 	for _, progName := range programs {
-		progID, err := plc.getID(progName + ".@tags")
+		progID, err := dev.getID(progName + ".@tags")
 		if err != nil {
 			return nil, err
 		}
 
-		progTags, _, err := plc.getList(progID, "")
+		progTags, _, err := dev.getList(progID, "")
 		if err != nil {
 			return nil, err
 		}
@@ -226,14 +228,14 @@ func (plc *PLC) GetAllTags() ([]Tag, error) {
 	return tags, nil
 }
 
-// GetAllPrograms gets a list of all programs on the PLC.
-func (plc *PLC) GetAllPrograms() ([]string, error) {
-	id, err := plc.getID("@tags")
+// GetAllPrograms gets a list of all programs on the Device.
+func (dev *Device) GetAllPrograms() ([]string, error) {
+	id, err := dev.getID("@tags")
 	if err != nil {
 		return nil, err
 	}
 
-	_, programs, err := plc.getList(id, "")
+	_, programs, err := dev.getList(id, "")
 	if err != nil {
 		return nil, err
 	}
@@ -241,8 +243,8 @@ func (plc *PLC) GetAllPrograms() ([]string, error) {
 	return programs, nil
 }
 
-func (plc *PLC) getList(id C.int32_t, prefix string) ([]Tag, []string, error) {
-	if err := newError(C.plc_tag_read(id, plc.timeout)); err != nil {
+func (dev *Device) getList(id C.int32_t, prefix string) ([]Tag, []string, error) {
+	if err := newError(C.plc_tag_read(id, dev.timeout)); err != nil {
 		return nil, nil, err
 	}
 

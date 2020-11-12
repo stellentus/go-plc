@@ -25,25 +25,25 @@ func main() {
 
 	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=LGX", *addr, *path)
 	timeout := 5000
-	testPLC, err := plc.New(connectionInfo, timeout)
+	device, err := plc.NewDevice(connectionInfo, timeout)
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not create test PLC!")
 	}
 	defer func() {
-		err := testPLC.Close()
+		err := device.Close()
 		if err != nil {
 			fmt.Println("Close was unsuccessful:", err.Error())
 		}
 	}()
 
-	tags, err := testPLC.GetAllTags()
+	tags, err := device.GetAllTags()
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not get PLC tags!")
 	}
 
 	fmt.Println("Tags:", tags)
 
-	programs, err := testPLC.GetAllPrograms()
+	programs, err := device.GetAllPrograms()
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not get PLC programs!")
 	}

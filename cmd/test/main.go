@@ -20,18 +20,18 @@ func main() {
 
 	fmt.Println("Attempting test connection to", connectionInfo, "using", *tagName)
 
-	testPLC, err := plc.New(connectionInfo, timeout)
+	device, err := plc.NewDevice(connectionInfo, timeout)
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not create test PLC!")
 	}
 	defer func() {
-		err := testPLC.Close()
+		err := device.Close()
 		if err != nil {
 			fmt.Println("Close was unsuccessful:", err.Error())
 		}
 	}()
 
-	err = testPLC.StatusForTag(*tagName)
+	err = device.StatusForTag(*tagName)
 	if err != nil {
 		if _, ok := err.(plc.Pending); ok {
 			panic("ERROR: PLC is not ready to communicate yet.")
@@ -45,9 +45,9 @@ func main() {
 	// Read. If non-zero, value is true. Otherwise, it's false.
 	var isOn bool
 	if *index >= 0 {
-		err = testPLC.ReadTagAtIndex(*tagName, *index, &isOn)
+		err = device.ReadTagAtIndex(*tagName, *index, &isOn)
 	} else {
-		err = testPLC.ReadTag(*tagName, &isOn)
+		err = device.ReadTag(*tagName, &isOn)
 	}
 	if err != nil {
 		panic("ERROR: Unable to read the data because " + err.Error())
@@ -57,9 +57,9 @@ func main() {
 	// Toggle the bool state
 	isOn = !isOn
 	if *index >= 0 {
-		err = testPLC.WriteTagAtIndex(*tagName, *index, isOn)
+		err = device.WriteTagAtIndex(*tagName, *index, isOn)
 	} else {
-		err = testPLC.WriteTag(*tagName, isOn)
+		err = device.WriteTag(*tagName, isOn)
 	}
 	if err != nil {
 		panic("ERROR: Unable to write the data because " + err.Error())
@@ -68,9 +68,9 @@ func main() {
 	// Confirm that it was toggled as expected
 	var newIsOn bool
 	if *index >= 0 {
-		err = testPLC.ReadTagAtIndex(*tagName, *index, &newIsOn)
+		err = device.ReadTagAtIndex(*tagName, *index, &newIsOn)
 	} else {
-		err = testPLC.ReadTag(*tagName, &newIsOn)
+		err = device.ReadTag(*tagName, &newIsOn)
 	}
 	if err != nil {
 		panic("ERROR: Unable to read the data because " + err.Error())
