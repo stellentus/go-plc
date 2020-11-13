@@ -192,10 +192,6 @@ func (dev *Device) WriteTag(name string, value interface{}) error {
 	return nil
 }
 
-func CheckRequiredVersion(major, minor, patch int) error {
-	return newError(C.plc_tag_check_lib_version(C.int(major), C.int(minor), C.int(patch)))
-}
-
 // GetAllTags gets a list of all tags available on the Device.
 func (dev *Device) GetAllTags() ([]Tag, error) {
 	id, err := dev.getID("@tags")
