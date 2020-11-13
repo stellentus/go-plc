@@ -1,7 +1,6 @@
 package plc
 
 /*
-#include <stdio.h>
 #include <stdlib.h>
 #include "./libplctag.h"
 */
