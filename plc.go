@@ -32,6 +32,8 @@ func NewDevice(conConf string, timeout int) (Device, error) {
 	return dev, nil
 }
 
+const noOffset = C.int(0)
+
 func (dev *Device) getID(tagName string) (C.int32_t, error) {
 	id, ok := dev.ids[tagName]
 	if ok {
@@ -93,41 +95,39 @@ func (dev *Device) ReadTag(name string, value interface{}) error {
 		return err
 	}
 
-	offset := C.int(0)
-
 	switch val := value.(type) {
 	case *bool:
-		result := C.plc_tag_get_uint8(id, offset)
+		result := C.plc_tag_get_uint8(id, noOffset)
 		*val = uint8(result) > 0
 	case *uint8:
-		result := C.plc_tag_get_uint8(id, offset)
+		result := C.plc_tag_get_uint8(id, noOffset)
 		*val = uint8(result)
 	case *uint16:
-		result := C.plc_tag_get_uint16(id, offset)
+		result := C.plc_tag_get_uint16(id, noOffset)
 		*val = uint16(result)
 	case *uint32:
-		result := C.plc_tag_get_uint32(id, offset)
+		result := C.plc_tag_get_uint32(id, noOffset)
 		*val = uint32(result)
 	case *uint64:
-		result := C.plc_tag_get_uint64(id, offset)
+		result := C.plc_tag_get_uint64(id, noOffset)
 		*val = uint64(result)
 	case *int8:
-		result := C.plc_tag_get_int8(id, offset)
+		result := C.plc_tag_get_int8(id, noOffset)
 		*val = int8(result)
 	case *int16:
-		result := C.plc_tag_get_int16(id, offset)
+		result := C.plc_tag_get_int16(id, noOffset)
 		*val = int16(result)
 	case *int32:
-		result := C.plc_tag_get_int32(id, offset)
+		result := C.plc_tag_get_int32(id, noOffset)
 		*val = int32(result)
 	case *int64:
-		result := C.plc_tag_get_int64(id, offset)
+		result := C.plc_tag_get_int64(id, noOffset)
 		*val = int64(result)
 	case *float32:
-		result := C.plc_tag_get_float32(id, offset)
+		result := C.plc_tag_get_float32(id, noOffset)
 		*val = float32(result)
 	case *float64:
-		result := C.plc_tag_get_float64(id, offset)
+		result := C.plc_tag_get_float64(id, noOffset)
 		*val = float64(result)
 	default:
 		return fmt.Errorf("Type %T is unknown and can't be read (%v)", val, val)
@@ -152,35 +152,33 @@ func (dev *Device) WriteTag(name string, value interface{}) error {
 		return err
 	}
 
-	offset := C.int(0)
-
 	switch val := value.(type) {
 	case bool:
 		b := C.uint8_t(0)
 		if val {
 			b = C.uint8_t(255)
 		}
-		err = newError(C.plc_tag_set_uint8(id, offset, b))
+		err = newError(C.plc_tag_set_uint8(id, noOffset, b))
 	case uint8:
-		err = newError(C.plc_tag_set_uint8(id, offset, C.uint8_t(val)))
+		err = newError(C.plc_tag_set_uint8(id, noOffset, C.uint8_t(val)))
 	case uint16:
-		err = newError(C.plc_tag_set_uint16(id, offset, C.uint16_t(val)))
+		err = newError(C.plc_tag_set_uint16(id, noOffset, C.uint16_t(val)))
 	case uint32:
-		err = newError(C.plc_tag_set_uint32(id, offset, C.uint32_t(val)))
+		err = newError(C.plc_tag_set_uint32(id, noOffset, C.uint32_t(val)))
 	case uint64:
-		err = newError(C.plc_tag_set_uint64(id, offset, C.uint64_t(val)))
+		err = newError(C.plc_tag_set_uint64(id, noOffset, C.uint64_t(val)))
 	case int8:
-		err = newError(C.plc_tag_set_int8(id, offset, C.int8_t(val)))
+		err = newError(C.plc_tag_set_int8(id, noOffset, C.int8_t(val)))
 	case int16:
-		err = newError(C.plc_tag_set_int16(id, offset, C.int16_t(val)))
+		err = newError(C.plc_tag_set_int16(id, noOffset, C.int16_t(val)))
 	case int32:
-		err = newError(C.plc_tag_set_int32(id, offset, C.int32_t(val)))
+		err = newError(C.plc_tag_set_int32(id, noOffset, C.int32_t(val)))
 	case int64:
-		err = newError(C.plc_tag_set_int64(id, offset, C.int64_t(val)))
+		err = newError(C.plc_tag_set_int64(id, noOffset, C.int64_t(val)))
 	case float32:
-		err = newError(C.plc_tag_set_float32(id, offset, C.float(val)))
+		err = newError(C.plc_tag_set_float32(id, noOffset, C.float(val)))
 	case float64:
-		err = newError(C.plc_tag_set_float64(id, offset, C.double(val)))
+		err = newError(C.plc_tag_set_float64(id, noOffset, C.double(val)))
 	default:
 		err = fmt.Errorf("Type %T is unknown and can't be written (%v)", val, val)
 	}
