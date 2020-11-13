@@ -1,3 +1,5 @@
+// +build !stub
+
 package plc
 
 /*
