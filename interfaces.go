@@ -26,3 +26,22 @@ type Writer interface {
 	// which is not atomic.
 	WriteTagAtIndex(name string, index int, value interface{}) error
 }
+
+// rawDevice is an interface to a PLC device.
+type rawDevice interface {
+	// ReadTag reads the requested tag into the provided value.
+	ReadTag(name string, value interface{}) error
+
+	// WriteTag writes the provided tag and value.
+	WriteTag(name string, value interface{}) error
+
+	// Close cleans up resources.
+	Close() error
+
+	// StatusForTag returns the error status of the requested tag
+	StatusForTag(name string) error
+
+	// GetList gets a list of tag names for the provided program
+	// name (or all tags if no program name is provided).
+	GetList(listName, prefix string) ([]Tag, []string, error)
+}
