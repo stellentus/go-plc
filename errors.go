@@ -1,7 +1,6 @@
 package plc
 
 /*
-#cgo LDFLAGS: ./libplctag.a
 #include <stdio.h>
 #include <stdlib.h>
 #include "./libplctag.h"
