@@ -194,13 +194,13 @@ func (dev *Device) WriteTag(name string, value interface{}) error {
 
 // GetAllTags gets a list of all tags available on the Device.
 func (dev *Device) GetAllTags() ([]Tag, error) {
-	tags, programs, err := dev.getList("@tags", "")
+	tags, programs, err := dev.getList("", "")
 	if err != nil {
 		return nil, err
 	}
 
 	for _, progName := range programs {
-		progTags, _, err := dev.getList(progName+".@tags", "")
+		progTags, _, err := dev.getList(progName, "")
 		if err != nil {
 			return nil, err
 		}
@@ -212,7 +212,7 @@ func (dev *Device) GetAllTags() ([]Tag, error) {
 
 // GetAllPrograms gets a list of all programs on the Device.
 func (dev *Device) GetAllPrograms() ([]string, error) {
-	_, programs, err := dev.getList("@tags", "")
+	_, programs, err := dev.getList("", "")
 	if err != nil {
 		return nil, err
 	}
@@ -221,6 +221,12 @@ func (dev *Device) GetAllPrograms() ([]string, error) {
 }
 
 func (dev *Device) getList(listName, prefix string) ([]Tag, []string, error) {
+	if listName == "" {
+		listName += "@tags"
+	} else {
+		listName += ".@tags"
+	}
+
 	id, err := dev.getID(listName)
 	if err != nil {
 		return nil, nil, err
