@@ -194,23 +194,13 @@ func (dev *Device) WriteTag(name string, value interface{}) error {
 
 // GetAllTags gets a list of all tags available on the Device.
 func (dev *Device) GetAllTags() ([]Tag, error) {
-	id, err := dev.getID("@tags")
-	if err != nil {
-		return nil, err
-	}
-
-	tags, programs, err := dev.getList(id, "")
+	tags, programs, err := dev.getList("@tags", "")
 	if err != nil {
 		return nil, err
 	}
 
 	for _, progName := range programs {
-		progID, err := dev.getID(progName + ".@tags")
-		if err != nil {
-			return nil, err
-		}
-
-		progTags, _, err := dev.getList(progID, "")
+		progTags, _, err := dev.getList(progName+".@tags", "")
 		if err != nil {
 			return nil, err
 		}
@@ -222,12 +212,7 @@ func (dev *Device) GetAllTags() ([]Tag, error) {
 
 // GetAllPrograms gets a list of all programs on the Device.
 func (dev *Device) GetAllPrograms() ([]string, error) {
-	id, err := dev.getID("@tags")
-	if err != nil {
-		return nil, err
-	}
-
-	_, programs, err := dev.getList(id, "")
+	_, programs, err := dev.getList("@tags", "")
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +220,12 @@ func (dev *Device) GetAllPrograms() ([]string, error) {
 	return programs, nil
 }
 
-func (dev *Device) getList(id C.int32_t, prefix string) ([]Tag, []string, error) {
+func (dev *Device) getList(listName, prefix string) ([]Tag, []string, error) {
+	id, err := dev.getID(listName)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	if err := newError(C.plc_tag_read(id, dev.timeout)); err != nil {
 		return nil, nil, err
 	}
