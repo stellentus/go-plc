@@ -28,6 +28,17 @@ func TestReadTagAtIndex(t *testing.T) {
 	assert.Equal(t, testTagName+"[0]", spy.lastTag)
 }
 
+func TestWriteTagAtIndex(t *testing.T) {
+	spy := spyRawDevice{}
+	dev := newTestDevice(&spy)
+
+	var unused int
+	err := dev.WriteTagAtIndex(testTagName, 0, &unused)
+	assert.NoError(t, err)
+
+	assert.Equal(t, testTagName+"[0]", spy.lastTag)
+}
+
 // spyRawDevice just records the last tag that was sent through the interface
 type spyRawDevice struct {
 	lastTag string
