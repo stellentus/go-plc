@@ -2,6 +2,7 @@ package plc
 
 import (
 	"fmt"
+	"reflect"
 )
 
 // Device manages a connection to actual PLC hardware.
@@ -37,6 +38,11 @@ func TagWithIndex(name string, index int) string {
 // It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
 // portion of the tag tree is locked.
 func (dev *Device) ReadTag(name string, value interface{}) error {
+	v := reflect.ValueOf(value)
+	if v.Kind() != reflect.Ptr {
+		return fmt.Errorf("ReadTag expects a pointer type but got %v", v.Kind())
+	}
+
 	return dev.rawDevice.ReadTag(name, value)
 }
 

@@ -19,6 +19,15 @@ func newTestDevice(rd rawDevice) Device {
 
 const testTagName = "TEST_TAG"
 
+func TestReadTagRequiresPointer(t *testing.T) {
+	fake := RawDeviceFake{DeviceFake{}}
+	dev := newTestDevice(&fake)
+
+	var notAPointer int
+	err := dev.ReadTag(testTagName, notAPointer)
+	assert.Error(t, err)
+}
+
 func TestReadTag(t *testing.T) {
 	fake := RawDeviceFake{DeviceFake{}}
 	dev := newTestDevice(&fake)
