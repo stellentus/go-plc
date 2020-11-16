@@ -136,3 +136,31 @@ func (df FakeReadWriter) WriteTag(name string, value interface{}) error {
 	df[name] = value
 	return nil
 }
+
+type fakeEvent struct {
+	name string
+	done chan interface{}
+}
+
+type BlockingFake struct {
+	ch chan fakeEvent
+	DeviceFake
+}
+
+func newBlockingFake() BlockingFake { return BlockingFake{make(chan fakeEvent), DeviceFake{}} }
+
+func (bf BlockingFake) block(name string) {
+	done := make(chan interface{})
+	bf.ch <- fakeEvent{name, done}
+	<-done
+}
+
+func (bf BlockingFake) ReadTag(name string, value interface{}) error {
+	bf.block(name)
+	return bf.DeviceFake.ReadTag(name, value)
+}
+
+func (bf BlockingFake) WriteTag(name string, value interface{}) error {
+	bf.block(name)
+	return bf.DeviceFake.WriteTag(name, value)
+}
