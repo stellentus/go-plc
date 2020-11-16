@@ -42,7 +42,11 @@ func (dev *libplctagDevice) Close() error {
 	return nil
 }
 
-const noOffset = C.int(0)
+const (
+	noOffset         = C.int(0)
+	stringDataOffset = 4
+	stringMaxLength  = 82 // Size according to libplctag. Seems like an underlying protocol thing.
+)
 
 func (dev *libplctagDevice) getID(tagName string) (C.int32_t, error) {
 	id, ok := dev.ids[tagName]
@@ -115,6 +119,13 @@ func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
 	case *float64:
 		result := C.plc_tag_get_float64(id, noOffset)
 		*val = float64(result)
+	case *string:
+		bytes := make([]byte, 0, stringMaxLength)
+		str_len := int(C.plc_tag_get_int32(id, noOffset))
+		for str_index := 0; str_index < str_len; str_index++ {
+			bytes[str_index] = byte(C.plc_tag_get_uint8(id, C.int(stringDataOffset+str_index)))
+		}
+		*val = string(bytes)
 	default:
 		return fmt.Errorf("Type %T is unknown and can't be read (%v)", val, val)
 	}
@@ -156,6 +167,25 @@ func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
 		err = newError(C.plc_tag_set_float32(id, noOffset, C.float(val)))
 	case float64:
 		err = newError(C.plc_tag_set_float64(id, noOffset, C.double(val)))
+	case string: // TODO this should lock the tag until the write is done
+		// write the string length
+		err = newError(C.plc_tag_set_int32(id, noOffset, C.int32_t(len(val))))
+		if err != nil {
+			return err
+		}
+
+		// copy the data
+		for str_index := 0; str_index < stringMaxLength; str_index++ {
+			byt := byte(0) // pad with zeroes after the string ended
+			if str_index < len(val) {
+				byt = val[str_index]
+			}
+
+			err = newError(C.plc_tag_set_uint8(id, C.int(stringDataOffset+str_index), C.uint8_t(byt)))
+			if err != nil {
+				return err
+			}
+		}
 	default:
 		err = fmt.Errorf("Type %T is unknown and can't be written (%v)", val, val)
 	}
