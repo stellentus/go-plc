@@ -75,13 +75,13 @@ func (dev *libplctagDevice) StatusForTag(name string) error {
 }
 
 // ReadTag reads the requested tag into the provided value.
-func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
+func (dev *libplctagDevice) ReadTag(name string, value interface{}) (err error) {
 	id, err := dev.getID(name)
 	if err != nil {
 		return err
 	}
 
-	if err := newError(C.plc_tag_read(id, dev.timeout)); err != nil {
+	if err = newError(C.plc_tag_read(id, dev.timeout)); err != nil {
 		return err
 	}
 
@@ -120,6 +120,18 @@ func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
 		result := C.plc_tag_get_float64(id, noOffset)
 		*val = float64(result)
 	case *string:
+		// We only lock in this context because it's ok if we get the results of someone else's update to the cache
+		err = newError(C.plc_tag_lock(id))
+		if err != nil {
+			return err
+		}
+		defer func() {
+			lockErr := newError(C.plc_tag_unlock(id))
+			if lockErr != nil {
+				err = fmt.Errorf("error locking %w and other error %s", lockErr, err.Error())
+			}
+		}()
+
 		bytes := make([]byte, 0, stringMaxLength)
 		str_len := int(C.plc_tag_get_int32(id, noOffset))
 		for str_index := 0; str_index < str_len; str_index++ {
@@ -134,11 +146,22 @@ func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
 }
 
 // WriteTag writes the provided tag and value.
-func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
+func (dev *libplctagDevice) WriteTag(name string, value interface{}) (err error) {
 	id, err := dev.getID(name)
 	if err != nil {
 		return err
 	}
+
+	err = newError(C.plc_tag_lock(id))
+	if err != nil {
+		return err
+	}
+	defer func() {
+		lockErr := newError(C.plc_tag_unlock(id))
+		if lockErr != nil {
+			err = fmt.Errorf("error locking %w and other error %s", lockErr, err.Error())
+		}
+	}()
 
 	switch val := value.(type) {
 	case bool:
@@ -194,7 +217,7 @@ func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
 	}
 
 	// Read. If non-zero, value is true. Otherwise, it's false.
-	if err := newError(C.plc_tag_write(id, dev.timeout)); err != nil {
+	if err = newError(C.plc_tag_write(id, dev.timeout)); err != nil {
 		return err
 	}
 
