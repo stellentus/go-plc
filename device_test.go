@@ -1,6 +1,8 @@
 package plc
 
 import (
+	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,51 +20,70 @@ func newTestDevice(rd rawDevice) Device {
 const testTagName = "TEST_TAG"
 
 func TestReadTag(t *testing.T) {
-	spy := spyRawDevice{}
+	spy := RawDeviceFake{DeviceFake{}}
 	dev := newTestDevice(&spy)
 
-	var unused int
-	err := dev.ReadTag(testTagName, &unused)
+	spy.DeviceFake[testTagName] = int(7)
+
+	var result int
+	err := dev.ReadTag(testTagName, &result)
 	assert.NoError(t, err)
 
-	assert.Equal(t, testTagName, spy.lastTag)
+	assert.Equal(t, 7, result)
 }
 
 func TestWriteTag(t *testing.T) {
-	spy := spyRawDevice{}
+	spy := RawDeviceFake{DeviceFake{}}
 	dev := newTestDevice(&spy)
 
-	var unused int
-	err := dev.WriteTag(testTagName, &unused)
+	var value = 9
+	err := dev.WriteTag(testTagName, value)
 	assert.NoError(t, err)
 
-	assert.Equal(t, testTagName, spy.lastTag)
+	assert.Equal(t, 9, spy.DeviceFake[testTagName])
 }
 
-// spyRawDevice just records the last tag that was sent through the interface
-type spyRawDevice struct {
-	lastTag string
+// RawDeviceFake adds lower APIs to a DeviceFake
+type RawDeviceFake struct {
+	DeviceFake
 }
 
-func (dev *spyRawDevice) ReadTag(name string, value interface{}) error {
-	dev.lastTag = name
+func (dev RawDeviceFake) Close() error {
 	return nil
 }
 
-func (dev *spyRawDevice) WriteTag(name string, value interface{}) error {
-	dev.lastTag = name
+func (dev RawDeviceFake) StatusForTag(name string) error {
 	return nil
 }
 
-func (dev *spyRawDevice) Close() error {
-	return nil
-}
-
-func (dev *spyRawDevice) StatusForTag(name string) error {
-	dev.lastTag = name
-	return nil
-}
-
-func (dev *spyRawDevice) GetList(listName, prefix string) ([]Tag, []string, error) {
+func (dev RawDeviceFake) GetList(listName, prefix string) ([]Tag, []string, error) {
 	return nil, nil, nil
 }
+
+type DeviceFake map[string]interface{}
+
+func (df DeviceFake) ReadTag(name string, value interface{}) error {
+	v, ok := df[name]
+	if !ok {
+		return fmt.Errorf("")
+	}
+
+	in := reflect.ValueOf(v)
+	out := reflect.Indirect(reflect.ValueOf(value))
+
+	switch {
+	case !out.CanSet():
+		return fmt.Errorf("cannot set %s", out.Type().Name())
+	case out.Kind() != in.Kind():
+		return fmt.Errorf("cannot set %s to %s", out.Type().Name(), in.Type().Name())
+	}
+
+	out.Set(in)
+	return nil
+}
+
+func (df DeviceFake) WriteTag(name string, value interface{}) error {
+	df[name] = value
+	return nil
+}
+
