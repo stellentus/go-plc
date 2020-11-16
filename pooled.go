@@ -21,16 +21,8 @@ func (p *Pooled) ReadTag(name string, value interface{}) error {
 	return p.read.task(func() error { return p.plc.ReadTag(name, value) })
 }
 
-func (p *Pooled) ReadTagAtIndex(name string, index int, value interface{}) error {
-	return p.read.task(func() error { return p.plc.ReadTagAtIndex(name, index, value) })
-}
-
 func (p *Pooled) WriteTag(name string, value interface{}) error {
 	return p.write.task(func() error { return p.plc.WriteTag(name, value) })
-}
-
-func (p *Pooled) WriteTagAtIndex(name string, index int, value interface{}) error {
-	return p.write.task(func() error { return p.plc.WriteTagAtIndex(name, index, value) })
 }
 
 type task func()

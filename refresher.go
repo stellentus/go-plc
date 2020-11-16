@@ -55,9 +55,3 @@ func (r *Refresher) ReadTag(name string, value interface{}) error {
 
 	return r.plc.ReadTag(name, value)
 }
-
-func (r *Refresher) ReadTagAtIndex(name string, index int, value interface{}) error {
-	r.launchIfNecessary(name, value, func(v interface{}) { r.plc.ReadTagAtIndex(name, index, v) })
-
-	return r.plc.ReadTagAtIndex(name, index, value)
-}

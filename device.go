@@ -29,31 +29,16 @@ func (dev *Device) StatusForTag(name string) error {
 	return dev.rawDevice.StatusForTag(name)
 }
 
-func tagWithIndex(name string, index int) string {
+// TagWithIndex provides the fully qualified tag for the given index of an array.
+func TagWithIndex(name string, index int) string {
 	// Array tags can be read by adding the index to the string, e.g. "EXAMPLE[0]"
 	// Perhaps this should have error checking on index<0.
 	return fmt.Sprintf("%s[%d]", name, index)
 }
 
-// ReadTagAtIndex reads the requested array tag at the given index into the provided value.
-// It's provided to be faster than ReadTag when only a single array element is needed.
-func (dev *Device) ReadTagAtIndex(name string, index int, value interface{}) error {
-	name = tagWithIndex(name, index)
-	return dev.ReadTag(name, value)
-}
-
 // ReadTag reads the requested tag into the provided value.
 func (dev *Device) ReadTag(name string, value interface{}) error {
 	return dev.rawDevice.ReadTag(name, value)
-}
-
-// WriteTagAtIndex writes the requested array tag at the given index with the provided value.
-// It's provided to be faster than WriteTag when only a single array element is needed. (Otherwise
-// would be necessary to read into an entire slice, edit one element, and re-write the slice,
-// which is not atomic.)
-func (dev *Device) WriteTagAtIndex(name string, index int, value interface{}) error {
-	name = tagWithIndex(name, index)
-	return dev.WriteTag(name, value)
 }
 
 // WriteTag writes the provided tag and value.

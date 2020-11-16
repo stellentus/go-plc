@@ -17,26 +17,26 @@ func newTestDevice(rd rawDevice) Device {
 
 const testTagName = "TEST_TAG"
 
-func TestReadTagAtIndex(t *testing.T) {
+func TestReadTag(t *testing.T) {
 	spy := spyRawDevice{}
 	dev := newTestDevice(&spy)
 
 	var unused int
-	err := dev.ReadTagAtIndex(testTagName, 0, &unused)
+	err := dev.ReadTag(testTagName, &unused)
 	assert.NoError(t, err)
 
-	assert.Equal(t, testTagName+"[0]", spy.lastTag)
+	assert.Equal(t, testTagName, spy.lastTag)
 }
 
-func TestWriteTagAtIndex(t *testing.T) {
+func TestWriteTag(t *testing.T) {
 	spy := spyRawDevice{}
 	dev := newTestDevice(&spy)
 
 	var unused int
-	err := dev.WriteTagAtIndex(testTagName, 0, &unused)
+	err := dev.WriteTag(testTagName, &unused)
 	assert.NoError(t, err)
 
-	assert.Equal(t, testTagName+"[0]", spy.lastTag)
+	assert.Equal(t, testTagName, spy.lastTag)
 }
 
 // spyRawDevice just records the last tag that was sent through the interface

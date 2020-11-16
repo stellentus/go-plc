@@ -45,7 +45,7 @@ func main() {
 	// Read. If non-zero, value is true. Otherwise, it's false.
 	var isOn bool
 	if *index >= 0 {
-		err = device.ReadTagAtIndex(*tagName, *index, &isOn)
+		err = device.ReadTag(plc.TagWithIndex(*tagName, *index), &isOn)
 	} else {
 		err = device.ReadTag(*tagName, &isOn)
 	}
@@ -57,7 +57,7 @@ func main() {
 	// Toggle the bool state
 	isOn = !isOn
 	if *index >= 0 {
-		err = device.WriteTagAtIndex(*tagName, *index, isOn)
+		err = device.WriteTag(plc.TagWithIndex(*tagName, *index), isOn)
 	} else {
 		err = device.WriteTag(*tagName, isOn)
 	}
@@ -68,7 +68,7 @@ func main() {
 	// Confirm that it was toggled as expected
 	var newIsOn bool
 	if *index >= 0 {
-		err = device.ReadTagAtIndex(*tagName, *index, &newIsOn)
+		err = device.ReadTag(plc.TagWithIndex(*tagName, *index), &newIsOn)
 	} else {
 		err = device.ReadTag(*tagName, &newIsOn)
 	}
