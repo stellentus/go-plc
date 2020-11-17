@@ -7,8 +7,23 @@ package plc
 #include "./libplctag.h"
 */
 import "C"
+import "fmt"
 
-// CheckRequiredVersion returns an error if the version doesn't match the requirements.
-func CheckRequiredVersion(major, minor, patch int) error {
-	return newError(C.plc_tag_check_lib_version(C.int(major), C.int(minor), C.int(patch)))
+const (
+	REQ_VER_MAJOR = 2
+	REQ_VER_MINOR = 1
+	REQ_VER_PATCH = 0
+)
+
+func init() {
+	// Ensure the linked library uses the correct version
+	err := newError(C.plc_tag_check_lib_version(
+		C.int(REQ_VER_MAJOR),
+		C.int(REQ_VER_MINOR),
+		C.int(REQ_VER_PATCH)))
+
+	if err != nil {
+		panic(fmt.Sprintf("Required PLC library version %d.%d.%d is not available",
+			REQ_VER_MAJOR, REQ_VER_MINOR, REQ_VER_PATCH))
+	}
 }
