@@ -20,10 +20,10 @@ func newTestDevice(rd rawDevice) Device {
 const testTagName = "TEST_TAG"
 
 func TestReadTag(t *testing.T) {
-	spy := RawDeviceFake{DeviceFake{}}
-	dev := newTestDevice(&spy)
+	fake := RawDeviceFake{DeviceFake{}}
+	dev := newTestDevice(&fake)
 
-	spy.DeviceFake[testTagName] = int(7)
+	fake.DeviceFake[testTagName] = int(7)
 
 	var result int
 	err := dev.ReadTag(testTagName, &result)
@@ -33,14 +33,14 @@ func TestReadTag(t *testing.T) {
 }
 
 func TestWriteTag(t *testing.T) {
-	spy := RawDeviceFake{DeviceFake{}}
-	dev := newTestDevice(&spy)
+	fake := RawDeviceFake{DeviceFake{}}
+	dev := newTestDevice(&fake)
 
 	var value = 9
 	err := dev.WriteTag(testTagName, value)
 	assert.NoError(t, err)
 
-	assert.Equal(t, 9, spy.DeviceFake[testTagName])
+	assert.Equal(t, 9, fake.DeviceFake[testTagName])
 }
 
 // RawDeviceFake adds lower APIs to a DeviceFake
