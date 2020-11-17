@@ -52,10 +52,6 @@ func (dev RawDeviceFake) Close() error {
 	return nil
 }
 
-func (dev RawDeviceFake) StatusForTag(name string) error {
-	return nil
-}
-
 func (dev RawDeviceFake) GetList(listName, prefix string) ([]Tag, []string, error) {
 	return nil, nil, nil
 }
@@ -86,4 +82,3 @@ func (df DeviceFake) WriteTag(name string, value interface{}) error {
 	df[name] = value
 	return nil
 }
-

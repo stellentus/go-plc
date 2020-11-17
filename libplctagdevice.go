@@ -65,15 +65,6 @@ func (dev *libplctagDevice) getID(tagName string) (C.int32_t, error) {
 	return id, nil
 }
 
-// StatusForTag returns the error status of the requested tag.
-func (dev *libplctagDevice) StatusForTag(name string) error {
-	id, err := dev.getID(name)
-	if err != nil {
-		return err
-	}
-	return newError(C.plc_tag_status(id))
-}
-
 // ReadTag reads the requested tag into the provided value.
 func (dev *libplctagDevice) ReadTag(name string, value interface{}) (err error) {
 	id, err := dev.getID(name)

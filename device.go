@@ -24,11 +24,6 @@ func (dev *Device) Close() error {
 	return dev.rawDevice.Close()
 }
 
-// StatusForTag returns the error status of the requested tag.
-func (dev *Device) StatusForTag(name string) error {
-	return dev.rawDevice.StatusForTag(name)
-}
-
 // TagWithIndex provides the fully qualified tag for the given index of an array.
 func TagWithIndex(name string, index int) string {
 	// Array tags can be read by adding the index to the string, e.g. "EXAMPLE[0]"

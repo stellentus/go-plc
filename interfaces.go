@@ -28,9 +28,6 @@ type rawDevice interface {
 	// Close cleans up resources.
 	Close() error
 
-	// StatusForTag returns the error status of the requested tag
-	StatusForTag(name string) error
-
 	// GetList gets a list of tag names for the provided program
 	// name (or all tags if no program name is provided).
 	GetList(listName, prefix string) ([]Tag, []string, error)

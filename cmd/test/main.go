@@ -31,17 +31,6 @@ func main() {
 		}
 	}()
 
-	err = device.StatusForTag(*tagName)
-	if err != nil {
-		if _, ok := err.(plc.Pending); ok {
-			panic("ERROR: PLC is not ready to communicate yet.")
-		} else {
-			panic("ERROR " + err.Error() + ": Error setting up tag internal state.")
-		}
-	}
-
-	fmt.Println("Connected successfully")
-
 	// Read. If non-zero, value is true. Otherwise, it's false.
 	var isOn bool
 	if *index >= 0 {
