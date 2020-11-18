@@ -21,6 +21,7 @@ type libplctagDevice struct {
 
 // newLibplctagDevice creates a new libplctagDevice.
 // The conConf string provides IP and other connection configuration (see libplctag for options).
+// It is not thread safe.
 func newLibplctagDevice(conConf string, timeout int) (libplctagDevice, error) {
 	dev := libplctagDevice{
 		conConf: conConf,
@@ -66,6 +67,8 @@ func (dev *libplctagDevice) getID(tagName string) (C.int32_t, error) {
 }
 
 // ReadTag reads the requested tag into the provided value.
+// It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
+// portion of the tag tree is locked.
 func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
 	id, err := dev.getID(name)
 	if err != nil {
@@ -125,6 +128,8 @@ func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
 }
 
 // WriteTag writes the provided tag and value.
+// It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
+// portion of the tag tree is locked.
 func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
 	id, err := dev.getID(name)
 	if err != nil {
