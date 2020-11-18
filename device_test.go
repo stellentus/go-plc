@@ -92,9 +92,9 @@ func (df DeviceFake) ReadTag(name string, value interface{}) error {
 
 	switch {
 	case !out.CanSet():
-		return fmt.Errorf("cannot set %s", out.Type().Name())
+		return fmt.Errorf("for '%s', cannot set %s", name, out.Type().Name())
 	case out.Kind() != in.Kind():
-		return fmt.Errorf("cannot set %s to %s", out.Type().Name(), in.Type().Name())
+		return fmt.Errorf("for '%s', cannot set %s to %s (%v)", name, out.Type().Name(), in.Type().Name(), v)
 	}
 
 	out.Set(in)
