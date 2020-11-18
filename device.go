@@ -43,7 +43,28 @@ func (dev *Device) ReadTag(name string, value interface{}) error {
 		return fmt.Errorf("ReadTag expects a pointer type but got %v", v.Kind())
 	}
 
-	return dev.rawDevice.ReadTag(name, value)
+	switch v.Elem().Kind() {
+	case reflect.String:
+		bytes := make([]byte, stringMaxLength)
+		for str_index := 0; str_index < stringMaxLength; str_index++ {
+			var val byte
+			err := dev.rawDevice.ReadTag(TagWithIndex(name, str_index), &val)
+			if err != nil {
+				return err
+			}
+			if val == 0 {
+				// We found a null, which is the end of the string
+				bytes = bytes[:str_index] // we don't want the nulls at the end
+				break
+			}
+			bytes[str_index] = val
+		}
+		result := string(bytes)
+		v.Elem().Set(reflect.ValueOf(result))
+		return nil
+	default:
+		return dev.rawDevice.ReadTag(name, value)
+	}
 }
 
 // WriteTag writes the provided tag and value.

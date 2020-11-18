@@ -147,13 +147,6 @@ func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
 			return err
 		}
 		*val = float64(result)
-	case *string:
-		bytes := make([]byte, 0, stringMaxLength)
-		str_len := int(C.plc_tag_get_int32(id, noOffset))
-		for str_index := 0; str_index < str_len; str_index++ {
-			bytes[str_index] = byte(C.plc_tag_get_uint8(id, C.int(stringDataOffset+str_index)))
-		}
-		*val = string(bytes)
 	default:
 		return fmt.Errorf("Type %T is unknown and can't be read (%v)", val, val)
 	}

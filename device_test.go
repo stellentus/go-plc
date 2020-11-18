@@ -28,6 +28,20 @@ func TestReadTagRequiresPointer(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestReadString(t *testing.T) {
+	fake := RawDeviceFake{DeviceFake{
+		"STR[0]": uint8('h'),
+		"STR[1]": uint8('i'),
+		"STR[2]": uint8(0),
+	}}
+	dev := newTestDevice(&fake)
+
+	var str string
+	err := dev.ReadTag("STR", &str)
+	assert.NoError(t, err)
+	assert.Equal(t, "hi", str, "String should be loaded from array elements ending in null")
+}
+
 func TestReadTag(t *testing.T) {
 	fake := RawDeviceFake{DeviceFake{}}
 	dev := newTestDevice(&fake)
