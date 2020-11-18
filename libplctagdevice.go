@@ -7,6 +7,7 @@ package plc
 import "C"
 import (
 	"fmt"
+	"math"
 	"strings"
 	"unsafe"
 )
@@ -81,37 +82,70 @@ func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
 
 	switch val := value.(type) {
 	case *bool:
-		result := C.plc_tag_get_uint8(id, noOffset)
+		result, err := getUint8(id, noOffset)
+		if err != nil {
+			return err
+		}
 		*val = uint8(result) > 0
 	case *uint8:
-		result := C.plc_tag_get_uint8(id, noOffset)
+		result, err := getUint8(id, noOffset)
+		if err != nil {
+			return err
+		}
 		*val = uint8(result)
 	case *uint16:
-		result := C.plc_tag_get_uint16(id, noOffset)
+		result, err := getUint16(id, noOffset)
+		if err != nil {
+			return err
+		}
 		*val = uint16(result)
 	case *uint32:
-		result := C.plc_tag_get_uint32(id, noOffset)
+		result, err := getUint32(id, noOffset)
+		if err != nil {
+			return err
+		}
 		*val = uint32(result)
 	case *uint64:
-		result := C.plc_tag_get_uint64(id, noOffset)
+		result, err := getUint64(id, noOffset)
+		if err != nil {
+			return err
+		}
 		*val = uint64(result)
 	case *int8:
-		result := C.plc_tag_get_int8(id, noOffset)
+		result, err := getInt8(id, noOffset)
+		if err != nil {
+			return err
+		}
 		*val = int8(result)
 	case *int16:
-		result := C.plc_tag_get_int16(id, noOffset)
+		result, err := getInt16(id, noOffset)
+		if err != nil {
+			return err
+		}
 		*val = int16(result)
 	case *int32:
-		result := C.plc_tag_get_int32(id, noOffset)
+		result, err := getInt32(id, noOffset)
+		if err != nil {
+			return err
+		}
 		*val = int32(result)
 	case *int64:
-		result := C.plc_tag_get_int64(id, noOffset)
+		result, err := getInt64(id, noOffset)
+		if err != nil {
+			return err
+		}
 		*val = int64(result)
 	case *float32:
-		result := C.plc_tag_get_float32(id, noOffset)
+		result, err := getFloat32(id, noOffset)
+		if err != nil {
+			return err
+		}
 		*val = float32(result)
 	case *float64:
-		result := C.plc_tag_get_float64(id, noOffset)
+		result, err := getFloat64(id, noOffset)
+		if err != nil {
+			return err
+		}
 		*val = float64(result)
 	case *string:
 		bytes := make([]byte, 0, stringMaxLength)
@@ -268,4 +302,99 @@ func (dev *libplctagDevice) GetList(listName, prefix string) ([]Tag, []string, e
 	}
 
 	return tags, programNames, nil
+}
+
+func getBool(id C.int32_t, offset C.int) (bool, error) {
+	result, err := getUint8(id, offset)
+	return result > 0, err
+}
+
+func getUint8(id C.int32_t, offset C.int) (uint8, error) {
+	result := uint8(C.plc_tag_get_uint8(id, offset))
+	if result == math.MaxUint8 {
+		// If libplctag returns this value, it might be an error, so check
+		return result, newError(C.plc_tag_status(id))
+	}
+	return result, nil
+}
+
+func getUint16(id C.int32_t, offset C.int) (uint16, error) {
+	result := uint16(C.plc_tag_get_uint16(id, offset))
+	if result == math.MaxUint16 {
+		// If libplctag returns this value, it might be an error, so check
+		return result, newError(C.plc_tag_status(id))
+	}
+	return result, nil
+}
+
+func getUint32(id C.int32_t, offset C.int) (uint32, error) {
+	result := uint32(C.plc_tag_get_uint32(id, offset))
+	if result == math.MaxUint32 {
+		// If libplctag returns this value, it might be an error, so check
+		return result, newError(C.plc_tag_status(id))
+	}
+	return result, nil
+}
+
+func getUint64(id C.int32_t, offset C.int) (uint64, error) {
+	result := uint64(C.plc_tag_get_uint64(id, offset))
+	if result == math.MaxUint64 {
+		// If libplctag returns this value, it might be an error, so check
+		return result, newError(C.plc_tag_status(id))
+	}
+	return result, nil
+}
+
+func getInt8(id C.int32_t, offset C.int) (int8, error) {
+	result := int8(C.plc_tag_get_int8(id, offset))
+	if result == math.MinInt8 {
+		// If libplctag returns this value, it might be an error, so check
+		return result, newError(C.plc_tag_status(id))
+	}
+	return result, nil
+}
+
+func getInt16(id C.int32_t, offset C.int) (int16, error) {
+	result := int16(C.plc_tag_get_int16(id, offset))
+	if result == math.MinInt16 {
+		// If libplctag returns this value, it might be an error, so check
+		return result, newError(C.plc_tag_status(id))
+	}
+	return result, nil
+}
+
+func getInt32(id C.int32_t, offset C.int) (int32, error) {
+	result := int32(C.plc_tag_get_int32(id, offset))
+	if result == math.MinInt32 {
+		// If libplctag returns this value, it might be an error, so check
+		return result, newError(C.plc_tag_status(id))
+	}
+	return result, nil
+}
+
+func getInt64(id C.int32_t, offset C.int) (int64, error) {
+	result := int64(C.plc_tag_get_int64(id, offset))
+	if result == math.MinInt64 {
+		// If libplctag returns this value, it might be an error, so check
+		return result, newError(C.plc_tag_status(id))
+	}
+	return result, nil
+}
+
+func getFloat32(id C.int32_t, offset C.int) (float32, error) {
+	result := float32(C.plc_tag_get_float32(id, offset))
+	if result == math.SmallestNonzeroFloat32 {
+		// If libplctag returns this value, it might be an error, so check
+		return result, newError(C.plc_tag_status(id))
+	}
+	return result, nil
+}
+
+func getFloat64(id C.int32_t, offset C.int) (float64, error) {
+	result := float64(C.plc_tag_get_float64(id, offset))
+	if result == math.SmallestNonzeroFloat64 {
+		// If libplctag returns this value, it might be an error, so check
+		return result, newError(C.plc_tag_status(id))
+	}
+	return result, nil
 }
