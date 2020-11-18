@@ -13,7 +13,7 @@ var path = flag.String("path", "1,0", "Path to the PLC at the provided host or I
 func main() {
 	flag.Parse()
 
-	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=LGX", *addr, *path)
+	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", *addr, *path)
 	timeout := 5000
 	device, err := plc.NewDevice(connectionInfo, timeout)
 	if err != nil {

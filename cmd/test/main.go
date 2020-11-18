@@ -15,7 +15,7 @@ var index = flag.Int("index", -1, "Array index to access, or -1 if not an array"
 func main() {
 	flag.Parse()
 
-	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=LGX", *addr, *path)
+	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", *addr, *path)
 	timeout := 5000
 
 	fmt.Println("Attempting test connection to", connectionInfo, "using", *tagName)
