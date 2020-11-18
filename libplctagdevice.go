@@ -158,7 +158,7 @@ func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
 		err = newError(C.plc_tag_set_float32(id, noOffset, C.float(val)))
 	case float64:
 		err = newError(C.plc_tag_set_float64(id, noOffset, C.double(val)))
-	case string: // TODO this should lock the tag until the write is done
+	case string:
 		// write the string length
 		err = newError(C.plc_tag_set_int32(id, noOffset, C.int32_t(len(val))))
 		if err != nil {
