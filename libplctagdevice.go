@@ -21,6 +21,7 @@ type libplctagDevice struct {
 
 // newLibplctagDevice creates a new libplctagDevice.
 // The conConf string provides IP and other connection configuration (see libplctag for options).
+// It is not thread safe.
 func newLibplctagDevice(conConf string, timeout int) (libplctagDevice, error) {
 	dev := libplctagDevice{
 		conConf: conConf,
@@ -66,13 +67,15 @@ func (dev *libplctagDevice) getID(tagName string) (C.int32_t, error) {
 }
 
 // ReadTag reads the requested tag into the provided value.
-func (dev *libplctagDevice) ReadTag(name string, value interface{}) (err error) {
+// It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
+// portion of the tag tree is locked.
+func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
 	id, err := dev.getID(name)
 	if err != nil {
 		return err
 	}
 
-	if err = newError(C.plc_tag_read(id, dev.timeout)); err != nil {
+	if err := newError(C.plc_tag_read(id, dev.timeout)); err != nil {
 		return err
 	}
 
@@ -111,18 +114,6 @@ func (dev *libplctagDevice) ReadTag(name string, value interface{}) (err error) 
 		result := C.plc_tag_get_float64(id, noOffset)
 		*val = float64(result)
 	case *string:
-		// We only lock in this context because it's ok if we get the results of someone else's update to the cache
-		err = newError(C.plc_tag_lock(id))
-		if err != nil {
-			return err
-		}
-		defer func() {
-			lockErr := newError(C.plc_tag_unlock(id))
-			if lockErr != nil {
-				err = fmt.Errorf("error locking %w and other error %s", lockErr, err.Error())
-			}
-		}()
-
 		bytes := make([]byte, 0, stringMaxLength)
 		str_len := int(C.plc_tag_get_int32(id, noOffset))
 		for str_index := 0; str_index < str_len; str_index++ {
@@ -137,22 +128,13 @@ func (dev *libplctagDevice) ReadTag(name string, value interface{}) (err error) 
 }
 
 // WriteTag writes the provided tag and value.
-func (dev *libplctagDevice) WriteTag(name string, value interface{}) (err error) {
+// It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
+// portion of the tag tree is locked.
+func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
 	id, err := dev.getID(name)
 	if err != nil {
 		return err
 	}
-
-	err = newError(C.plc_tag_lock(id))
-	if err != nil {
-		return err
-	}
-	defer func() {
-		lockErr := newError(C.plc_tag_unlock(id))
-		if lockErr != nil {
-			err = fmt.Errorf("error locking %w and other error %s", lockErr, err.Error())
-		}
-	}()
 
 	switch val := value.(type) {
 	case bool:
@@ -181,7 +163,7 @@ func (dev *libplctagDevice) WriteTag(name string, value interface{}) (err error)
 		err = newError(C.plc_tag_set_float32(id, noOffset, C.float(val)))
 	case float64:
 		err = newError(C.plc_tag_set_float64(id, noOffset, C.double(val)))
-	case string: // TODO this should lock the tag until the write is done
+	case string:
 		// write the string length
 		err = newError(C.plc_tag_set_int32(id, noOffset, C.int32_t(len(val))))
 		if err != nil {
@@ -208,7 +190,7 @@ func (dev *libplctagDevice) WriteTag(name string, value interface{}) (err error)
 	}
 
 	// Read. If non-zero, value is true. Otherwise, it's false.
-	if err = newError(C.plc_tag_write(id, dev.timeout)); err != nil {
+	if err := newError(C.plc_tag_write(id, dev.timeout)); err != nil {
 		return err
 	}
 
