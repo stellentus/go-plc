@@ -41,7 +41,7 @@ func (r *Refresher) launchIfNecessary(name string, value interface{}, f func(v i
 	}
 
 	r.seen[name] = struct{}{}
-	value = reflect.New(reflect.TypeOf(value))
+	value = reflect.New(reflect.TypeOf(value).Elem()).Interface()
 
 	go func() {
 		for _ = range time.NewTicker(r.period).C {
