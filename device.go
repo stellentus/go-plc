@@ -3,6 +3,7 @@ package plc
 import (
 	"fmt"
 	"reflect"
+	"time"
 )
 
 // Device manages a connection to actual PLC hardware.
@@ -16,7 +17,7 @@ var _ = ReadWriter(&Device{}) // Compiler makes sure this type is a ReadWriter
 // The conConf string provides IP and other connection configuration (see libplctag for options).
 // It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
 // portion of the tag tree is locked.
-func NewDevice(conConf string, timeout int) (Device, error) {
+func NewDevice(conConf string, timeout time.Duration) (Device, error) {
 	raw, err := newLibplctagDevice(conConf, timeout)
 	if err != nil {
 		return Device{}, err

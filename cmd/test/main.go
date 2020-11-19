@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/stellentus/go-plc"
 )
@@ -16,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", *addr, *path)
-	timeout := 5000
+	timeout := 5 * time.Second
 
 	fmt.Println("Attempting test connection to", connectionInfo, "using", *tagName)
 

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -26,11 +27,11 @@ var _ = ReadWriter(&libplctagDevice{}) // Compiler makes sure this type is a Rea
 // newLibplctagDevice creates a new libplctagDevice.
 // The conConf string provides IP and other connection configuration (see libplctag for options).
 // It is not thread safe.
-func newLibplctagDevice(conConf string, timeout int) (libplctagDevice, error) {
+func newLibplctagDevice(conConf string, timeout time.Duration) (libplctagDevice, error) {
 	dev := libplctagDevice{
 		conConf: conConf,
 		ids:     make(map[string]C.int32_t),
-		timeout: C.int(timeout),
+		timeout: C.int(timeout.Milliseconds()),
 	}
 
 	return dev, nil

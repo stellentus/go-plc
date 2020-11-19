@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/stellentus/go-plc"
 )
@@ -14,7 +15,7 @@ func main() {
 	flag.Parse()
 
 	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", *addr, *path)
-	timeout := 5000
+	timeout := 5 * time.Second
 	device, err := plc.NewDevice(connectionInfo, timeout)
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not create test PLC!")
