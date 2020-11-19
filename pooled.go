@@ -18,11 +18,11 @@ func NewPooled(plc ReadWriter, workers int) Pooled {
 	return Pooled{plc, read, write}
 }
 
-func (p *Pooled) ReadTag(name string, value interface{}) error {
+func (p Pooled) ReadTag(name string, value interface{}) error {
 	return p.read.task(func() error { return p.plc.ReadTag(name, value) })
 }
 
-func (p *Pooled) WriteTag(name string, value interface{}) error {
+func (p Pooled) WriteTag(name string, value interface{}) error {
 	return p.write.task(func() error { return p.plc.WriteTag(name, value) })
 }
 
