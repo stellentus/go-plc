@@ -10,7 +10,7 @@ import (
 
 var addr = flag.String("address", "192.168.1.176", "Hostname or IP address of the PLC")
 var path = flag.String("path", "1,0", "Path to the PLC at the provided host or IP")
-var tagName = flag.String("tagName", "Enable_RampDown", "Name of the boolean tag to toggle")
+var tagName = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the boolean tag to toggle")
 var index = flag.Int("index", -1, "Array index to access, or -1 if not an array")
 
 func main() {
