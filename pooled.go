@@ -36,10 +36,12 @@ func (t tasker) task(f func() error) error {
 }
 
 func worker(read, write <-chan task) {
-	select {
-	case t := <-write:
-		t()
-	case t := <-read:
-		t()
+	for {
+		select {
+		case t := <-write:
+			t()
+		case t := <-read:
+			t()
+		}
 	}
 }
