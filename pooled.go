@@ -12,7 +12,7 @@ var _ = ReadWriter(&Pooled{})
 func NewPooled(plc ReadWriter, workers int) Pooled {
 	read, write := make(tasker), make(tasker)
 	for i := 0; i < workers; i++ {
-		worker(read, write)
+		go worker(read, write)
 	}
 	return Pooled{plc, read, write}
 }
