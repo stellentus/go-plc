@@ -13,8 +13,8 @@ func TestNewDevice(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func newTestDevice(rd rawDevice) Device {
-	return Device{rawDevice: rd}
+func newTestDevice(rd rawDevice) *Device {
+	return &Device{rawDevice: rd}
 }
 
 const testTagName = "TEST_TAG"
