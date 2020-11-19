@@ -51,6 +51,9 @@ func newPlant() (refresher plc.Reader, plant plc.ReadWriter) {
 	return refresher, pooled
 }
 
+// ReaderFunc is a function that can be used as a Reader.
+// It's the same pattern as http.HandlerFunc.
+// Maybe this should eventually be moved into the package if it seems useful.
 type ReaderFunc func(name string, value interface{}) error
 
 func (rt ReaderFunc) ReadTag(name string, value interface{}) error {
