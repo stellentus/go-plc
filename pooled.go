@@ -8,7 +8,8 @@ type Pooled struct {
 
 var _ = ReadWriter(&Pooled{})
 
-// NewPooled creates a new Pooled an launches workers goroutines to handle incoming reads and writes.
+// NewPooled creates a new Pooled and launches worker goroutines to handle incoming reads and writes.
+// There is no way to kill the workers once they're launched.
 func NewPooled(plc ReadWriter, workers int) Pooled {
 	read, write := make(tasker), make(tasker)
 	for i := 0; i < workers; i++ {
