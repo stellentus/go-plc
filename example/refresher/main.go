@@ -11,6 +11,7 @@ import (
 
 var addr = flag.String("address", "192.168.1.176", "Hostname or IP address of the PLC")
 var path = flag.String("path", "1,0", "Path to the PLC at the provided host or IP")
+var numWorkers = flag.Int("workers", 1, "Number of worker threads talking to libplctag")
 var timeout = flag.Duration("timeout", 5*time.Second, "PLC communication timeout")
 var refreshDuration = flag.Duration("refresh", time.Second, "Refresh period")
 var tagName = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the uint8 tag to read repeatedly")
@@ -36,15 +37,18 @@ func newPlant() (refresher plc.Reader, plant plc.ReadWriter) {
 	}
 	// WARNING device.Close() should be called
 
+	fmt.Printf("Creating a pool of %d threads\n", *numWorkers)
+	pooled := plc.NewPooled(device, *numWorkers)
+
 	debug := ReaderFunc(func(name string, value interface{}) error {
 		fmt.Printf("Read: %s is %v\n", name, reflect.ValueOf(value).Elem())
-		return device.ReadTag(name, value)
+		return pooled.ReadTag(name, value)
 	})
 
 	fmt.Printf("Creating a refresher to reload every %v\n", *refreshDuration)
 	refresher = plc.NewRefresher(debug, *refreshDuration)
 
-	return refresher, device
+	return refresher, pooled
 }
 
 type ReaderFunc func(name string, value interface{}) error
