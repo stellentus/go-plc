@@ -22,7 +22,7 @@ type Refresher struct {
 	mutex  sync.Mutex
 }
 
-var _ = Reader(&Refresher{})
+var _ = Reader(&Refresher{}) // Compiler makes sure this type is a Reader
 
 // NewRefresher returns a refresher that will update every read value.
 func NewRefresher(plc Reader, period time.Duration) *Refresher {

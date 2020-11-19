@@ -10,6 +10,8 @@ type Device struct {
 	rawDevice
 }
 
+var _ = ReadWriter(&Device{}) // Compiler makes sure this type is a ReadWriter
+
 // NewDevice creates a new Device.
 // The conConf string provides IP and other connection configuration (see libplctag for options).
 // It is not thread safe. In a multi-threaded context, callers should ensure the appropriate

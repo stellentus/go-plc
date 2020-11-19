@@ -6,7 +6,7 @@ type Pooled struct {
 	read, write tasker
 }
 
-var _ = ReadWriter(&Pooled{})
+var _ = ReadWriter(&Pooled{}) // Compiler makes sure this type is a ReadWriter
 
 // NewPooled creates a new Pooled and launches worker goroutines to handle incoming reads and writes.
 // There is no way to kill the workers once they're launched.

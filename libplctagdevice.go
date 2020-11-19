@@ -20,6 +20,9 @@ type libplctagDevice struct {
 	timeout C.int
 }
 
+var _ = rawDevice(&libplctagDevice{})  // Compiler makes sure this type is a rawDevice
+var _ = ReadWriter(&libplctagDevice{}) // Compiler makes sure this type is a ReadWriter
+
 // newLibplctagDevice creates a new libplctagDevice.
 // The conConf string provides IP and other connection configuration (see libplctag for options).
 // It is not thread safe.
