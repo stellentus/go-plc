@@ -9,8 +9,9 @@ import (
 )
 
 type Config struct {
-	Workers        int
-	PrintReadDebug bool
+	Workers         int
+	PrintReadDebug  bool
+	PrintWriteDebug bool
 }
 
 func NewCompositeDevice(addr string, path string, timeout time.Duration, conf Config) plc.ReadWriteCloser {
@@ -39,6 +40,10 @@ func NewCompositeDevice(addr string, path string, timeout time.Duration, conf Co
 		rwc = PrintReadDebug(rwc)
 	}
 
+	if conf.PrintWriteDebug {
+		rwc = PrintWriteDebug(rwc)
+	}
+
 	return rwc
 }
 
@@ -48,4 +53,12 @@ func PrintReadDebug(rwc plc.ReadWriteCloser) plc.ReadWriteCloser {
 		fmt.Printf("Read: %s is %v\n", name, reflect.ValueOf(value).Elem())
 		return read(name, value)
 	}).WithWriteCloser(rwc)
+}
+
+func PrintWriteDebug(rwc plc.ReadWriteCloser) plc.ReadWriteCloser {
+	write := rwc.WriteTag
+	return plc.WriterFunc(func(name string, value interface{}) error {
+		fmt.Printf("Write: %s is %v\n", name, reflect.ValueOf(value))
+		return write(name, value)
+	}).WithReadCloser(rwc)
 }
