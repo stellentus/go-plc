@@ -58,16 +58,26 @@ func NewDevice(addr string, path string, timeout time.Duration, conf Config) (pl
 func PrintReadDebug(rwc plc.ReadWriteCloser) plc.ReadWriteCloser {
 	read := rwc.ReadTag
 	return plc.ReaderFunc(func(name string, value interface{}) error {
-		fmt.Printf("Read: %s is %v\n", name, reflect.ValueOf(value).Elem())
-		return read(name, value)
+		err := read(name, value)
+		if err != nil {
+			fmt.Printf("Read FAILURE for %s (%v)\n", name, err)
+		} else {
+			fmt.Printf("Read: %s is %v\n", name, reflect.ValueOf(value).Elem())
+		}
+		return err
 	}).WithWriteCloser(rwc)
 }
 
 func PrintWriteDebug(rwc plc.ReadWriteCloser) plc.ReadWriteCloser {
 	write := rwc.WriteTag
 	return plc.WriterFunc(func(name string, value interface{}) error {
-		fmt.Printf("Write: %s is %v\n", name, reflect.ValueOf(value))
-		return write(name, value)
+		err := write(name, value)
+		if err != nil {
+			fmt.Printf("Write FAILURE setting %s to %v (%v)\n", name, reflect.ValueOf(value), err)
+		} else {
+			fmt.Printf("Write: %s is %v\n", name, reflect.ValueOf(value))
+		}
+		return err
 	}).WithReadCloser(rwc)
 }
 
