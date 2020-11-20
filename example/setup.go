@@ -27,21 +27,20 @@ func NewDebugPooledDevice(addr string, path string, timeout time.Duration, conf 
 		}
 	}()
 
+	rwc := plc.ReadWriteCloser(device)
+
 	fmt.Printf("Creating a pool of %d threads\n", conf.Workers)
-	pooled := plc.NewPooled(device, conf.Workers)
+	rwc = plc.NewPooled(rwc, conf.Workers).WithCloser(rwc)
 
-	debug := plc.ReaderFunc(func(name string, value interface{}) error {
+	rwc = PrintReadDebug(rwc)
+
+	return rwc
+}
+
+func PrintReadDebug(rwc plc.ReadWriteCloser) plc.ReadWriteCloser {
+	read := rwc.ReadTag
+	return plc.ReaderFunc(func(name string, value interface{}) error {
 		fmt.Printf("Read: %s is %v\n", name, reflect.ValueOf(value).Elem())
-		return pooled.ReadTag(name, value)
-	})
-
-	return struct {
-		plc.Reader
-		plc.Writer
-		plc.Closer
-	}{
-		Reader: debug,
-		Writer: pooled,
-		Closer: device,
-	}
+		return read(name, value)
+	}).WithWriteCloser(rwc)
 }
