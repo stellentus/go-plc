@@ -30,13 +30,14 @@ func NewDevice(addr string, path string, timeout time.Duration, conf Config) (pl
 		conf.DebugFunc = doNothing
 	}
 
+	var rwc plc.ReadWriteCloser
+	var err error
+
 	conf.DebugFunc("Initializing connection to %s\n", connectionInfo)
-	device, err := plc.NewDevice(connectionInfo, timeout)
+	rwc, err = plc.NewDevice(connectionInfo, timeout)
 	if err != nil {
 		return nil, err
 	}
-
-	rwc := plc.ReadWriteCloser(device)
 
 	if conf.Workers > 0 {
 		conf.DebugFunc("Creating a pool of %d threads\n", conf.Workers)
