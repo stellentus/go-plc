@@ -17,12 +17,20 @@ type Config struct {
 
 	// PrintWriteDebug creates a wrapper to print the value being written.
 	PrintWriteDebug bool
+
+	// DebugFunc prints debug about device construction.
+	// If nil, nothing is printed.
+	DebugFunc func(string, ...interface{}) (int, error)
 }
 
 func NewCompositeDevice(addr string, path string, timeout time.Duration, conf Config) plc.ReadWriteCloser {
 	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", addr, path)
 
-	fmt.Println("Initializing connection to", connectionInfo)
+	if conf.DebugFunc == nil {
+		conf.DebugFunc = doNothing
+	}
+
+	conf.DebugFunc("Initializing connection to %s\n", connectionInfo)
 	device, err := plc.NewDevice(connectionInfo, timeout)
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not create test PLC!")
@@ -37,7 +45,7 @@ func NewCompositeDevice(addr string, path string, timeout time.Duration, conf Co
 	rwc := plc.ReadWriteCloser(device)
 
 	if conf.Workers > 0 {
-		fmt.Printf("Creating a pool of %d threads\n", conf.Workers)
+		conf.DebugFunc("Creating a pool of %d threads\n", conf.Workers)
 		rwc = plc.NewPooled(rwc, conf.Workers).WithCloser(rwc)
 	}
 
@@ -67,3 +75,5 @@ func PrintWriteDebug(rwc plc.ReadWriteCloser) plc.ReadWriteCloser {
 		return write(name, value)
 	}).WithReadCloser(rwc)
 }
+
+func doNothing(string, ...interface{}) (int, error) { return 0, nil }

@@ -23,6 +23,7 @@ func main() {
 	dev := example.NewCompositeDevice(*addr, *path, *timeout, example.Config{
 		Workers:        *numWorkers,
 		PrintReadDebug: true,
+		DebugFunc:      fmt.Printf,
 	})
 
 	fmt.Printf("Creating a refresher to reload every %v\n", *refreshDuration)
