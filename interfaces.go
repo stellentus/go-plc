@@ -11,21 +11,23 @@ type ReadWriteCloser interface {
 	Closer
 }
 
-// Reader writes values from a PLC.
+// Reader is the interface that wraps the basic ReadTag method.
 type Reader interface {
 	// ReadTag reads the requested tag into the provided value.
 	ReadTag(name string, value interface{}) error
 }
 
-// Writer writes values out to a PLC.
+// Writer is the interface that wraps the basic WriteTag method.
 type Writer interface {
 	// WriteTag writes the provided tag and value.
 	WriteTag(name string, value interface{}) error
 }
 
-// Closer closes something.
+// Closer is the interface that wraps the basic Close method.
+//
+// The behavior of Close after the first call is undefined.
+// Specific implementations may document their own behavior.
 type Closer interface {
-	// Close cleans up resources.
 	Close() error
 }
 
