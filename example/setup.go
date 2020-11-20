@@ -13,7 +13,7 @@ type Config struct {
 	PrintReadDebug bool
 }
 
-func NewDebugPooledDevice(addr string, path string, timeout time.Duration, conf Config) plc.ReadWriteCloser {
+func NewCompositeDevice(addr string, path string, timeout time.Duration, conf Config) plc.ReadWriteCloser {
 	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", addr, path)
 
 	fmt.Println("Initializing connection to", connectionInfo)
