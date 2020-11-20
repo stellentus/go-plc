@@ -32,3 +32,19 @@ type rawDevice interface {
 	// name (or all tags if no program name is provided).
 	GetList(listName, prefix string) ([]Tag, []string, error)
 }
+
+// ReaderFunc is a function that can be used as a Reader.
+// It's the same pattern as http.HandlerFunc.
+type ReaderFunc func(name string, value interface{}) error
+
+func (f ReaderFunc) ReadTag(name string, value interface{}) error {
+	return f(name, value)
+}
+
+// WriterFunc is a function that can be used as a Writer.
+// It's the same pattern as http.HandlerFunc.
+type WriterFunc func(name string, value interface{}) error
+
+func (f WriterFunc) WriteTag(name string, value interface{}) error {
+	return f(name, value)
+}

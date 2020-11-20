@@ -40,7 +40,7 @@ func newPlant() (refresher plc.Reader, plant plc.ReadWriter) {
 	fmt.Printf("Creating a pool of %d threads\n", *numWorkers)
 	pooled := plc.NewPooled(device, *numWorkers)
 
-	debug := ReaderFunc(func(name string, value interface{}) error {
+	debug := plc.ReaderFunc(func(name string, value interface{}) error {
 		fmt.Printf("Read: %s is %v\n", name, reflect.ValueOf(value).Elem())
 		return pooled.ReadTag(name, value)
 	})
@@ -49,13 +49,4 @@ func newPlant() (refresher plc.Reader, plant plc.ReadWriter) {
 	refresher = plc.NewRefresher(debug, *refreshDuration)
 
 	return refresher, pooled
-}
-
-// ReaderFunc is a function that can be used as a Reader.
-// It's the same pattern as http.HandlerFunc.
-// Maybe this should eventually be moved into the package if it seems useful.
-type ReaderFunc func(name string, value interface{}) error
-
-func (rt ReaderFunc) ReadTag(name string, value interface{}) error {
-	return rt(name, value)
 }
