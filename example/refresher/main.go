@@ -37,7 +37,20 @@ func main() {
 	fmt.Printf("Creating a refresher to reload every %v\n", *refreshDuration)
 	refresher := plc.NewRefresher(dev, *refreshDuration)
 
+	// Tell the refresher to begin reading
 	val := uint8(0)
 	refresher.ReadTag(*tagName, &val)
-	time.Sleep(10 * time.Second)
+
+	// Just read for 2 seconds
+	time.Sleep(2 * time.Second)
+
+	// Now write a new value. It will still be read by the refresher.
+	fmt.Println("Writing", val+1)
+	dev.WriteTag(*tagName, val+1)
+	time.Sleep(2 * time.Second)
+
+	// Now return to the original value.
+	fmt.Println("Writing", val)
+	dev.WriteTag(*tagName, val)
+	time.Sleep(2 * time.Second)
 }
