@@ -8,7 +8,11 @@ import (
 	"github.com/stellentus/go-plc"
 )
 
-func NewDebugPooledDevice(addr string, path string, timeout time.Duration, numWorkers int) plc.ReadWriteCloser {
+type Config struct {
+	Workers int
+}
+
+func NewDebugPooledDevice(addr string, path string, timeout time.Duration, conf Config) plc.ReadWriteCloser {
 	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", addr, path)
 
 	fmt.Println("Initializing connection to", connectionInfo)
@@ -23,8 +27,8 @@ func NewDebugPooledDevice(addr string, path string, timeout time.Duration, numWo
 		}
 	}()
 
-	fmt.Printf("Creating a pool of %d threads\n", numWorkers)
-	pooled := plc.NewPooled(device, numWorkers)
+	fmt.Printf("Creating a pool of %d threads\n", conf.Workers)
+	pooled := plc.NewPooled(device, conf.Workers)
 
 	debug := plc.ReaderFunc(func(name string, value interface{}) error {
 		fmt.Printf("Read: %s is %v\n", name, reflect.ValueOf(value).Elem())
