@@ -10,8 +10,6 @@ import (
 )
 
 var addr = flag.String("address", "192.168.1.176", "Hostname or IP address of the PLC")
-var path = flag.String("path", "1,0", "Path to the PLC at the provided host or IP")
-var timeout = flag.Duration("timeout", 5*time.Second, "PLC communication timeout")
 var numWorkers = flag.Int("workers", 1, "Number of worker threads talking to libplctag")
 var refreshDuration = flag.Duration("refresh", time.Second, "Refresh period")
 var tagName = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the uint8 tag to read repeatedly")
@@ -20,10 +18,11 @@ var tagName = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the uint8 
 func main() {
 	flag.Parse()
 
-	dev, err := example.NewDevice(*addr, *path, *timeout, example.Config{
-		Workers:        *numWorkers,
-		PrintReadDebug: true,
-		DebugFunc:      fmt.Printf,
+	dev, err := example.NewDevice(example.Config{
+		Workers:          *numWorkers,
+		PrintReadDebug:   true,
+		DebugFunc:        fmt.Printf,
+		DeviceConnection: map[string]string{"gateway": *addr},
 	})
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not create test PLC!")

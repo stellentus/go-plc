@@ -1,9 +1,7 @@
 package example
 
 import (
-	"fmt"
 	"reflect"
-	"time"
 
 	"github.com/stellentus/go-plc"
 )
@@ -23,11 +21,12 @@ type Config struct {
 	// DebugFunc prints debug.
 	// If nil, nothing is printed.
 	DebugFunc
+
+	// DeviceConnection is the map used by plc.Device to initialize the connection.
+	DeviceConnection map[string]string
 }
 
-func NewDevice(addr string, path string, timeout time.Duration, conf Config) (plc.ReadWriteCloser, error) {
-	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", addr, path)
-
+func NewDevice(conf Config) (plc.ReadWriteCloser, error) {
 	if conf.DebugFunc == nil {
 		conf.DebugFunc = doNothing
 	}
@@ -35,8 +34,8 @@ func NewDevice(addr string, path string, timeout time.Duration, conf Config) (pl
 	var rwc plc.ReadWriteCloser
 	var err error
 
-	conf.DebugFunc("Initializing connection to %s\n", connectionInfo)
-	rwc, err = plc.NewDevice(connectionInfo, timeout)
+	conf.DebugFunc("Initializing connection to %s\n", conf.DeviceConnection["gateway"])
+	rwc, err = plc.NewDevice(conf.DeviceConnection)
 	if err != nil {
 		return nil, err
 	}

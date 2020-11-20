@@ -1,6 +1,7 @@
 package plc
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -14,15 +15,54 @@ type Device struct {
 var _ = ReadWriter(&Device{}) // Compiler makes sure this type is a ReadWriter
 
 // NewDevice creates a new Device.
-// The conConf string provides IP and other connection configuration (see libplctag for options).
+// The conf map provides IP and other connection configuration (see libplctag for options).
+// Five of them are essential:
+// 	- protocol (default: "ab_eip")
+// 	- gateway (default: throws an error; should be an IP address)
+// 	- path (default: "1,0")
+// 	- cpu (default: "controllogix")
+// 	- timeout (default: "5s"; parsed with time.ParseDuration)
 // It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
 // portion of the tag tree is locked.
-func NewDevice(conConf string, timeout time.Duration) (*Device, error) {
+func NewDevice(conf map[string]string) (*Device, error) {
+	conConf, timeout, err := parseConfig(conf)
+	if err != nil {
+		return nil, err
+	}
 	raw, err := newLibplctagDevice(conConf, timeout)
 	if err != nil {
 		return nil, err
 	}
 	return &Device{rawDevice: &raw}, nil
+}
+
+func parseConfig(conf map[string]string) (string, time.Duration, error) {
+	var protocol, gateway, path, cpu, timeout string
+	var ok bool
+
+	if gateway, ok = conf["gateway"]; !ok {
+		return "", 0, errors.New("Cannot create plc.Device without a gateway (i.e. network address)")
+	}
+	if protocol, ok = conf["protocol"]; !ok {
+		protocol = "ab_eip"
+	}
+	if path, ok = conf["path"]; !ok {
+		path = "1,0"
+	}
+	if cpu, ok = conf["cpu"]; !ok {
+		cpu = "controllogix"
+	}
+	connectionInfo := fmt.Sprintf("protocol=%s&gateway=%s&path=%s&cpu=%s", protocol, gateway, path, cpu)
+
+	if timeout, ok = conf["timeout"]; !ok {
+		timeout = "5s"
+	}
+	tm, err := time.ParseDuration(timeout)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return connectionInfo, tm, nil
 }
 
 // Close should be called on the Device to clean up its resources.

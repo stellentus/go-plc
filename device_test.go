@@ -9,8 +9,28 @@ import (
 )
 
 func TestNewDevice(t *testing.T) {
-	_, err := NewDevice("", 0)
+	_, err := NewDevice(map[string]string{"gateway": "test"})
 	assert.NoError(t, err)
+}
+
+func TestNewDeviceRequiresConfig(t *testing.T) {
+	_, err := NewDevice(nil)
+	assert.Error(t, err)
+}
+
+func TestNewDeviceRequiresGateway(t *testing.T) {
+	_, err := NewDevice(map[string]string{})
+	assert.Error(t, err)
+}
+
+func TestNewDeviceParsesTimeout(t *testing.T) {
+	_, err := NewDevice(map[string]string{"gateway": "test", "timeout": "250ms"})
+	assert.NoError(t, err)
+}
+
+func TestNewDeviceInvalidTimeout(t *testing.T) {
+	_, err := NewDevice(map[string]string{"gateway": "test", "timeout": "fifty milliseconds"})
+	assert.Error(t, err)
 }
 
 func newTestDevice(rd rawDevice) *Device {

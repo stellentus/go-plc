@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"time"
 
 	"github.com/stellentus/go-plc"
 )
@@ -14,9 +13,11 @@ var path = flag.String("path", "1,0", "Path to the PLC at the provided host or I
 func main() {
 	flag.Parse()
 
-	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", *addr, *path)
-	timeout := 5 * time.Second
-	device, err := plc.NewDevice(connectionInfo, timeout)
+	conf := map[string]string{
+		"gateway": *addr,
+		"path":    *path,
+	}
+	device, err := plc.NewDevice(conf)
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not create test PLC!")
 	}
