@@ -21,7 +21,8 @@ func main() {
 	flag.Parse()
 
 	dev := example.NewDebugPooledDevice(*addr, *path, *timeout, example.Config{
-		Workers: *numWorkers,
+		Workers:        *numWorkers,
+		PrintReadDebug: true,
 	})
 
 	fmt.Printf("Creating a refresher to reload every %v\n", *refreshDuration)

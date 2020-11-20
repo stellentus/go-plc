@@ -9,7 +9,8 @@ import (
 )
 
 type Config struct {
-	Workers int
+	Workers        int
+	PrintReadDebug bool
 }
 
 func NewDebugPooledDevice(addr string, path string, timeout time.Duration, conf Config) plc.ReadWriteCloser {
@@ -29,10 +30,14 @@ func NewDebugPooledDevice(addr string, path string, timeout time.Duration, conf 
 
 	rwc := plc.ReadWriteCloser(device)
 
-	fmt.Printf("Creating a pool of %d threads\n", conf.Workers)
-	rwc = plc.NewPooled(rwc, conf.Workers).WithCloser(rwc)
+	if conf.Workers > 0 {
+		fmt.Printf("Creating a pool of %d threads\n", conf.Workers)
+		rwc = plc.NewPooled(rwc, conf.Workers).WithCloser(rwc)
+	}
 
-	rwc = PrintReadDebug(rwc)
+	if conf.PrintReadDebug {
+		rwc = PrintReadDebug(rwc)
+	}
 
 	return rwc
 }
