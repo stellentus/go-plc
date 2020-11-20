@@ -5,6 +5,16 @@ type ReadWriter interface {
 	Writer
 }
 
+type ReadCloser interface {
+	Reader
+	Closer
+}
+
+type WriteCloser interface {
+	Writer
+	Closer
+}
+
 type ReadWriteCloser interface {
 	Reader
 	Writer
@@ -48,10 +58,28 @@ func (f ReaderFunc) ReadTag(name string, value interface{}) error {
 	return f(name, value)
 }
 
+// WithWriteCloser creates a ReadWriteCloser from ReaderFunc and the provided WriteCloser.
+func (f ReaderFunc) WithWriteCloser(wc WriteCloser) ReadWriteCloser {
+	return struct {
+		Reader
+		Writer
+		Closer
+	}{Reader: f, Writer: wc, Closer: wc}
+}
+
 // WriterFunc is a function that can be used as a Writer.
 // It's the same pattern as http.HandlerFunc.
 type WriterFunc func(name string, value interface{}) error
 
 func (f WriterFunc) WriteTag(name string, value interface{}) error {
 	return f(name, value)
+}
+
+// WithReadCloser creates a ReadWriteCloser from WriterFunc and the provided ReadCloser.
+func (f WriterFunc) WithReadCloser(rc ReadCloser) ReadWriteCloser {
+	return struct {
+		Reader
+		Writer
+		Closer
+	}{Reader: rc, Writer: f, Closer: rc}
 }

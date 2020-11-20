@@ -26,6 +26,17 @@ func (p Pooled) WriteTag(name string, value interface{}) error {
 	return p.write.task(func() error { return p.plc.WriteTag(name, value) })
 }
 
+// WithCloser creates a ReadWriteCloser from Pooled and the provided Closer.
+func (p Pooled) WithCloser(cl Closer) ReadWriteCloser {
+	return struct {
+		ReadWriter
+		Closer
+	}{
+		ReadWriter: p,
+		Closer:     cl,
+	}
+}
+
 type task func()
 type tasker chan task
 
