@@ -8,6 +8,8 @@ import (
 	"github.com/stellentus/go-plc"
 )
 
+type DebugFunc func(string, ...interface{}) (int, error)
+
 type Config struct {
 	// Workers creates a pool of workers if greater than 0.
 	Workers int
@@ -18,9 +20,9 @@ type Config struct {
 	// PrintWriteDebug creates a wrapper to print the value being written.
 	PrintWriteDebug bool
 
-	// DebugFunc prints debug about device construction.
+	// DebugFunc prints debug.
 	// If nil, nothing is printed.
-	DebugFunc func(string, ...interface{}) (int, error)
+	DebugFunc
 }
 
 func NewDevice(addr string, path string, timeout time.Duration, conf Config) (plc.ReadWriteCloser, error) {
@@ -45,37 +47,37 @@ func NewDevice(addr string, path string, timeout time.Duration, conf Config) (pl
 	}
 
 	if conf.PrintReadDebug {
-		rwc = PrintReadDebug(rwc)
+		rwc = PrintReadDebug(rwc, conf.DebugFunc)
 	}
 
 	if conf.PrintWriteDebug {
-		rwc = PrintWriteDebug(rwc)
+		rwc = PrintWriteDebug(rwc, conf.DebugFunc)
 	}
 
 	return rwc, nil
 }
 
-func PrintReadDebug(rwc plc.ReadWriteCloser) plc.ReadWriteCloser {
+func PrintReadDebug(rwc plc.ReadWriteCloser, rf DebugFunc) plc.ReadWriteCloser {
 	read := rwc.ReadTag
 	return plc.ReaderFunc(func(name string, value interface{}) error {
 		err := read(name, value)
 		if err != nil {
-			fmt.Printf("Read FAILURE for %s (%v)\n", name, err)
+			rf("Read FAILURE for %s (%v)\n", name, err)
 		} else {
-			fmt.Printf("Read: %s is %v\n", name, reflect.ValueOf(value).Elem())
+			rf("Read: %s is %v\n", name, reflect.ValueOf(value).Elem())
 		}
 		return err
 	}).WithWriteCloser(rwc)
 }
 
-func PrintWriteDebug(rwc plc.ReadWriteCloser) plc.ReadWriteCloser {
+func PrintWriteDebug(rwc plc.ReadWriteCloser, rf DebugFunc) plc.ReadWriteCloser {
 	write := rwc.WriteTag
 	return plc.WriterFunc(func(name string, value interface{}) error {
 		err := write(name, value)
 		if err != nil {
-			fmt.Printf("Write FAILURE setting %s to %v (%v)\n", name, reflect.ValueOf(value), err)
+			rf("Write FAILURE setting %s to %v (%v)\n", name, reflect.ValueOf(value), err)
 		} else {
-			fmt.Printf("Write: %s is %v\n", name, reflect.ValueOf(value))
+			rf("Write: %s is %v\n", name, reflect.ValueOf(value))
 		}
 		return err
 	}).WithReadCloser(rwc)
