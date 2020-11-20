@@ -9,8 +9,13 @@ import (
 )
 
 type Config struct {
-	Workers         int
-	PrintReadDebug  bool
+	// Workers creates a pool of workers if greater than 0.
+	Workers int
+
+	// PrintReadDebug creates a wrapper to print the value being read.
+	PrintReadDebug bool
+
+	// PrintWriteDebug creates a wrapper to print the value being written.
 	PrintWriteDebug bool
 }
 
