@@ -20,7 +20,7 @@ var tagName = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the uint8 
 func main() {
 	flag.Parse()
 
-	dev := example.NewCompositeDevice(*addr, *path, *timeout, example.Config{
+	dev := example.NewDevice(*addr, *path, *timeout, example.Config{
 		Workers:        *numWorkers,
 		PrintReadDebug: true,
 		DebugFunc:      fmt.Printf,

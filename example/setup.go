@@ -23,7 +23,7 @@ type Config struct {
 	DebugFunc func(string, ...interface{}) (int, error)
 }
 
-func NewCompositeDevice(addr string, path string, timeout time.Duration, conf Config) plc.ReadWriteCloser {
+func NewDevice(addr string, path string, timeout time.Duration, conf Config) plc.ReadWriteCloser {
 	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", addr, path)
 
 	if conf.DebugFunc == nil {
