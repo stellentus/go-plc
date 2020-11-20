@@ -5,6 +5,14 @@ type ReadWriter interface {
 	Writer
 }
 
+type ReadWriteCloser interface {
+	Reader
+	Writer
+
+	// Close cleans up resources.
+	Close() error
+}
+
 // Reader writes values from a PLC.
 type Reader interface {
 	// ReadTag reads the requested tag into the provided value.
@@ -19,10 +27,7 @@ type Writer interface {
 
 // rawDevice is an interface to a PLC device.
 type rawDevice interface {
-	ReadWriter
-
-	// Close cleans up resources.
-	Close() error
+	ReadWriteCloser
 
 	// GetList gets a list of tag names for the provided program
 	// name (or all tags if no program name is provided).
