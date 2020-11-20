@@ -35,12 +35,6 @@ func NewDevice(addr string, path string, timeout time.Duration, conf Config) (pl
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		err := device.Close()
-		if err != nil {
-			fmt.Println("Close was unsuccessful:", err.Error())
-		}
-	}()
 
 	rwc := plc.ReadWriteCloser(device)
 

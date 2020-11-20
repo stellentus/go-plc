@@ -28,6 +28,12 @@ func main() {
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not create test PLC!")
 	}
+	defer func() {
+		err := dev.Close()
+		if err != nil {
+			panic("ERROR: Close was unsuccessful:" + err.Error())
+		}
+	}()
 
 	fmt.Printf("Creating a refresher to reload every %v\n", *refreshDuration)
 	refresher := plc.NewRefresher(dev, *refreshDuration)
