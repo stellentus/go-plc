@@ -19,11 +19,7 @@ type Writer interface {
 
 // rawDevice is an interface to a PLC device.
 type rawDevice interface {
-	// ReadTag reads the requested tag into the provided value.
-	ReadTag(name string, value interface{}) error
-
-	// WriteTag writes the provided tag and value.
-	WriteTag(name string, value interface{}) error
+	ReadWriter
 
 	// Close cleans up resources.
 	Close() error
