@@ -23,7 +23,7 @@ type Config struct {
 	DebugFunc func(string, ...interface{}) (int, error)
 }
 
-func NewDevice(addr string, path string, timeout time.Duration, conf Config) plc.ReadWriteCloser {
+func NewDevice(addr string, path string, timeout time.Duration, conf Config) (plc.ReadWriteCloser, error) {
 	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", addr, path)
 
 	if conf.DebugFunc == nil {
@@ -33,7 +33,7 @@ func NewDevice(addr string, path string, timeout time.Duration, conf Config) plc
 	conf.DebugFunc("Initializing connection to %s\n", connectionInfo)
 	device, err := plc.NewDevice(connectionInfo, timeout)
 	if err != nil {
-		panic("ERROR " + err.Error() + ": Could not create test PLC!")
+		return nil, err
 	}
 	defer func() {
 		err := device.Close()
@@ -57,7 +57,7 @@ func NewDevice(addr string, path string, timeout time.Duration, conf Config) plc
 		rwc = PrintWriteDebug(rwc)
 	}
 
-	return rwc
+	return rwc, nil
 }
 
 func PrintReadDebug(rwc plc.ReadWriteCloser) plc.ReadWriteCloser {

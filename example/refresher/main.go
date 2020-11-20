@@ -20,11 +20,14 @@ var tagName = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the uint8 
 func main() {
 	flag.Parse()
 
-	dev := example.NewDevice(*addr, *path, *timeout, example.Config{
+	dev, err := example.NewDevice(*addr, *path, *timeout, example.Config{
 		Workers:        *numWorkers,
 		PrintReadDebug: true,
 		DebugFunc:      fmt.Printf,
 	})
+	if err != nil {
+		panic("ERROR " + err.Error() + ": Could not create test PLC!")
+	}
 
 	fmt.Printf("Creating a refresher to reload every %v\n", *refreshDuration)
 	refresher := plc.NewRefresher(dev, *refreshDuration)
