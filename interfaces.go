@@ -8,9 +8,7 @@ type ReadWriter interface {
 type ReadWriteCloser interface {
 	Reader
 	Writer
-
-	// Close cleans up resources.
-	Close() error
+	Closer
 }
 
 // Reader writes values from a PLC.
@@ -23,6 +21,12 @@ type Reader interface {
 type Writer interface {
 	// WriteTag writes the provided tag and value.
 	WriteTag(name string, value interface{}) error
+}
+
+// Closer closes something.
+type Closer interface {
+	// Close cleans up resources.
+	Close() error
 }
 
 // rawDevice is an interface to a PLC device.
