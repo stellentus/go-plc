@@ -62,6 +62,9 @@ func main() {
 }
 
 func initializeRefresher(rd plc.Reader) error {
+	if rd == nil {
+		return nil // No refresher? Do nothing
+	}
 	for tag, v := range knownTags {
 		val := copy(v)
 		err := rd.ReadTag(tag, val)
