@@ -24,10 +24,14 @@ type Config struct {
 
 	// DeviceConnection is the map used by plc.Device to initialize the connection.
 	DeviceConnection map[string]string
+
+	// UseCache creates a cache if true.
+	UseCache bool
 }
 
 type Device struct {
 	plc.ReadWriteCloser
+	cache plc.Reader
 }
 
 func NewDevice(conf Config) (Device, error) {
@@ -57,7 +61,18 @@ func NewDevice(conf Config) (Device, error) {
 		dev.ReadWriteCloser = plc.NewPooled(dev.ReadWriteCloser, conf.Workers).WithCloser(dev.ReadWriteCloser)
 	}
 
+	if conf.UseCache {
+		conf.DebugFunc("Creating a cache\n")
+		cache := plc.NewCache(dev.ReadWriteCloser)
+		dev.ReadWriteCloser = cache.WithWriteCloser(dev.ReadWriteCloser)
+		dev.cache = cache.CacheReader()
+	}
+
 	return dev, nil
+}
+
+func (dev Device) Cache() plc.Reader {
+	return dev.cache
 }
 
 func PrintReadDebug(rwc plc.ReadWriteCloser, rf DebugFunc) plc.ReadWriteCloser {
