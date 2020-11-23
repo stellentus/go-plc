@@ -26,34 +26,38 @@ type Config struct {
 	DeviceConnection map[string]string
 }
 
-func NewDevice(conf Config) (plc.ReadWriteCloser, error) {
+type Device struct {
+	plc.ReadWriteCloser
+}
+
+func NewDevice(conf Config) (Device, error) {
 	if conf.DebugFunc == nil {
 		conf.DebugFunc = doNothing
 	}
 
-	var rwc plc.ReadWriteCloser
 	var err error
+	dev := Device{}
 
 	conf.DebugFunc("Initializing connection to %s\n", conf.DeviceConnection["gateway"])
-	rwc, err = plc.NewDevice(conf.DeviceConnection)
+	dev.ReadWriteCloser, err = plc.NewDevice(conf.DeviceConnection)
 	if err != nil {
-		return nil, err
+		return dev, err
 	}
 
 	if conf.PrintReadDebug {
-		rwc = PrintReadDebug(rwc, conf.DebugFunc)
+		dev.ReadWriteCloser = PrintReadDebug(dev.ReadWriteCloser, conf.DebugFunc)
 	}
 
 	if conf.PrintWriteDebug {
-		rwc = PrintWriteDebug(rwc, conf.DebugFunc)
+		dev.ReadWriteCloser = PrintWriteDebug(dev.ReadWriteCloser, conf.DebugFunc)
 	}
 
 	if conf.Workers > 0 {
 		conf.DebugFunc("Creating a pool of %d threads\n", conf.Workers)
-		rwc = plc.NewPooled(rwc, conf.Workers).WithCloser(rwc)
+		dev.ReadWriteCloser = plc.NewPooled(dev.ReadWriteCloser, conf.Workers).WithCloser(dev.ReadWriteCloser)
 	}
 
-	return rwc, nil
+	return dev, nil
 }
 
 func PrintReadDebug(rwc plc.ReadWriteCloser, rf DebugFunc) plc.ReadWriteCloser {
