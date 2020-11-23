@@ -15,10 +15,13 @@ var numWorkers = flag.Int("workers", 1, "Number of worker threads talking to lib
 var timeout = flag.Duration("timeout", 5*time.Second, "PLC communication timeout")
 var refreshDuration = flag.Duration("refresh", time.Second, "Refresh period")
 var tagName = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the uint8 tag to read repeatedly")
+var plcDebug = flag.Int("plctagdebug", 0, "Debug level for libplctag's debug (0-5)")
 
 // This command demonstrates setting up to read and write values from a plant.
 func main() {
 	flag.Parse()
+
+	plc.SetLibplctagDebug(plc.LibplctagDebugLevel(*plcDebug))
 
 	refresher, _ := newPlant()
 

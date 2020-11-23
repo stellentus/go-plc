@@ -13,6 +13,21 @@ import (
 	"unsafe"
 )
 
+type LibplctagDebugLevel int
+
+const (
+	DebugNone = LibplctagDebugLevel(iota)
+	DebugError
+	DebugWarn
+	DebugInfo
+	DebugDetail
+	DebugSpew
+)
+
+func SetLibplctagDebug(level LibplctagDebugLevel) {
+	C.plc_tag_set_debug_level(C.int(level))
+}
+
 // libplctagDevice is an instance of the rawDevice interface.
 // It communicates with a PLC over the network by using the libplctag C library.
 type libplctagDevice struct {
