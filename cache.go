@@ -65,3 +65,16 @@ type TagNotFoundError struct {
 func (err TagNotFoundError) Error() string {
 	return "Tag '" + err.Name + "' could not be found"
 }
+
+// WithWriteCloser creates a ReadWriteCloser from Cache and the provided WriteCloser.
+func (r *Cache) WithWriteCloser(wc WriteCloser) ReadWriteCloser {
+	return struct {
+		Reader
+		Writer
+		Closer
+	}{
+		Reader: r,
+		Writer: wc,
+		Closer: wc,
+	}
+}
