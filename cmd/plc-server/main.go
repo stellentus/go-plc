@@ -4,14 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"time"
 
-	"github.com/stellentus/go-plc"
+	"github.com/stellentus/go-plc/example"
 )
 
 var (
 	plcAddr  = flag.String("plc-address", "192.168.1.176", "Hostname or IP address of the PLC")
-	path     = flag.String("path", "1,0", "Path to the PLC at the provided host or IP")
 	httpAddr = flag.String("http", ":8784", "Port for http server to listen to")
 )
 
@@ -31,14 +29,17 @@ var knownTags = map[string]interface{}{
 func main() {
 	flag.Parse()
 
-	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", *plcAddr, *path)
-	timeout := 5 * time.Second
-	device, err := plc.NewDevice(connectionInfo, timeout)
+	device, err := example.NewDevice(example.Config{
+		PrintReadDebug:   true,
+		PrintWriteDebug:  true,
+		DebugFunc:        fmt.Printf,
+		DeviceConnection: map[string]string{"gateway": *plcAddr},
+	})
 	panicIfError(err, "Could not create test PLC!")
 	defer func() {
 		err := device.Close()
 		if err != nil {
-			fmt.Println("Close was unsuccessful:", err.Error())
+			panic("ERROR: Close was unsuccessful:" + err.Error())
 		}
 	}()
 
