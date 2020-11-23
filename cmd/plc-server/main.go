@@ -38,7 +38,7 @@ func main() {
 		PrintWriteDebug:   true,
 		DebugFunc:         fmt.Printf,
 		DeviceConnection:  map[string]string{"gateway": *plcAddr},
-		UseCache:          true,
+		UseCache:          false,
 		RefresherDuration: *refreshDuration,
 	})
 	panicIfError(err, "Could not create test PLC!")
