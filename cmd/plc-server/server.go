@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -86,7 +87,16 @@ func (h RawTagsHandler) Write(w http.ResponseWriter, req *http.Request) {
 
 	var lastError error
 	for tag, value := range values {
-		err := h.WriteTag(tag, value)
+		valueType := reflect.TypeOf(value)
+
+		desiredType := reflect.TypeOf(h.validTags[tag])
+		if valueType.ConvertibleTo(desiredType) {
+			fetchVal := reflect.ValueOf(value).Convert(desiredType)
+			err = h.WriteTag(tag, fetchVal.Interface())
+		} else {
+			err = fmt.Errorf("Cannot convert between types %T and %v", value, desiredType)
+		}
+
 		if err != nil {
 			lastError = err
 			values[tag] = err
