@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/stellentus/go-plc"
 	"github.com/stellentus/go-plc/example"
 )
 
@@ -19,11 +18,12 @@ func main() {
 	flag.Parse()
 
 	dev, err := example.NewDevice(example.Config{
-		Workers:          *numWorkers,
-		PrintReadDebug:   true,
-		PrintWriteDebug:  true,
-		DebugFunc:        fmt.Printf,
-		DeviceConnection: map[string]string{"gateway": *addr},
+		RefresherDuration: *refreshDuration,
+		Workers:           *numWorkers,
+		PrintReadDebug:    true,
+		PrintWriteDebug:   true,
+		DebugFunc:         fmt.Printf,
+		DeviceConnection:  map[string]string{"gateway": *addr},
 	})
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not create test PLC!")
@@ -35,8 +35,7 @@ func main() {
 		}
 	}()
 
-	fmt.Printf("Creating a refresher to reload every %v\n", *refreshDuration)
-	refresher := plc.NewRefresher(dev, *refreshDuration)
+	refresher := dev.Refresher()
 
 	// Tell the refresher to begin reading
 	val := uint8(0)

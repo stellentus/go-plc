@@ -1,7 +1,9 @@
 package example
 
 import (
+	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/stellentus/go-plc"
 )
@@ -27,11 +29,15 @@ type Config struct {
 
 	// UseCache creates a cache if true.
 	UseCache bool
+
+	// RefresherDuration creates a duration if not zero.
+	RefresherDuration time.Duration
 }
 
 type Device struct {
 	plc.ReadWriteCloser
-	cache plc.Reader
+	cache     plc.Reader
+	refresher plc.Reader
 }
 
 func NewDevice(conf Config) (Device, error) {
@@ -72,11 +78,24 @@ func NewDevice(conf Config) (Device, error) {
 		}
 	}
 
+	if conf.RefresherDuration > 0 {
+		fmt.Printf("Creating a refresher to reload every %v\n", conf.RefresherDuration)
+		dev.refresher = plc.NewRefresher(dev.ReadWriteCloser, conf.RefresherDuration)
+
+		if conf.PrintReadDebug {
+			dev.refresher = newPrintReaderFunc("REFRESH-START", dev.refresher.ReadTag, conf.DebugFunc)
+		}
+	}
+
 	return dev, nil
 }
 
 func (dev Device) Cache() plc.Reader {
 	return dev.cache
+}
+
+func (dev Device) Refresher() plc.Reader {
+	return dev.refresher
 }
 
 func PrintReadDebug(prefix string, rwc plc.ReadWriteCloser, rf DebugFunc) plc.ReadWriteCloser {
