@@ -56,7 +56,8 @@ func main() {
 		plc.Writer
 	}{Reader: device, Writer: device}
 
-	if device.Cache() != nil {
+	if device.Cache() != nil && device.Refresher() != nil {
+		// Can only use cache if there's also a refresher
 		httpRW.Reader = device.Cache()
 	}
 
