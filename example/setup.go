@@ -40,17 +40,17 @@ func NewDevice(conf Config) (plc.ReadWriteCloser, error) {
 		return nil, err
 	}
 
-	if conf.Workers > 0 {
-		conf.DebugFunc("Creating a pool of %d threads\n", conf.Workers)
-		rwc = plc.NewPooled(rwc, conf.Workers).WithCloser(rwc)
-	}
-
 	if conf.PrintReadDebug {
 		rwc = PrintReadDebug(rwc, conf.DebugFunc)
 	}
 
 	if conf.PrintWriteDebug {
 		rwc = PrintWriteDebug(rwc, conf.DebugFunc)
+	}
+
+	if conf.Workers > 0 {
+		conf.DebugFunc("Creating a pool of %d threads\n", conf.Workers)
+		rwc = plc.NewPooled(rwc, conf.Workers).WithCloser(rwc)
 	}
 
 	return rwc, nil
