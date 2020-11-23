@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	plcAddr  = flag.String("plc-address", "192.168.1.176", "Hostname or IP address of the PLC")
-	httpAddr = flag.String("http", ":8784", "Port for http server to listen to")
+	plcAddr    = flag.String("plc-address", "192.168.1.176", "Hostname or IP address of the PLC")
+	httpAddr   = flag.String("http", ":8784", "Port for http server to listen to")
+	numWorkers = flag.Int("workers", 1, "Number of worker threads talking to libplctag")
 )
 
 var knownTags = map[string]interface{}{
@@ -30,6 +31,7 @@ func main() {
 	flag.Parse()
 
 	device, err := example.NewDevice(example.Config{
+		Workers:          *numWorkers,
 		PrintReadDebug:   true,
 		PrintWriteDebug:  true,
 		DebugFunc:        fmt.Printf,
