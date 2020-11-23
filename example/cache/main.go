@@ -14,7 +14,6 @@ var refreshDuration = flag.Duration("refresh", time.Second, "Refresh period")
 var tagName = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the uint8 tag to read repeatedly")
 
 // This command demonstrates setting up to read and write values from a plant.
-// Most of the main function is identical to example/refresher. Only the last few lines are different.
 func main() {
 	flag.Parse()
 
