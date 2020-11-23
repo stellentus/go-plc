@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/stellentus/go-plc"
 	"github.com/stellentus/go-plc/example"
 )
 
@@ -24,6 +23,7 @@ func main() {
 		PrintReadDebug:   true,
 		DebugFunc:        fmt.Printf,
 		DeviceConnection: map[string]string{"gateway": *addr},
+		UseCache:         true,
 	})
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not create test PLC!")
@@ -35,26 +35,25 @@ func main() {
 		}
 	}()
 
-	fmt.Printf("Creating a cache\n")
-	cache := plc.NewCache(dev)
+	cache := dev.Cache()
 
 	// Get the first read
 	val := uint8(0)
 	original := uint8(0)
-	cache.ReadTag(*tagName, &original)
-	cache.ReadCachedTag(*tagName, &val)
+	dev.ReadTag(*tagName, &original)
+	cache.ReadTag(*tagName, &val)
 	fmt.Printf("Cached: %s is %v\n", *tagName, val)
 
 	// Now write a new value, but re-read from the cache
 	fmt.Println("Writing", val+1)
 	dev.WriteTag(*tagName, val+1)
 	time.Sleep(200 * time.Millisecond) // Arbitrary time to make sure the write completed
-	cache.ReadCachedTag(*tagName, &val)
+	cache.ReadTag(*tagName, &val)
 	fmt.Printf("Cached: %s is %v\n", *tagName, val)
 
 	// Now read the value and show the updated cache
+	dev.ReadTag(*tagName, &val)
 	cache.ReadTag(*tagName, &val)
-	cache.ReadCachedTag(*tagName, &val)
 	fmt.Printf("Cached: %s is %v\n", *tagName, val)
 
 	// Now return to the original value.
