@@ -42,19 +42,16 @@ func main() {
 	original := uint8(0)
 	dev.ReadTag(*tagName, &original)
 	cache.ReadTag(*tagName, &val)
-	fmt.Printf("Cached: %s is %v\n", *tagName, val)
 
 	// Now write a new value, but re-read from the cache
 	fmt.Println("Writing", val+1)
 	dev.WriteTag(*tagName, val+1)
 	time.Sleep(200 * time.Millisecond) // Arbitrary time to make sure the write completed
 	cache.ReadTag(*tagName, &val)
-	fmt.Printf("Cached: %s is %v\n", *tagName, val)
 
 	// Now read the value and show the updated cache
 	dev.ReadTag(*tagName, &val)
 	cache.ReadTag(*tagName, &val)
-	fmt.Printf("Cached: %s is %v\n", *tagName, val)
 
 	// Now return to the original value.
 	fmt.Println("Writing back to", original)

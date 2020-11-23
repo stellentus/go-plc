@@ -65,7 +65,11 @@ func NewDevice(conf Config) (Device, error) {
 		conf.DebugFunc("Creating a cache\n")
 		cache := plc.NewCache(dev.ReadWriteCloser)
 		dev.ReadWriteCloser = cache.WithWriteCloser(dev.ReadWriteCloser)
+
 		dev.cache = cache.CacheReader()
+		if conf.PrintReadDebug {
+			dev.cache = newPrintReaderFunc("CACHE-READ", dev.cache.ReadTag, conf.DebugFunc)
+		}
 	}
 
 	return dev, nil
