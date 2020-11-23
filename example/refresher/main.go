@@ -21,6 +21,7 @@ func main() {
 	dev, err := example.NewDevice(example.Config{
 		Workers:          *numWorkers,
 		PrintReadDebug:   true,
+		PrintWriteDebug:  true,
 		DebugFunc:        fmt.Printf,
 		DeviceConnection: map[string]string{"gateway": *addr},
 	})
@@ -45,12 +46,10 @@ func main() {
 	time.Sleep(2 * time.Second)
 
 	// Now write a new value. It will still be read by the refresher.
-	fmt.Println("Writing", val+1)
 	dev.WriteTag(*tagName, val+1)
 	time.Sleep(2 * time.Second)
 
 	// Now return to the original value.
-	fmt.Println("Writing", val)
 	dev.WriteTag(*tagName, val)
 	time.Sleep(2 * time.Second)
 }
