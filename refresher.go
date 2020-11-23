@@ -5,6 +5,7 @@ package plc
 */
 import "C"
 import (
+	"fmt"
 	"reflect"
 	"sync"
 	"time"
@@ -20,6 +21,9 @@ type Refresher struct {
 	period time.Duration
 	seen   map[string]struct{}
 	mutex  sync.Mutex
+
+	// ErrorCallback is called if an error is ever encountered.
+	ErrorCallback func(error)
 }
 
 var _ = Reader(&Refresher{}) // Compiler makes sure this type is a Reader
@@ -51,7 +55,16 @@ func (r *Refresher) launchIfNecessary(name string, value interface{}, f func(v i
 }
 
 func (r *Refresher) ReadTag(name string, value interface{}) error {
-	r.launchIfNecessary(name, value, func(v interface{}) { r.plc.ReadTag(name, v) })
+	r.launchIfNecessary(name, value, func(v interface{}) {
+		err := r.plc.ReadTag(name, v)
+		if err != nil {
+			if r.ErrorCallback != nil {
+				r.ErrorCallback(err)
+			} else {
+				fmt.Println("WARNING: Unhandled plc.Refresher.ReadTag error:", err)
+			}
+		}
+	})
 
 	return r.plc.ReadTag(name, value)
 }
