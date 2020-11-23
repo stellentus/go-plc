@@ -39,6 +39,7 @@ func main() {
 		PrintWriteDebug:   true,
 		DebugFunc:         fmt.Printf,
 		DeviceConnection:  map[string]string{"gateway": *plcAddr},
+		UseCache:          true,
 		RefresherDuration: *refreshDuration,
 	})
 	panicIfError(err, "Could not create test PLC!")
@@ -51,7 +52,11 @@ func main() {
 
 	initializeRefresher(device.Refresher())
 
-	http.Handle("/tags/raw", RawTagsHandler{device, knownTags})
+	httpRW := struct {
+		plc.Reader
+		plc.Writer
+	}{Reader: device.Cache(), Writer: device}
+	http.Handle("/tags/raw", RawTagsHandler{httpRW, knownTags})
 	fmt.Printf("Making PLC '%s' available at '%s'\n", *plcAddr, *httpAddr)
 	err = http.ListenAndServe(*httpAddr, nil)
 	panicIfError(err, "Could not start http server!")
