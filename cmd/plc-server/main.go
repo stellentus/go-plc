@@ -54,7 +54,12 @@ func main() {
 	httpRW := struct {
 		plc.Reader
 		plc.Writer
-	}{Reader: device.Cache(), Writer: device}
+	}{Reader: device, Writer: device}
+
+	if device.Cache() != nil {
+		httpRW.Reader = device.Cache()
+	}
+
 	http.Handle("/tags/raw", RawTagsHandler{httpRW, knownTags})
 	fmt.Printf("Making PLC '%s' available at '%s'\n", *plcAddr, *httpAddr)
 	err = http.ListenAndServe(*httpAddr, nil)
