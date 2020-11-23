@@ -21,6 +21,7 @@ func main() {
 	dev, err := example.NewDevice(example.Config{
 		Workers:          *numWorkers,
 		PrintReadDebug:   true,
+		PrintWriteDebug:  true,
 		DebugFunc:        fmt.Printf,
 		DeviceConnection: map[string]string{"gateway": *addr},
 		UseCache:         true,
@@ -44,7 +45,6 @@ func main() {
 	cache.ReadTag(*tagName, &val)
 
 	// Now write a new value, but re-read from the cache
-	fmt.Println("Writing", val+1)
 	dev.WriteTag(*tagName, val+1)
 	time.Sleep(200 * time.Millisecond) // Arbitrary time to make sure the write completed
 	cache.ReadTag(*tagName, &val)
@@ -54,6 +54,5 @@ func main() {
 	cache.ReadTag(*tagName, &val)
 
 	// Now return to the original value.
-	fmt.Println("Writing back to", original)
 	dev.WriteTag(*tagName, original)
 }
