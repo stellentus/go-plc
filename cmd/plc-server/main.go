@@ -35,7 +35,6 @@ func main() {
 
 	device, err := example.NewDevice(example.Config{
 		Workers:           *numWorkers,
-		PrintReadDebug:    true,
 		PrintWriteDebug:   true,
 		DebugFunc:         fmt.Printf,
 		DeviceConnection:  map[string]string{"gateway": *plcAddr},
