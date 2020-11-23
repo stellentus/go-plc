@@ -49,7 +49,7 @@ func NewDevice(conf Config) (Device, error) {
 	}
 
 	if conf.PrintReadDebug {
-		dev.ReadWriteCloser = PrintReadDebug(dev.ReadWriteCloser, conf.DebugFunc)
+		dev.ReadWriteCloser = PrintReadDebug("READ", dev.ReadWriteCloser, conf.DebugFunc)
 	}
 
 	if conf.PrintWriteDebug {
@@ -75,17 +75,20 @@ func (dev Device) Cache() plc.Reader {
 	return dev.cache
 }
 
-func PrintReadDebug(rwc plc.ReadWriteCloser, rf DebugFunc) plc.ReadWriteCloser {
-	read := rwc.ReadTag
+func PrintReadDebug(prefix string, rwc plc.ReadWriteCloser, rf DebugFunc) plc.ReadWriteCloser {
+	return newPrintReaderFunc(prefix, rwc.ReadTag, rf).WithWriteCloser(rwc)
+}
+
+func newPrintReaderFunc(prefix string, rd func(string, interface{}) error, rf DebugFunc) plc.ReaderFunc {
 	return plc.ReaderFunc(func(name string, value interface{}) error {
-		err := read(name, value)
+		err := rd(name, value)
 		if err != nil {
-			rf("Read FAILURE for %s (%v)\n", name, err)
+			rf("%s FAILURE for %s (%v)\n", prefix, name, err)
 		} else {
-			rf("Read: %s is %v\n", name, reflect.ValueOf(value).Elem())
+			rf("%s: %s is %v\n", prefix, name, reflect.ValueOf(value).Elem())
 		}
 		return err
-	}).WithWriteCloser(rwc)
+	})
 }
 
 func PrintWriteDebug(rwc plc.ReadWriteCloser, rf DebugFunc) plc.ReadWriteCloser {
