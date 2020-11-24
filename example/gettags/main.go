@@ -9,7 +9,6 @@ import (
 
 var (
 	addr     = flag.String("address", "192.168.1.176", "Hostname or IP address of the PLC")
-	path     = flag.String("path", "1,0", "Path to the PLC at the provided host or IP")
 	plcDebug = flag.Int("plctagdebug", 0, "Debug level for libplctag's debug (0-5)")
 )
 
@@ -18,11 +17,7 @@ func main() {
 
 	plc.SetLibplctagDebug(plc.LibplctagDebugLevel(*plcDebug))
 
-	conf := map[string]string{
-		"gateway": *addr,
-		"path":    *path,
-	}
-	device, err := plc.NewDevice(conf)
+	device, err := plc.NewDevice(*addr)
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not create test PLC!")
 	}

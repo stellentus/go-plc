@@ -44,7 +44,7 @@ func main() {
 
 	fmt.Printf("Initializing connection to %s\n", *plcAddr)
 
-	device, err := plc.NewDevice(map[string]string{"gateway": *plcAddr})
+	device, err := plc.NewDevice(*plcAddr)
 	panicIfError(err, "Could not create test PLC!")
 	defer func() {
 		err := device.Close()
