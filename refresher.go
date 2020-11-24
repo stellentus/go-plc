@@ -55,16 +55,3 @@ func (r *Refresher) ReadTag(name string, value interface{}) error {
 
 	return r.plc.ReadTag(name, value)
 }
-
-// WithWriteCloser creates a ReadWriteCloser from Refresher and the provided WriteCloser.
-func (r *Refresher) WithWriteCloser(wc WriteCloser) ReadWriteCloser {
-	return struct {
-		Reader
-		Writer
-		Closer
-	}{
-		Reader: r,
-		Writer: wc,
-		Closer: wc,
-	}
-}

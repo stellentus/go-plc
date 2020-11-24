@@ -53,9 +53,17 @@ func (r *Cache) ReadCachedTag(name string, value interface{}) error {
 	return nil
 }
 
+type CacheReader struct {
+	cache *Cache
+}
+
 // CacheReader returns a Reader which calls ReadCachedTag.
-func (r *Cache) CacheReader() Reader {
-	return ReaderFunc(r.ReadCachedTag)
+func (r *Cache) CacheReader() CacheReader {
+	return CacheReader{cache: r}
+}
+
+func (r CacheReader) ReadTag(name string, value interface{}) error {
+	return r.cache.ReadCachedTag(name, value)
 }
 
 type TagNotFoundError struct {
@@ -64,17 +72,4 @@ type TagNotFoundError struct {
 
 func (err TagNotFoundError) Error() string {
 	return "Tag '" + err.Name + "' could not be found"
-}
-
-// WithWriteCloser creates a ReadWriteCloser from Cache and the provided WriteCloser.
-func (r *Cache) WithWriteCloser(wc WriteCloser) ReadWriteCloser {
-	return struct {
-		Reader
-		Writer
-		Closer
-	}{
-		Reader: r,
-		Writer: wc,
-		Closer: wc,
-	}
 }
