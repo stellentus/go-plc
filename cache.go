@@ -3,11 +3,13 @@ package plc
 import (
 	"errors"
 	"reflect"
+	"sync"
 )
 
 type Cache struct {
 	reader Reader
 	cache  map[string]interface{}
+	mutex  sync.RWMutex
 }
 
 var _ = Reader(&Cache{}) // Compiler makes sure this type is a Reader
@@ -28,14 +30,19 @@ func (r *Cache) ReadTag(name string, value interface{}) error {
 		return err
 	}
 
+	r.mutex.Lock()
 	r.cache[name] = reflect.Indirect(reflect.ValueOf(value)).Interface()
+	r.mutex.Unlock()
+
 	return nil
 }
 
 // ReadCachedTag acts the same as ReadTag, but returns the cached value.
 // A read of a value not in the cache will return TagNotFoundError.
 func (r *Cache) ReadCachedTag(name string, value interface{}) error {
+	r.mutex.RLock()
 	cVal, ok := r.cache[name]
+	r.mutex.RUnlock()
 	if !ok {
 		return TagNotFoundError{name}
 	}
