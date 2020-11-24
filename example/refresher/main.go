@@ -9,10 +9,12 @@ import (
 	"github.com/stellentus/go-plc/example"
 )
 
-var addr = flag.String("address", "192.168.1.176", "Hostname or IP address of the PLC")
-var numWorkers = flag.Int("workers", 1, "Number of worker threads talking to libplctag")
-var refreshDuration = flag.Duration("refresh", time.Second, "Refresh period")
-var tagName = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the uint8 tag to read repeatedly")
+var (
+	addr            = flag.String("address", "192.168.1.176", "Hostname or IP address of the PLC")
+	numWorkers      = flag.Int("workers", 1, "Number of worker threads talking to libplctag")
+	refreshDuration = flag.Duration("refresh", time.Second, "Refresh period")
+	tagName         = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the uint8 tag to read repeatedly")
+)
 
 // This command demonstrates setting up to read and write values from a plant.
 func main() {
