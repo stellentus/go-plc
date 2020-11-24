@@ -15,6 +15,7 @@ var (
 	httpAddr        = flag.String("http", ":8784", "Port for http server to listen to")
 	numWorkers      = flag.Int("workers", 1, "Number of worker threads talking to libplctag")
 	refreshDuration = flag.Duration("refresh", time.Second, "Refresh period")
+	useCache        = flag.Bool("usecache", false, "Cache values")
 )
 
 var knownTags = map[string]interface{}{
@@ -33,32 +34,59 @@ var knownTags = map[string]interface{}{
 func main() {
 	flag.Parse()
 
-	device, err := example.NewDevice(example.Config{
-		Workers:           *numWorkers,
-		PrintIODebug:      true,
-		DebugFunc:         fmt.Printf,
-		DeviceConnection:  map[string]string{"gateway": *plcAddr},
-		UseCache:          false,
-		RefresherDuration: *refreshDuration,
-	})
+	fmt.Printf("Initializing connection to %s\n", *plcAddr)
+
+	device, err := plc.NewDevice(map[string]string{"gateway": *plcAddr})
 	panicIfError(err, "Could not create test PLC!")
 	defer func() {
 		err := device.Close()
-		if err != nil {
-			panic("ERROR: Close was unsuccessful:" + err.Error())
-		}
+		panicIfError(err, "Close was unsuccessful")
 	}()
 
-	initializeRefresher(device.Refresher())
+	// Wrap with debug
+	rw := plc.ReadWriter(example.DebugPrinter{
+		ReadPrefix: "READ",
+		Reader:     device,
+		Writer:     device,
+		DebugFunc:  fmt.Printf,
+	})
 
+	if *numWorkers > 0 {
+		fmt.Printf("Creating a pool of %d threads\n", *numWorkers)
+		rw = plc.NewPooled(rw, *numWorkers)
+	}
+
+	// Now split into Reader and Writer chains.
 	httpRW := struct {
 		plc.Reader
 		plc.Writer
-	}{Reader: device, Writer: device}
+	}{Reader: rw, Writer: rw}
 
-	if device.Cache() != nil && device.Refresher() != nil {
-		// Can only use cache if there's also a refresher
-		httpRW.Reader = device.Cache()
+	var cache plc.Cache
+	if *useCache {
+		fmt.Printf("Creating a cache\n")
+		cache := plc.NewCache(httpRW.Reader)
+		httpRW.Reader = cache
+	}
+
+	var refresher plc.Reader
+	if *refreshDuration > 0 {
+		fmt.Printf("Creating a refresher to reload every %v\n", *refreshDuration)
+		refresher = example.DebugPrinter{
+			ReadPrefix: "REFRESH-START",
+			Reader:     plc.NewRefresher(httpRW.Reader, *refreshDuration),
+			DebugFunc:  fmt.Printf,
+		}
+		initializeRefresher(refresher)
+	}
+
+	// Can only use cache if there's also a refresher
+	if *useCache && *refreshDuration > 0 {
+		httpRW.Reader = example.DebugPrinter{
+			ReadPrefix: "CACHE-READ",
+			Reader:     cache.CacheReader(),
+			DebugFunc:  fmt.Printf,
+		}
 	}
 
 	http.Handle("/tags/raw", RawTagsHandler{httpRW, knownTags})
