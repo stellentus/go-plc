@@ -70,10 +70,10 @@ func main() {
 		plc.Writer
 	}{Reader: rw, Writer: rw}
 
-	var cache plc.Cache
+	var cache *plc.Cache
 	if *useCache {
 		fmt.Printf("Creating a cache\n")
-		cache := plc.NewCache(httpRW.Reader)
+		cache = plc.NewCache(httpRW.Reader)
 		httpRW.Reader = cache
 	}
 
