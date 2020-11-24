@@ -7,8 +7,10 @@ import (
 	"github.com/stellentus/go-plc"
 )
 
-var addr = flag.String("address", "192.168.1.176", "Hostname or IP address of the PLC")
-var path = flag.String("path", "1,0", "Path to the PLC at the provided host or IP")
+var (
+	addr = flag.String("address", "192.168.1.176", "Hostname or IP address of the PLC")
+	path = flag.String("path", "1,0", "Path to the PLC at the provided host or IP")
+)
 
 func main() {
 	flag.Parse()
