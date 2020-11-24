@@ -15,11 +15,8 @@ type Config struct {
 	// Workers creates a pool of workers if greater than 0.
 	Workers int
 
-	// PrintReadDebug creates a wrapper to print the value being read.
-	PrintReadDebug bool
-
-	// PrintWriteDebug creates a wrapper to print the value being written.
-	PrintWriteDebug bool
+	// PrintIODebug creates a wrapper to print the values being read and written.
+	PrintIODebug bool
 
 	// DebugFunc prints debug.
 	// If nil, nothing is printed.
@@ -55,29 +52,24 @@ func NewDevice(conf Config) (Device, error) {
 	}
 
 	dev := Device{
-		Reader: device,
-		Writer: device,
 		Closer: device,
 	}
 
-	if conf.PrintReadDebug {
-		dev.Reader = newPrintReaderFunc("READ", dev.Reader.ReadTag, conf.DebugFunc)
-	}
+	// Now add wrappers that apply to the entire ReadWriter.
+	rw := plc.ReadWriter(device)
 
-	if conf.PrintWriteDebug {
-		dev.Writer = newPrintWriterFunc(dev.Writer.WriteTag, conf.DebugFunc)
+	if conf.PrintIODebug {
+		rw = newDebugReadWriter("READ", rw.ReadTag, rw.WriteTag, conf.DebugFunc)
 	}
 
 	if conf.Workers > 0 {
 		conf.DebugFunc("Creating a pool of %d threads\n", conf.Workers)
-		rw := struct {
-			plc.Reader
-			plc.Writer
-		}{dev.Reader, dev.Writer}
-		pooled := plc.NewPooled(rw, conf.Workers)
-		dev.Reader = pooled
-		dev.Writer = pooled
+		rw = plc.NewPooled(rw, conf.Workers)
 	}
+
+	// Now split into Reader and Writer chains.
+	dev.Reader = rw
+	dev.Writer = rw
 
 	if conf.UseCache {
 		conf.DebugFunc("Creating a cache\n")
@@ -85,7 +77,7 @@ func NewDevice(conf Config) (Device, error) {
 		dev.Reader = cache
 
 		dev.cache = cache.CacheReader()
-		if conf.PrintReadDebug {
+		if conf.PrintIODebug {
 			dev.cache = newPrintReaderFunc("CACHE-READ", dev.cache.ReadTag, conf.DebugFunc)
 		}
 	}
@@ -96,7 +88,7 @@ func NewDevice(conf Config) (Device, error) {
 		dev.Reader = refresher
 		dev.refresher = refresher
 
-		if conf.PrintReadDebug {
+		if conf.PrintIODebug {
 			dev.refresher = newPrintReaderFunc("REFRESH-START", dev.refresher.ReadTag, conf.DebugFunc)
 		}
 	}
@@ -150,6 +142,16 @@ func newPrintWriterFunc(wr WriterFunc, rf DebugFunc) WriterFunc {
 		}
 		return err
 	})
+}
+
+func newDebugReadWriter(prefix string, rd ReaderFunc, wr WriterFunc, rf DebugFunc) plc.ReadWriter {
+	return struct {
+		plc.Reader
+		plc.Writer
+	}{
+		newPrintReaderFunc(prefix, rd, rf),
+		newPrintWriterFunc(wr, rf),
+	}
 }
 
 func doNothing(string, ...interface{}) (int, error) { return 0, nil }

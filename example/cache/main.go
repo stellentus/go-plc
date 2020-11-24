@@ -19,8 +19,7 @@ func main() {
 
 	dev, err := example.NewDevice(example.Config{
 		Workers:          *numWorkers,
-		PrintReadDebug:   true,
-		PrintWriteDebug:  true,
+		PrintIODebug:     true,
 		DebugFunc:        fmt.Printf,
 		DeviceConnection: map[string]string{"gateway": *addr},
 		UseCache:         true,

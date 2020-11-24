@@ -20,8 +20,7 @@ func main() {
 	dev, err := example.NewDevice(example.Config{
 		RefresherDuration: *refreshDuration,
 		Workers:           *numWorkers,
-		PrintReadDebug:    true,
-		PrintWriteDebug:   true,
+		PrintIODebug:      true,
 		DebugFunc:         fmt.Printf,
 		DeviceConnection:  map[string]string{"gateway": *addr},
 	})
