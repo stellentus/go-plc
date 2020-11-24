@@ -34,6 +34,11 @@ var knownTags = map[string]interface{}{
 func main() {
 	flag.Parse()
 
+	if *useCache && *refreshDuration <= 0 {
+		fmt.Println("Cannot use cache without a refresher")
+		return
+	}
+
 	fmt.Printf("Initializing connection to %s\n", *plcAddr)
 
 	device, err := plc.NewDevice(map[string]string{"gateway": *plcAddr})
