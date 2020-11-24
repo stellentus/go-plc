@@ -13,11 +13,14 @@ var (
 	addr       = flag.String("address", "192.168.1.176", "Hostname or IP address of the PLC")
 	numWorkers = flag.Int("workers", 1, "Number of worker threads talking to libplctag")
 	tagName    = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the uint8 tag to read repeatedly")
+	plcDebug   = flag.Int("plctagdebug", 0, "Debug level for libplctag's debug (0-5)")
 )
 
 // This command demonstrates setting up to read and write values from a plant.
 func main() {
 	flag.Parse()
+
+	plc.SetLibplctagDebug(plc.LibplctagDebugLevel(*plcDebug))
 
 	fmt.Printf("Initializing connection to %s\n", *addr)
 

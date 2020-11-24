@@ -16,6 +16,7 @@ var (
 	numWorkers      = flag.Int("workers", 1, "Number of worker threads talking to libplctag")
 	refreshDuration = flag.Duration("refresh", time.Second, "Refresh period")
 	useCache        = flag.Bool("usecache", false, "Cache values")
+	plcDebug        = flag.Int("plctagdebug", 0, "Debug level for libplctag's debug (0-5)")
 )
 
 var knownTags = map[string]interface{}{
@@ -38,6 +39,8 @@ func main() {
 		fmt.Println("Cannot use cache without a refresher")
 		return
 	}
+
+	plc.SetLibplctagDebug(plc.LibplctagDebugLevel(*plcDebug))
 
 	fmt.Printf("Initializing connection to %s\n", *plcAddr)
 

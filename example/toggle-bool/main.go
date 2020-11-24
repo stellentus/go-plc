@@ -8,14 +8,17 @@ import (
 )
 
 var (
-	addr    = flag.String("address", "192.168.1.176", "Hostname or IP address of the PLC")
-	path    = flag.String("path", "1,0", "Path to the PLC at the provided host or IP")
-	tagName = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the boolean tag to toggle")
-	index   = flag.Int("index", -1, "Array index to access, or -1 if not an array")
+	addr     = flag.String("address", "192.168.1.176", "Hostname or IP address of the PLC")
+	path     = flag.String("path", "1,0", "Path to the PLC at the provided host or IP")
+	tagName  = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the boolean tag to toggle")
+	index    = flag.Int("index", -1, "Array index to access, or -1 if not an array")
+	plcDebug = flag.Int("plctagdebug", 0, "Debug level for libplctag's debug (0-5)")
 )
 
 func main() {
 	flag.Parse()
+
+	plc.SetLibplctagDebug(plc.LibplctagDebugLevel(*plcDebug))
 
 	conf := map[string]string{
 		"gateway": *addr,
