@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/stellentus/go-plc"
 	"github.com/stellentus/go-plc/example"
 )
 
@@ -17,24 +18,38 @@ var tagName = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the uint8 
 func main() {
 	flag.Parse()
 
-	dev, err := example.NewDevice(example.Config{
-		RefresherDuration: *refreshDuration,
-		Workers:           *numWorkers,
-		PrintIODebug:      true,
-		DebugFunc:         fmt.Printf,
-		DeviceConnection:  map[string]string{"gateway": *addr},
-	})
-	if err != nil {
-		panic("ERROR " + err.Error() + ": Could not create test PLC!")
+	if *refreshDuration <= 0 {
+		panic("Cannot test refresher with no duration")
 	}
+
+	fmt.Printf("Initializing connection to %s\n", *addr)
+
+	device, err := plc.NewDevice(map[string]string{"gateway": *addr})
+	panicIfError(err, "Could not create test PLC!")
 	defer func() {
-		err := dev.Close()
-		if err != nil {
-			panic("ERROR: Close was unsuccessful:" + err.Error())
-		}
+		err := device.Close()
+		panicIfError(err, "Close was unsuccessful")
 	}()
 
-	refresher := dev.Refresher()
+	// Wrap with debug
+	rw := plc.ReadWriter(example.DebugPrinter{
+		ReadPrefix: "READ",
+		Reader:     device,
+		Writer:     device,
+		DebugFunc:  fmt.Printf,
+	})
+
+	if *numWorkers > 0 {
+		fmt.Printf("Creating a pool of %d threads\n", *numWorkers)
+		rw = plc.NewPooled(rw, *numWorkers)
+	}
+
+	fmt.Printf("Creating a refresher to reload every %v\n", *refreshDuration)
+	refresher := example.DebugPrinter{ // Wrap the referesher in debug
+		ReadPrefix: "REFRESH-START",
+		Reader:     plc.NewRefresher(rw, *refreshDuration),
+		DebugFunc:  fmt.Printf,
+	}
 
 	// Tell the refresher to begin reading
 	val := uint8(0)
@@ -44,10 +59,16 @@ func main() {
 	time.Sleep(2 * time.Second)
 
 	// Now write a new value. It will still be read by the refresher.
-	dev.WriteTag(*tagName, val+1)
+	rw.WriteTag(*tagName, val+1)
 	time.Sleep(2 * time.Second)
 
 	// Now return to the original value.
-	dev.WriteTag(*tagName, val)
+	rw.WriteTag(*tagName, val)
 	time.Sleep(2 * time.Second)
+}
+
+func panicIfError(err error, reason string) {
+	if err != nil {
+		panic("ERROR " + err.Error() + ": " + reason)
+	}
 }
