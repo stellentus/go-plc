@@ -4,32 +4,35 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewDevice(t *testing.T) {
-	_, err := NewDevice(map[string]string{"gateway": "test"})
+	_, err := NewDevice("test")
 	assert.NoError(t, err)
 }
 
-func TestNewDeviceRequiresConfig(t *testing.T) {
-	_, err := NewDevice(nil)
-	assert.Error(t, err)
-}
-
 func TestNewDeviceRequiresGateway(t *testing.T) {
-	_, err := NewDevice(map[string]string{})
+	_, err := NewDevice("")
 	assert.Error(t, err)
 }
 
 func TestNewDeviceParsesTimeout(t *testing.T) {
-	_, err := NewDevice(map[string]string{"gateway": "test", "timeout": "250ms"})
+	dev, err := NewDevice("test", Timeout(time.Millisecond))
 	assert.NoError(t, err)
+	assert.Equal(t, time.Millisecond, dev.timeout)
 }
 
-func TestNewDeviceInvalidTimeout(t *testing.T) {
-	_, err := NewDevice(map[string]string{"gateway": "test", "timeout": "fifty milliseconds"})
+func TestNewDeviceParsesTimeoutFromString(t *testing.T) {
+	dev, err := NewDevice("test", TimeoutFromString("250ms"))
+	assert.NoError(t, err)
+	assert.Equal(t, 250*time.Millisecond, dev.timeout)
+}
+
+func TestNewDeviceInvalidTimeoutString(t *testing.T) {
+	_, err := NewDevice("test", TimeoutFromString("fifty milliseconds"))
 	assert.Error(t, err)
 }
 
