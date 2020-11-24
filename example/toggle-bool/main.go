@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"time"
 
 	"github.com/stellentus/go-plc"
 )
@@ -16,12 +15,14 @@ var index = flag.Int("index", -1, "Array index to access, or -1 if not an array"
 func main() {
 	flag.Parse()
 
-	connectionInfo := fmt.Sprintf("protocol=ab_eip&gateway=%s&path=%s&cpu=controllogix", *addr, *path)
-	timeout := 5 * time.Second
+	conf := map[string]string{
+		"gateway": *addr,
+		"path":    *path,
+	}
 
-	fmt.Println("Attempting test connection to", connectionInfo, "using", *tagName)
+	fmt.Println("Attempting test connection to", conf["gateway"], "using", *tagName)
 
-	device, err := plc.NewDevice(connectionInfo, timeout)
+	device, err := plc.NewDevice(conf)
 	if err != nil {
 		panic("ERROR " + err.Error() + ": Could not create test PLC!")
 	}
