@@ -59,7 +59,12 @@ func NewDevice(conf Config) (Device, error) {
 	rw := plc.ReadWriter(device)
 
 	if conf.PrintIODebug {
-		rw = newDebugReadWriter("READ", rw.ReadTag, rw.WriteTag, conf.DebugFunc)
+		rw = DebugPrinter{
+			ReadPrefix: "READ",
+			Reader:     rw,
+			Writer:     rw,
+			DebugFunc:  conf.DebugFunc,
+		}
 	}
 
 	if conf.Workers > 0 {
@@ -78,7 +83,11 @@ func NewDevice(conf Config) (Device, error) {
 
 		dev.cache = cache.CacheReader()
 		if conf.PrintIODebug {
-			dev.cache = newPrintReaderFunc("CACHE-READ", dev.cache.ReadTag, conf.DebugFunc)
+			dev.cache = DebugPrinter{
+				ReadPrefix: "CACHE-READ",
+				Reader:     dev.cache,
+				DebugFunc:  conf.DebugFunc,
+			}
 		}
 	}
 
@@ -89,7 +98,11 @@ func NewDevice(conf Config) (Device, error) {
 		dev.refresher = refresher
 
 		if conf.PrintIODebug {
-			dev.refresher = newPrintReaderFunc("REFRESH-START", dev.refresher.ReadTag, conf.DebugFunc)
+			dev.refresher = DebugPrinter{
+				ReadPrefix: "REFRESH-START",
+				Reader:     dev.refresher,
+				DebugFunc:  conf.DebugFunc,
+			}
 		}
 	}
 
@@ -104,54 +117,31 @@ func (dev Device) Refresher() plc.Reader {
 	return dev.refresher
 }
 
-// ReaderFunc is a function that can be used as a Reader.
-// It's the same pattern as http.HandlerFunc.
-type ReaderFunc func(name string, value interface{}) error
-
-func (f ReaderFunc) ReadTag(name string, value interface{}) error {
-	return f(name, value)
+type DebugPrinter struct {
+	ReadPrefix string
+	plc.Reader
+	plc.Writer
+	DebugFunc
 }
 
-// WriterFunc is a function that can be used as a Writer.
-// It's the same pattern as http.HandlerFunc.
-type WriterFunc func(name string, value interface{}) error
-
-func (f WriterFunc) WriteTag(name string, value interface{}) error {
-	return f(name, value)
-}
-
-func newPrintReaderFunc(prefix string, rd ReaderFunc, rf DebugFunc) ReaderFunc {
-	return ReaderFunc(func(name string, value interface{}) error {
-		err := rd(name, value)
-		if err != nil {
-			rf("%s FAILURE for %s (%v)\n", prefix, name, err)
-		} else {
-			rf("%s: %s is %v\n", prefix, name, reflect.ValueOf(value).Elem())
-		}
-		return err
-	})
-}
-
-func newPrintWriterFunc(wr WriterFunc, rf DebugFunc) WriterFunc {
-	return WriterFunc(func(name string, value interface{}) error {
-		err := wr(name, value)
-		if err != nil {
-			rf("Write FAILURE setting %s to %v (%v)\n", name, reflect.ValueOf(value), err)
-		} else {
-			rf("Write: %s is %v\n", name, reflect.ValueOf(value))
-		}
-		return err
-	})
-}
-
-func newDebugReadWriter(prefix string, rd ReaderFunc, wr WriterFunc, rf DebugFunc) plc.ReadWriter {
-	return struct {
-		plc.Reader
-		plc.Writer
-	}{
-		newPrintReaderFunc(prefix, rd, rf),
-		newPrintWriterFunc(wr, rf),
+func (dp DebugPrinter) ReadTag(name string, value interface{}) error {
+	err := dp.Reader.ReadTag(name, value)
+	if err != nil {
+		dp.DebugFunc("%s FAILURE for %s (%v)\n", dp.ReadPrefix, name, err)
+	} else {
+		dp.DebugFunc("%s: %s is %v\n", dp.ReadPrefix, name, reflect.ValueOf(value).Elem())
 	}
+	return err
+}
+
+func (dp DebugPrinter) WriteTag(name string, value interface{}) error {
+	err := dp.Writer.WriteTag(name, value)
+	if err != nil {
+		dp.DebugFunc("Write FAILURE setting %s to %v (%v)\n", name, reflect.ValueOf(value), err)
+	} else {
+		dp.DebugFunc("Write: %s is %v\n", name, reflect.ValueOf(value))
+	}
+	return err
 }
 
 func doNothing(string, ...interface{}) (int, error) { return 0, nil }
