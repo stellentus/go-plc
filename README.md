@@ -1,6 +1,6 @@
 # go-plc
 
-A wrapper for PLC communication in golang.
+A wrapper for PLC communication in golang. Examples are provided in the [example](https://github.com/stellentus/go-plc/tree/master/example) directory. They expect to be run against the stub version of `libplctag`.
 
 ## Instructions
 
