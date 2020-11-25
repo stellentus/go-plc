@@ -3,7 +3,7 @@
 package plc
 
 /*
-#cgo LDFLAGS: ${SRCDIR}/libplctag_stub.a
+#cgo LDFLAGS: -lplcstub
 #include "./libplctag.h"
 */
 import "C"
