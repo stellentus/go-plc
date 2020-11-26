@@ -10,7 +10,7 @@ import (
 var (
 	addr     = flag.String("address", "192.168.1.176", "Hostname or IP address of the PLC")
 	path     = flag.String("path", "1,0", "Path to the PLC at the provided host or IP")
-	tagName  = flag.String("tagName", "DUMMY_AQUA_DATA_0[0]", "Name of the boolean tag to toggle")
+	tagName  = flag.String("tagName", "DUMMY_BOOL_TAG", "Name of the boolean tag to toggle")
 	plcDebug = flag.Int("plctagdebug", 0, "Debug level for libplctag's debug (0-5)")
 )
 
