@@ -3,6 +3,9 @@ package plc
 import (
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var parserTests = []struct {
@@ -69,4 +72,35 @@ func TestParser(t *testing.T) {
 			}
 		}
 	}
+}
+
+var testTagType = TagType(0x7738)
+var testTagTypeName = "testTagType"
+
+func TestTagTypeString(t *testing.T) {
+	assert.Equal(t, "7738", testTagType.String())
+}
+
+func TestTagTypeHasNoName(t *testing.T) {
+	assert.False(t, testTagType.HasName(), "unregistered type has no name")
+}
+
+func TestRegisterTagType(t *testing.T) {
+	err := RegisterTagTypeName(testTagType, testTagTypeName)
+	require.NoError(t, err)
+	assert.Equal(t, testTagTypeName, testTagType.String(), "Name should be updated if registered")
+}
+
+func TestRegisterDuplicateTagType(t *testing.T) {
+	err := RegisterTagTypeName(testTagType, testTagTypeName)
+	require.NoError(t, err)
+	err = RegisterTagTypeName(testTagType, testTagTypeName)
+	assert.NoError(t, err)
+}
+
+func TestRegisterTwoStringsOneTag(t *testing.T) {
+	err := RegisterTagTypeName(testTagType, testTagTypeName)
+	require.NoError(t, err)
+	err = RegisterTagTypeName(testTagType, testTagTypeName+"DifferentString")
+	assert.Error(t, err)
 }

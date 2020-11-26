@@ -232,5 +232,34 @@ func ParseQualifiedTagName(qtn string) ([]string, error) {
 type TagType uint16
 
 func (tt TagType) String() string {
+	if name, ok := tagTypeNames[tt]; ok {
+		return name
+	}
 	return fmt.Sprintf("%04X", uint16(tt))
+}
+
+func (tt TagType) HasName() bool {
+	_, ok := tagTypeNames[tt]
+	return ok
+}
+
+var tagTypeNames = map[TagType]string{}
+
+// RegisterTagTypeName registers the provided string as the name of the provided TagType.
+// It returns an error if the TagType has already been registered with a different string,
+// but it does not check if the string is unique.
+func RegisterTagTypeName(tt TagType, name string) error {
+	if name == "" {
+		return fmt.Errorf("Cannot register empty string for TagType{%04X}", tt)
+	}
+
+	prevName, ok := tagTypeNames[tt]
+	if ok { // tt is already registered
+		if prevName == name {
+			return nil // same string; do nothing
+		}
+		return fmt.Errorf("Cannot register string '%s' for TagType{%04X} with '%s' already registered", name, tt, prevName)
+	}
+	tagTypeNames[tt] = name
+	return nil
 }
