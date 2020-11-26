@@ -17,6 +17,8 @@ func main() {
 
 	plc.SetLibplctagDebug(plc.LibplctagDebugLevel(*plcDebug))
 
+	panicIfError(registerTagTypes(), "Couldn't register tag types")
+
 	device, err := plc.NewDevice(*addr)
 	panicIfError(err, "Could not create test PLC!")
 	defer func() {
@@ -35,6 +37,11 @@ func main() {
 	panicIfError(err, "Could not get PLC programs!")
 
 	fmt.Println("Programs:", programs)
+}
+
+func registerTagTypes() error {
+	// Add the dummy tag type
+	return plc.RegisterTagTypeName(0x2000, "dummy_tag_type")
 }
 
 func panicIfError(err error, reason string) {
