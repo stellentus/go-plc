@@ -74,6 +74,10 @@ func TestParser(t *testing.T) {
 	}
 }
 
+func resetRegistration() {
+	tagTypeNames = map[TagType]string{}
+}
+
 var testTagType = TagType(0x7738)
 var testTagTypeName = "testTagType"
 
@@ -86,12 +90,14 @@ func TestTagTypeHasNoName(t *testing.T) {
 }
 
 func TestRegisterTagType(t *testing.T) {
+	resetRegistration()
 	err := RegisterTagTypeName(testTagType, testTagTypeName)
 	require.NoError(t, err)
 	assert.Equal(t, testTagTypeName, testTagType.String(), "Name should be updated if registered")
 }
 
 func TestRegisterDuplicateTagType(t *testing.T) {
+	resetRegistration()
 	err := RegisterTagTypeName(testTagType, testTagTypeName)
 	require.NoError(t, err)
 	err = RegisterTagTypeName(testTagType, testTagTypeName)
@@ -99,6 +105,7 @@ func TestRegisterDuplicateTagType(t *testing.T) {
 }
 
 func TestRegisterTwoStringsOneTag(t *testing.T) {
+	resetRegistration()
 	err := RegisterTagTypeName(testTagType, testTagTypeName)
 	require.NoError(t, err)
 	err = RegisterTagTypeName(testTagType, testTagTypeName+"DifferentString")
