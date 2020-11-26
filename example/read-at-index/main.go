@@ -26,9 +26,7 @@ func main() {
 	fmt.Printf("Initializing connection to %s using %s\n", *addr, *tagName)
 
 	device, err := plc.NewDevice(*addr)
-	if err != nil {
-		panic("ERROR " + err.Error() + ": Could not create test PLC!")
-	}
+	panicIfError(err, "Could not create test PLC!")
 	defer func() {
 		err := device.Close()
 		if err != nil {
@@ -38,8 +36,12 @@ func main() {
 
 	var tagValue uint32
 	err = device.ReadTag(plc.TagWithIndex(*tagName, *index), &tagValue)
-	if err != nil {
-		panic("ERROR: Unable to read the data because " + err.Error())
-	}
+	panicIfError(err, "Unable to read the data")
 	fmt.Printf("%s[%d] is %v\n", *tagName, *index, tagValue)
+}
+
+func panicIfError(err error, reason string) {
+	if err != nil {
+		panic("ERROR " + err.Error() + ": " + reason)
+	}
 }

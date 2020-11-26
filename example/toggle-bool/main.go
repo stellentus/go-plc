@@ -21,9 +21,7 @@ func main() {
 	fmt.Println("Attempting test connection to", *addr, "using", *tagName)
 
 	device, err := plc.NewDevice(*addr)
-	if err != nil {
-		panic("ERROR " + err.Error() + ": Could not create test PLC!")
-	}
+	panicIfError(err, "Could not create test PLC!")
 	defer func() {
 		err := device.Close()
 		if err != nil {
@@ -34,29 +32,29 @@ func main() {
 	// Read. If non-zero, value is true. Otherwise, it's false.
 	var isOn bool
 	err = device.ReadTag(*tagName, &isOn)
-	if err != nil {
-		panic("ERROR: Unable to read the data because " + err.Error())
-	}
+	panicIfError(err, "Unable to read the data")
 	fmt.Printf("%s is %v\n", *tagName, isOn)
 
 	// Toggle the bool state
 	isOn = !isOn
 	err = device.WriteTag(*tagName, isOn)
-	if err != nil {
-		panic("ERROR: Unable to write the data because " + err.Error())
-	}
+	panicIfError(err, "Unable to write the data")
 
 	// Confirm that it was toggled as expected
 	var newIsOn bool
 	err = device.ReadTag(*tagName, &newIsOn)
-	if err != nil {
-		panic("ERROR: Unable to read the data because " + err.Error())
-	}
+	panicIfError(err, "Unable to read the data")
 	fmt.Printf("%s is %v\n", *tagName, newIsOn)
 
 	if isOn == newIsOn {
 		fmt.Printf("SUCCESS! Bool switched from %v to %v as expected\n", !isOn, newIsOn)
 	} else {
 		fmt.Printf("FAILURE! value remained as %v\n", newIsOn)
+	}
+}
+
+func panicIfError(err error, reason string) {
+	if err != nil {
+		panic("ERROR " + err.Error() + ": " + reason)
 	}
 }

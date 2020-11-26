@@ -18,9 +18,7 @@ func main() {
 	plc.SetLibplctagDebug(plc.LibplctagDebugLevel(*plcDebug))
 
 	device, err := plc.NewDevice(*addr)
-	if err != nil {
-		panic("ERROR " + err.Error() + ": Could not create test PLC!")
-	}
+	panicIfError(err, "Could not create test PLC!")
 	defer func() {
 		err := device.Close()
 		if err != nil {
@@ -29,16 +27,18 @@ func main() {
 	}()
 
 	tags, err := device.GetAllTags()
-	if err != nil {
-		panic("ERROR " + err.Error() + ": Could not get PLC tags!")
-	}
+	panicIfError(err, "Could not get PLC tags!")
 
 	fmt.Println("Tags:", tags)
 
 	programs, err := device.GetAllPrograms()
-	if err != nil {
-		panic("ERROR " + err.Error() + ": Could not get PLC programs!")
-	}
+	panicIfError(err, "Could not get PLC programs!")
 
 	fmt.Println("Programs:", programs)
+}
+
+func panicIfError(err error, reason string) {
+	if err != nil {
+		panic("ERROR " + err.Error() + ": " + reason)
+	}
 }
