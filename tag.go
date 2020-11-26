@@ -243,7 +243,12 @@ func (tt TagType) HasName() bool {
 	return ok
 }
 
-var tagTypeNames = map[TagType]string{}
+var tagTypeNames = map[TagType]string{
+	0x00C1: "BOOL",
+	0x00C2: "SINT",
+	0x00CA: "REAL",
+	0x20C4: "DINT",
+}
 
 // RegisterTagTypeName registers the provided string as the name of the provided TagType.
 // It returns an error if the TagType has already been registered with a different string,
