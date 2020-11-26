@@ -1,9 +1,5 @@
 package plc
 
-/*
-#include <stdint.h>
-*/
-import "C"
 import (
 	"bytes"
 	"fmt"
@@ -12,13 +8,10 @@ import (
 	"unicode"
 )
 
-const SystemTagBit = 0x1000
-const TagDimensionMask = 0x6000
-
 type Tag struct {
 	name        string
-	tagType     C.uint16_t
-	elementSize C.uint16_t
+	tagType     uint16
+	elementSize uint16
 	dimensions  []int
 }
 

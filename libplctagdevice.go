@@ -100,6 +100,9 @@ const (
 	DebugSpew
 )
 
+const SystemTagBit = 0x1000
+const TagDimensionMask = 0x6000
+
 func SetLibplctagDebug(level LibplctagDebugLevel) {
 	C.plc_tag_set_debug_level(C.int(level))
 }
@@ -341,10 +344,10 @@ func (dev *libplctagDevice) GetList(listName, prefix string) ([]Tag, []string, e
 		tag := Tag{}
 		offset += 4
 
-		tag.tagType = C.plc_tag_get_uint16(id, offset)
+		tag.tagType = uint16(C.plc_tag_get_uint16(id, offset))
 		offset += 2
 
-		tag.elementSize = C.plc_tag_get_uint16(id, offset)
+		tag.elementSize = uint16(C.plc_tag_get_uint16(id, offset))
 		offset += 2
 
 		tag.addDimension(int(C.plc_tag_get_uint32(id, offset)))
