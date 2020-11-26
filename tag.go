@@ -9,8 +9,8 @@ import (
 )
 
 type Tag struct {
-	name        string
-	tagType     uint16
+	name string
+	TagType
 	elementSize uint16
 	dimensions  []int
 }
@@ -27,7 +27,7 @@ func (tag *Tag) addDimension(dim int) {
 }
 
 func (tag Tag) String() string {
-	name := fmt.Sprintf("%s{%04X}", tag.name, int(tag.tagType))
+	name := fmt.Sprintf("%s{%v}", tag.name, tag.TagType)
 
 	if len(tag.dimensions) == 0 {
 		return name
@@ -227,4 +227,10 @@ func ParseQualifiedTagName(qtn string) ([]string, error) {
 	}
 
 	return ret, nil
+}
+
+type TagType uint16
+
+func (tt TagType) String() string {
+	return fmt.Sprintf("%04X", uint16(tt))
 }

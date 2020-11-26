@@ -344,7 +344,7 @@ func (dev *libplctagDevice) GetList(listName, prefix string) ([]Tag, []string, e
 		tag := Tag{}
 		offset += 4
 
-		tag.tagType = uint16(C.plc_tag_get_uint16(id, offset))
+		tag.TagType = TagType(C.plc_tag_get_uint16(id, offset))
 		offset += 2
 
 		tag.elementSize = uint16(C.plc_tag_get_uint16(id, offset))
@@ -374,10 +374,10 @@ func (dev *libplctagDevice) GetList(listName, prefix string) ([]Tag, []string, e
 
 		if strings.HasPrefix(tag.name, "Program:") {
 			programNames = append(programNames, tag.name)
-		} else if (tag.tagType & SystemTagBit) == SystemTagBit {
+		} else if (tag.TagType & SystemTagBit) == SystemTagBit {
 			// Do nothing for system tags
 		} else {
-			numDimensions := int((tag.tagType & TagDimensionMask) >> 13)
+			numDimensions := int((tag.TagType & TagDimensionMask) >> 13)
 			if numDimensions != len(tag.dimensions) {
 				return nil, nil, fmt.Errorf("GetList: %w: tag '%s' claims to have %d dimensions but has %d", ErrPlcInternal, tag.name, numDimensions, len(tag.dimensions))
 			}
