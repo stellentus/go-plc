@@ -3,6 +3,7 @@ package plc
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"unicode"
@@ -235,6 +236,9 @@ func (tt TagType) String() string {
 	if name, ok := tagTypeNames[tt]; ok {
 		return name
 	}
+	if rtype, ok := tagTypes[tt]; ok {
+		return fmt.Sprintf("%v", rtype)
+	}
 	return fmt.Sprintf("%04X", uint16(tt))
 }
 
@@ -268,3 +272,43 @@ func RegisterTagTypeName(tt TagType, name string) error {
 	tagTypeNames[tt] = name
 	return nil
 }
+
+func (tt TagType) CanBeInstantiated() bool {
+	_, ok := tagTypes[tt]
+	return ok
+}
+
+var tagTypes = map[TagType]reflect.Type{
+	0x00C1: reflect.TypeOf(Bool(false)),
+	0x00C2: reflect.TypeOf(Sint(0)),
+	0x00CA: reflect.TypeOf(Real(0)),
+	0x20C4: reflect.TypeOf(Dint(0)),
+}
+
+// RegisterTagType registers the provided variable as the type of the provided TagType.
+// It returns a warning if the TagType has already been registered with a different variable,
+// but it does not check if the string is unique.
+// This also registers the TagType name if there isn't already one.
+func RegisterTagType(tt TagType, instanceOfType interface{}) error {
+	if instanceOfType == nil {
+		return fmt.Errorf("Cannot register nil for TagType{%04X}", tt)
+	}
+
+	newType := reflect.TypeOf(instanceOfType)
+
+	prevType, ok := tagTypes[tt]
+	if ok { // tt is already registered
+		if prevType == newType {
+			return nil // same type; do nothing
+		}
+		return fmt.Errorf("Cannot register type '%v' for TagType{%04X} with '%v' already registered", newType, tt, prevType)
+	}
+	tagTypes[tt] = newType
+
+	return nil
+}
+
+type Bool bool
+type Sint uint16 // TODO perhaps this should be signed?
+type Real float32
+type Dint uint32 // TODO perhaps this should be signed?
