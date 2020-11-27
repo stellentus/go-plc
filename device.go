@@ -41,6 +41,7 @@ func NewDevice(addr string, opts ...DeviceOptionFunc) (*Device, error) {
 		return nil, err
 	}
 
+	dev.isConnected = true
 	dev.rawDevice = &raw
 	return dev, nil
 }
