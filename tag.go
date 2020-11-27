@@ -242,6 +242,17 @@ func (tt TagType) String() string {
 	return fmt.Sprintf("%04X", uint16(tt))
 }
 
+// NewInstance returns a pointer to a new variable of the TagType.
+// This can be passed directly into ReadTag to read the value.
+func (tt TagType) NewInstance() (interface{}, error) {
+	rtyp, ok := tagTypes[tt]
+	if !ok {
+		return nil, fmt.Errorf("no instance of %s has been registered", tt.String())
+	}
+
+	return reflect.New(rtyp).Interface(), nil
+}
+
 func (tt TagType) HasName() bool {
 	_, ok := tagTypeNames[tt]
 	return ok

@@ -1,6 +1,7 @@
 package plc
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -76,6 +77,7 @@ func TestParser(t *testing.T) {
 
 func resetRegistration() {
 	tagTypeNames = map[TagType]string{}
+	tagTypes = map[TagType]reflect.Type{}
 }
 
 var testTagType = TagType(0x7738)
@@ -89,14 +91,14 @@ func TestTagTypeHasNoName(t *testing.T) {
 	assert.False(t, testTagType.HasName(), "unregistered type has no name")
 }
 
-func TestRegisterTagType(t *testing.T) {
+func TestRegisterTagTypeString(t *testing.T) {
 	resetRegistration()
 	err := RegisterTagTypeName(testTagType, testTagTypeName)
 	require.NoError(t, err)
 	assert.Equal(t, testTagTypeName, testTagType.String(), "Name should be updated if registered")
 }
 
-func TestRegisterDuplicateTagType(t *testing.T) {
+func TestRegisterDuplicateTagTypeString(t *testing.T) {
 	resetRegistration()
 	err := RegisterTagTypeName(testTagType, testTagTypeName)
 	require.NoError(t, err)
@@ -109,5 +111,33 @@ func TestRegisterTwoStringsOneTag(t *testing.T) {
 	err := RegisterTagTypeName(testTagType, testTagTypeName)
 	require.NoError(t, err)
 	err = RegisterTagTypeName(testTagType, testTagTypeName+"DifferentString")
+	assert.Error(t, err)
+}
+
+func TestUnregisteredTagTypeCannotBeInstantiated(t *testing.T) {
+	resetRegistration()
+	assert.False(t, testTagType.CanBeInstantiated(), "Cannot instantiate unregistered tag type")
+}
+
+func TestRegisterTagTypeCanBeInstantiated(t *testing.T) {
+	resetRegistration()
+	err := RegisterTagType(testTagType, int(0))
+	require.NoError(t, err)
+	assert.True(t, testTagType.CanBeInstantiated(), "Can instantiate registered tag type")
+}
+
+func TestRegisterDuplicateTagType(t *testing.T) {
+	resetRegistration()
+	err := RegisterTagType(testTagType, int(0))
+	require.NoError(t, err)
+	err = RegisterTagType(testTagType, int(0))
+	assert.NoError(t, err)
+}
+
+func TestRegisterTwoTypesOneTag(t *testing.T) {
+	resetRegistration()
+	err := RegisterTagType(testTagType, int(0))
+	require.NoError(t, err)
+	err = RegisterTagType(testTagType, int32(0))
 	assert.Error(t, err)
 }
