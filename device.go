@@ -58,17 +58,6 @@ func Timeout(to time.Duration) DeviceOptionFunc {
 	}
 }
 
-// TimeoutFromString sets the PLC connection timeout from a string.
-func TimeoutFromString(timeout string) DeviceOptionFunc {
-	return func(dev *Device) error {
-		tm, err := time.ParseDuration(timeout)
-		if err != nil {
-			return err
-		}
-		return Timeout(tm)(dev) // Call the version that uses a time.Duration
-	}
-}
-
 // LibplctagOption adds a libplctag option to the connection string (see libplctag for options).
 // Here are some important ones:
 // 	- protocol (default: "ab_eip")

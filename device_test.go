@@ -25,17 +25,6 @@ func TestNewDeviceParsesTimeout(t *testing.T) {
 	assert.Equal(t, time.Millisecond, dev.timeout)
 }
 
-func TestNewDeviceParsesTimeoutFromString(t *testing.T) {
-	dev, err := NewDevice("test", TimeoutFromString("250ms"))
-	assert.NoError(t, err)
-	assert.Equal(t, 250*time.Millisecond, dev.timeout)
-}
-
-func TestNewDeviceInvalidTimeoutString(t *testing.T) {
-	_, err := NewDevice("test", TimeoutFromString("fifty milliseconds"))
-	assert.Error(t, err)
-}
-
 func newTestDevice(rd rawDevice) *Device {
 	return &Device{rawDevice: rd}
 }
