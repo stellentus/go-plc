@@ -10,8 +10,8 @@ import (
 // Device manages a connection to actual PLC hardware.
 type Device struct {
 	rawDevice
-	conConf     string
 	timeout     time.Duration
+	conf        map[string]string
 	isConnected bool
 }
 
@@ -25,8 +25,14 @@ func NewDevice(addr string, opts ...DeviceOptionFunc) (*Device, error) {
 		return nil, errors.New("Device cannot be initialized without an address")
 	}
 
+	// Initialize with default connection options
 	dev := &Device{
-		conConf: "gateway=" + addr,
+		conf: map[string]string{
+			"protocol": "ab_eip",
+			"path":     "1,0",
+			"cpu":      "controllogix",
+		},
+		timeout: 5 * time.Second,
 	}
 
 	for _, opt := range opts {
@@ -36,11 +42,17 @@ func NewDevice(addr string, opts ...DeviceOptionFunc) (*Device, error) {
 		}
 	}
 
-	raw, err := newLibplctagDevice(dev.conConf, dev.timeout)
+	conConf := "gateway=" + addr
+	for name, val := range dev.conf {
+		conConf += "&" + name + "=" + val
+	}
+
+	raw, err := newLibplctagDevice(conConf, dev.timeout)
 	if err != nil {
 		return nil, err
 	}
 
+	dev.isConnected = true
 	dev.rawDevice = &raw
 	return dev, nil
 }
@@ -58,17 +70,6 @@ func Timeout(to time.Duration) DeviceOptionFunc {
 	}
 }
 
-// TimeoutFromString sets the PLC connection timeout from a string.
-func TimeoutFromString(timeout string) DeviceOptionFunc {
-	return func(dev *Device) error {
-		tm, err := time.ParseDuration(timeout)
-		if err != nil {
-			return err
-		}
-		return Timeout(tm)(dev) // Call the version that uses a time.Duration
-	}
-}
-
 // LibplctagOption adds a libplctag option to the connection string (see libplctag for options).
 // Here are some important ones:
 // 	- protocol (default: "ab_eip")
@@ -82,7 +83,7 @@ func LibplctagOption(name, val string) DeviceOptionFunc {
 		if name == "" {
 			return errors.New("Libplctag option name was not set")
 		}
-		dev.conConf += "&" + name + "=" + val
+		dev.conf[name] = val
 		return nil
 	}
 }
