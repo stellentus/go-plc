@@ -290,10 +290,10 @@ func (tt TagType) CanBeInstantiated() bool {
 }
 
 var tagTypes = map[TagType]reflect.Type{
-	0x00C1: reflect.TypeOf(Bool(false)),
-	0x00C2: reflect.TypeOf(Sint(0)),
-	0x00CA: reflect.TypeOf(Real(0)),
-	0x20C4: reflect.TypeOf(Dint(0)),
+	0x00C1: reflect.TypeOf(false),
+	0x00C2: reflect.TypeOf(uint16(0)), // TODO perhaps this should be signed?
+	0x00CA: reflect.TypeOf(float32(0)),
+	0x20C4: reflect.TypeOf(uint32(0)), // TODO perhaps this should be signed?
 }
 
 // RegisterTagType registers the provided variable as the type of the provided TagType.
@@ -318,8 +318,3 @@ func RegisterTagType(tt TagType, instanceOfType interface{}) error {
 
 	return nil
 }
-
-type Bool bool
-type Sint uint16 // TODO perhaps this should be signed?
-type Real float32
-type Dint uint32 // TODO perhaps this should be signed?
