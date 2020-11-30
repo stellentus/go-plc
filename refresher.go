@@ -5,7 +5,7 @@ package plc
 */
 import "C"
 import (
-	"fmt"
+	"log"
 	"reflect"
 	"sync"
 	"time"
@@ -61,7 +61,7 @@ func (r *Refresher) ReadTag(name string, value interface{}) error {
 			if r.ErrorCallback != nil {
 				r.ErrorCallback(err)
 			} else {
-				fmt.Println("WARNING: Unhandled plc.Refresher.ReadTag error:", err)
+				log.Println("WARNING: Unhandled plc.Refresher.ReadTag error:", err)
 			}
 		}
 	})
