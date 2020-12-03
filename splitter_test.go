@@ -74,12 +74,16 @@ type structWithUnexported struct {
 	unexported int32
 }
 type structWithTags struct {
-	BIG        uint64 `plctag:"myName"`
+	BIG        uint64 `plctag:"myName,omitempty"`
 	unexported int32  `plctag:"StillUnexported"`
 }
 type structIgnoringTag struct {
 	BIG    uint64 `plctag:"-"`
 	MEDIUM int32  `plctag:""`
+}
+type structIgnoringTagDashComma struct {
+	MEDIUM int32 `plctag:""`
+	SMALL  int8  `plctag:"-,"`
 }
 
 func TestStruct(t *testing.T) {
@@ -141,6 +145,18 @@ func TestStructTagIgnored(t *testing.T) {
 	fakeRW[testTagName+".MEDIUM"] = expected.MEDIUM
 
 	actual := structIgnoringTag{}
+	err := sr.ReadTag(testTagName, &actual)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual)
+}
+
+func TestStructTagIgnoredDashComma(t *testing.T) {
+	expected := structIgnoringTagDashComma{MEDIUM: 7}
+
+	sr, fakeRW := newSplitReaderForTesting()
+	fakeRW[testTagName+".MEDIUM"] = expected.MEDIUM
+
+	actual := structIgnoringTagDashComma{}
 	err := sr.ReadTag(testTagName, &actual)
 	require.NoError(t, err)
 	require.Equal(t, expected, actual)

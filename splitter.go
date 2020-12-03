@@ -3,6 +3,7 @@ package plc
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 // SplitReader splits reads of structs and arrays into separate reads of their components.
@@ -33,7 +34,7 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 			}
 
 			// Generate the name of the struct's field and recurse
-			fieldName := getNameOfField(str, i)
+			fieldName, _ := getNameOfField(str, i)
 			if fieldName == "" {
 				continue // Can't touch that
 			}
@@ -57,13 +58,27 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 	return err
 }
 
-func getNameOfField(str reflect.Value, i int) string {
+func getNameOfField(str reflect.Value, i int) (string, bool) {
+	omitEmpty := false
+
 	field := str.Type().Field(i)
 	plctag := field.Tag.Get("plctag")
 	if plctag == "" {
-		return field.Name
-	} else if plctag == "-" {
-		return ""
+		return field.Name, omitEmpty
 	}
-	return plctag
+	opts := strings.Split(plctag, ",")
+	switch opts[0] {
+	case "-":
+		return "", omitEmpty // Ignore this field
+	case "":
+		opts[0] = field.Name // Use the field name as the name
+	}
+
+	for _, opt := range opts[1:] {
+		if opt == "omitempty" {
+			omitEmpty = true
+		} // else an unused option was included
+	}
+
+	return opts[0], omitEmpty
 }
