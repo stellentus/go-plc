@@ -73,6 +73,10 @@ type structWithUnexported struct {
 	BIG        uint64
 	unexported int32
 }
+type structWithTags struct {
+	BIG        uint64 `plctag:"myName"`
+	unexported int32  `plctag:"StillUnexported"`
+}
 
 func TestStruct(t *testing.T) {
 	expected := testStructType{7, 3.14}
@@ -109,6 +113,18 @@ func TestStructUnexported(t *testing.T) {
 	// Since we don't save ".unexported", if there's an attempt to read it, an error will occur
 
 	actual := structWithUnexported{}
+	err := sr.ReadTag(testTagName, &actual)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual)
+}
+
+func TestStructTag(t *testing.T) {
+	expected := structWithTags{BIG: 7}
+
+	sr, fakeRW := newSplitReaderForTesting()
+	fakeRW[testTagName+".myName"] = expected.BIG
+
+	actual := structWithTags{}
 	err := sr.ReadTag(testTagName, &actual)
 	require.NoError(t, err)
 	require.Equal(t, expected, actual)

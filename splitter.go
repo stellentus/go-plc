@@ -33,7 +33,8 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 			}
 
 			// Generate the name of the struct's field and recurse
-			fieldName := name + "." + getNameOfField(str, i)
+			fieldName := getNameOfField(str, i)
+			fieldName = name + "." + fieldName // add prefix
 			if !str.Field(i).CanAddr() {
 				err = fmt.Errorf("Cannot address %s", fieldName)
 				break
@@ -54,6 +55,10 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 }
 
 func getNameOfField(str reflect.Value, i int) string {
-	// TODO use .Tag when it exists
-	return str.Type().Field(i).Name
+	field := str.Type().Field(i)
+	plctag := field.Tag.Get("plctag")
+	if plctag == "" {
+		return field.Name
+	}
+	return plctag
 }
