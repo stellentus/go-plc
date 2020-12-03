@@ -60,3 +60,39 @@ func TestSplitReaderError(t *testing.T) {
 		})
 	}
 }
+
+type testStructType struct {
+	I        uint32
+	MY_FLOAT float64
+}
+type recursionType struct {
+	VAL         int8
+	STRUCT_HERE testStructType
+}
+
+func TestStruct(t *testing.T) {
+	expected := testStructType{7, 3.14}
+
+	sr, fakeRW := newSplitReaderForTesting()
+	fakeRW[testTagName+".I"] = expected.I
+	fakeRW[testTagName+".MY_FLOAT"] = expected.MY_FLOAT
+
+	actual := testStructType{}
+	err := sr.ReadTag(testTagName, &actual)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual)
+}
+
+func TestStructInStruct(t *testing.T) {
+	expected := recursionType{-5, testStructType{7, 3.14}}
+
+	sr, fakeRW := newSplitReaderForTesting()
+	fakeRW[testTagName+".VAL"] = expected.VAL
+	fakeRW[testTagName+".STRUCT_HERE.I"] = expected.STRUCT_HERE.I
+	fakeRW[testTagName+".STRUCT_HERE.MY_FLOAT"] = expected.STRUCT_HERE.MY_FLOAT
+
+	actual := recursionType{}
+	err := sr.ReadTag(testTagName, &actual)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual)
+}
