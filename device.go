@@ -20,7 +20,7 @@ var _ = ReadWriter(&Device{}) // Compiler makes sure this type is a ReadWriter
 // NewDevice creates a new Device at the provided address with options.
 // It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
 // portion of the tag tree is locked.
-func NewDevice(addr string, opts ...DeviceOptionFunc) (*Device, error) {
+func NewDevice(addr string, opts ...deviceOption) (*Device, error) {
 	if addr == "" {
 		return nil, errors.New("Device cannot be initialized without an address")
 	}
@@ -52,10 +52,10 @@ func NewDevice(addr string, opts ...DeviceOptionFunc) (*Device, error) {
 	return dev, nil
 }
 
-type DeviceOptionFunc func(*Device) error
+type deviceOption func(*Device) error
 
 // Timeout sets the PLC connection timeout. Default is 5s.
-func Timeout(to time.Duration) DeviceOptionFunc {
+func Timeout(to time.Duration) deviceOption {
 	return func(dev *Device) error {
 		if dev.isConnected {
 			return errors.New("Device timeout cannot be set after initialization")
@@ -70,7 +70,7 @@ func Timeout(to time.Duration) DeviceOptionFunc {
 // 	- protocol (default: "ab_eip")
 // 	- path (default: "1,0")
 // 	- cpu (default: "controllogix")
-func LibplctagOption(name, val string) DeviceOptionFunc {
+func LibplctagOption(name, val string) deviceOption {
 	return func(dev *Device) error {
 		if dev.isConnected {
 			return errors.New("Libplctag options cannot be set after initialization")
