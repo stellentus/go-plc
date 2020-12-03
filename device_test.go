@@ -99,7 +99,7 @@ type FakeReadWriter map[string]interface{}
 func (df FakeReadWriter) ReadTag(name string, value interface{}) error {
 	v, ok := df[name]
 	if !ok {
-		return fmt.Errorf("")
+		return fmt.Errorf("FakeReadWriter does not contain '%s'", name)
 	}
 
 	in := reflect.ValueOf(v)
@@ -107,9 +107,9 @@ func (df FakeReadWriter) ReadTag(name string, value interface{}) error {
 
 	switch {
 	case !out.CanSet():
-		return fmt.Errorf("for '%s', cannot set %s", name, out.Type().Name())
+		return fmt.Errorf("FakeReadWriter for '%s', cannot set %s", name, out.Type().Name())
 	case out.Kind() != in.Kind():
-		return fmt.Errorf("for '%s', cannot set %s to %s (%v)", name, out.Type().Name(), in.Type().Name(), v)
+		return fmt.Errorf("FakeReadWriter for '%s', cannot set %s to %s (%v)", name, out.Type().Name(), in.Type().Name(), v)
 	}
 
 	out.Set(in)
