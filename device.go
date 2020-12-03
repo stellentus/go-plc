@@ -10,9 +10,8 @@ import (
 // Device manages a connection to actual PLC hardware.
 type Device struct {
 	rawDevice
-	timeout     time.Duration
-	conf        map[string]string
-	isConnected bool
+	timeout time.Duration
+	conf    map[string]string
 }
 
 var _ = ReadWriter(&Device{}) // Compiler makes sure this type is a ReadWriter
@@ -48,7 +47,6 @@ func NewDevice(addr string, opts ...deviceOption) (*Device, error) {
 	}
 
 	dev.rawDevice = newLibplctagDevice(conConf, dev.timeout)
-	dev.isConnected = true
 	return dev, nil
 }
 
@@ -57,9 +55,6 @@ type deviceOption func(*Device) error
 // Timeout sets the PLC connection timeout. Default is 5s.
 func Timeout(to time.Duration) deviceOption {
 	return func(dev *Device) error {
-		if dev.isConnected {
-			return errors.New("Device timeout cannot be set after initialization")
-		}
 		dev.timeout = to
 		return nil
 	}
@@ -72,9 +67,6 @@ func Timeout(to time.Duration) deviceOption {
 // 	- cpu (default: "controllogix")
 func LibplctagOption(name, val string) deviceOption {
 	return func(dev *Device) error {
-		if dev.isConnected {
-			return errors.New("Libplctag options cannot be set after initialization")
-		}
 		if name == "" {
 			return errors.New("Libplctag option name was not set")
 		}
