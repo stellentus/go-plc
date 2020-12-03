@@ -28,6 +28,10 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 	case reflect.Struct:
 		str := v.Elem()
 		for i := 0; i < str.NumField(); i++ {
+			if str.Type().Field(i).PkgPath != "" {
+				continue // Type is not exported, so skip it
+			}
+
 			// Generate the name of the struct's field and recurse
 			// TODO use .Tag when it exists
 			fieldName := name + "." + str.Type().Field(i).Name

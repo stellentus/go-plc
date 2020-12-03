@@ -69,6 +69,10 @@ type recursionType struct {
 	VAL         int8
 	STRUCT_HERE testStructType
 }
+type structWithUnexported struct {
+	BIG        uint64
+	unexported int32
+}
 
 func TestStruct(t *testing.T) {
 	expected := testStructType{7, 3.14}
@@ -92,6 +96,19 @@ func TestStructInStruct(t *testing.T) {
 	fakeRW[testTagName+".STRUCT_HERE.MY_FLOAT"] = expected.STRUCT_HERE.MY_FLOAT
 
 	actual := recursionType{}
+	err := sr.ReadTag(testTagName, &actual)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual)
+}
+
+func TestStructUnexported(t *testing.T) {
+	expected := structWithUnexported{BIG: 12} // Don't bother filling 'unexported' because it won't be set
+
+	sr, fakeRW := newSplitReaderForTesting()
+	fakeRW[testTagName+".BIG"] = expected.BIG
+	// Since we don't save ".unexported", if there's an attempt to read it, an error will occur
+
+	actual := structWithUnexported{}
 	err := sr.ReadTag(testTagName, &actual)
 	require.NoError(t, err)
 	require.Equal(t, expected, actual)
