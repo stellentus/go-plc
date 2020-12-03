@@ -86,7 +86,7 @@ type structIgnoringTagDashComma struct {
 	SMALL  int8  `plctag:"-,"`
 }
 
-func TestStruct(t *testing.T) {
+func TestSplitReadStruct(t *testing.T) {
 	expected := testStructType{7, 3.14}
 
 	sr, fakeRW := newSplitReaderForTesting()
@@ -99,7 +99,7 @@ func TestStruct(t *testing.T) {
 	require.Equal(t, expected, actual)
 }
 
-func TestStructInStruct(t *testing.T) {
+func TestSplitReadStructInStruct(t *testing.T) {
 	expected := recursionType{-5, testStructType{7, 3.14}}
 
 	sr, fakeRW := newSplitReaderForTesting()
@@ -113,7 +113,7 @@ func TestStructInStruct(t *testing.T) {
 	require.Equal(t, expected, actual)
 }
 
-func TestStructUnexported(t *testing.T) {
+func TestSplitReadStructUnexported(t *testing.T) {
 	expected := structWithUnexported{BIG: 12} // Don't bother filling 'unexported' because it won't be set
 
 	sr, fakeRW := newSplitReaderForTesting()
@@ -126,7 +126,7 @@ func TestStructUnexported(t *testing.T) {
 	require.Equal(t, expected, actual)
 }
 
-func TestStructTag(t *testing.T) {
+func TestSplitReadStructTag(t *testing.T) {
 	expected := structWithTags{BIG: 7}
 
 	sr, fakeRW := newSplitReaderForTesting()
@@ -138,7 +138,7 @@ func TestStructTag(t *testing.T) {
 	require.Equal(t, expected, actual)
 }
 
-func TestStructTagIgnored(t *testing.T) {
+func TestSplitReadStructTagIgnored(t *testing.T) {
 	expected := structIgnoringTag{MEDIUM: 7}
 
 	sr, fakeRW := newSplitReaderForTesting()
@@ -150,7 +150,7 @@ func TestStructTagIgnored(t *testing.T) {
 	require.Equal(t, expected, actual)
 }
 
-func TestStructTagIgnoredDashComma(t *testing.T) {
+func TestSplitReadStructTagIgnoredDashComma(t *testing.T) {
 	expected := structIgnoringTagDashComma{MEDIUM: 7}
 
 	sr, fakeRW := newSplitReaderForTesting()
