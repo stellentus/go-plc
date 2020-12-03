@@ -62,6 +62,16 @@ func TestSplitWriter(t *testing.T) {
 	}
 }
 
+func TestSplitWriterWithPointer(t *testing.T) {
+	val := int32(5)
+	sr, fakeRW := newSplitWriterForTesting()
+
+	// Now read the variable and make sure it is the same
+	err := sr.WriteTag(testTagName, &val)
+	require.NoError(t, err)
+	require.Equal(t, val, fakeRW[testTagName])
+}
+
 // TestSplitReaderError is sort of testing the FakeReadWriter, not so much the SplitReader.
 func TestSplitReaderError(t *testing.T) {
 	for _, tc := range manyTypesToTest {
@@ -186,6 +196,17 @@ func TestSplitWriteStruct(t *testing.T) {
 	sw, fakeRW := newSplitWriterForTesting()
 
 	err := sw.WriteTag(testTagName, expected)
+	require.NoError(t, err)
+
+	assert.Equal(t, expected.I, fakeRW[testTagName+".I"])
+	assert.Equal(t, expected.MY_FLOAT, fakeRW[testTagName+".MY_FLOAT"])
+}
+
+func TestSplitWriteStructPointer(t *testing.T) {
+	expected := testStructType{7, 3.14}
+	sw, fakeRW := newSplitWriterForTesting()
+
+	err := sw.WriteTag(testTagName, &expected)
 	require.NoError(t, err)
 
 	assert.Equal(t, expected.I, fakeRW[testTagName+".I"])

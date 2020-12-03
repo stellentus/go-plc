@@ -72,6 +72,9 @@ func NewSplitWriter(wr Writer) SplitWriter {
 
 func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 	v := reflect.ValueOf(value)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem() // Naturally use what the pointer is pointing to (but only do so once)
+	}
 
 	err := error(nil)
 	switch v.Kind() {
@@ -97,7 +100,7 @@ func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 		}
 	default:
 		// Just try with the underlying type
-		err = sw.Writer.WriteTag(name, value)
+		err = sw.Writer.WriteTag(name, v.Interface())
 	}
 
 	return err
