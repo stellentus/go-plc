@@ -77,6 +77,10 @@ type structWithTags struct {
 	BIG        uint64 `plctag:"myName"`
 	unexported int32  `plctag:"StillUnexported"`
 }
+type structIgnoringTag struct {
+	BIG    uint64 `plctag:"-"`
+	MEDIUM int32  `plctag:""`
+}
 
 func TestStruct(t *testing.T) {
 	expected := testStructType{7, 3.14}
@@ -125,6 +129,18 @@ func TestStructTag(t *testing.T) {
 	fakeRW[testTagName+".myName"] = expected.BIG
 
 	actual := structWithTags{}
+	err := sr.ReadTag(testTagName, &actual)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual)
+}
+
+func TestStructTagIgnored(t *testing.T) {
+	expected := structIgnoringTag{MEDIUM: 7}
+
+	sr, fakeRW := newSplitReaderForTesting()
+	fakeRW[testTagName+".MEDIUM"] = expected.MEDIUM
+
+	actual := structIgnoringTag{}
 	err := sr.ReadTag(testTagName, &actual)
 	require.NoError(t, err)
 	require.Equal(t, expected, actual)
