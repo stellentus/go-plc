@@ -33,7 +33,7 @@ func TestSplitReader(t *testing.T) {
 
 			// Create an actual variable of the type we want to test
 			actual := reflect.New(reflect.TypeOf(tc)).Interface()
-			require.Equal(tt, reflect.TypeOf(actual), reflect.PtrTo(reflect.TypeOf(tc)), "Created type must match desired type")
+			require.Equal(tt, reflect.TypeOf(actual), reflect.PtrTo(reflect.TypeOf(tc)), "Created type must match desired type") // If this fails, it's a bug in test code, not the underlying code.
 
 			// Now read the variable and make sure it is the same
 			err := sr.ReadTag(testTagName, actual)
