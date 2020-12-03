@@ -58,6 +58,51 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 	return err
 }
 
+// SplitWriter splits writes of structs and arrays into separate writes of their components.
+type SplitWriter struct {
+	Writer
+}
+
+var _ = Writer(SplitWriter{}) // Compiler makes sure this type is a Writer
+
+// NewSplitWriter returns a SplitWriter.
+func NewSplitWriter(wr Writer) SplitWriter {
+	return SplitWriter{wr}
+}
+
+func (sw SplitWriter) WriteTag(name string, value interface{}) error {
+	v := reflect.ValueOf(value)
+
+	err := error(nil)
+	switch v.Kind() {
+	case reflect.Struct:
+		str := v
+		for i := 0; i < str.NumField(); i++ {
+			if str.Type().Field(i).PkgPath != "" {
+				continue // Type is not exported, so skip it
+			}
+
+			// Generate the name of the struct's field and recurse
+			fieldName, _ := getNameOfField(str, i)
+			if fieldName == "" {
+				continue // Can't touch that
+			}
+			fieldName = name + "." + fieldName // add prefix
+			fieldPointer := str.Field(i).Interface()
+
+			err = sw.WriteTag(fieldName, fieldPointer)
+			if err != nil {
+				break
+			}
+		}
+	default:
+		// Just try with the underlying type
+		err = sw.Writer.WriteTag(name, value)
+	}
+
+	return err
+}
+
 func getNameOfField(str reflect.Value, i int) (string, bool) {
 	omitEmpty := false
 
