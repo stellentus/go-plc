@@ -10,9 +10,8 @@ import (
 // Device manages a connection to actual PLC hardware.
 type Device struct {
 	rawDevice
-	timeout     time.Duration
-	conf        map[string]string
-	isConnected bool
+	timeout time.Duration
+	conf    map[string]string
 }
 
 var _ = ReadWriter(&Device{}) // Compiler makes sure this type is a ReadWriter
@@ -20,7 +19,7 @@ var _ = ReadWriter(&Device{}) // Compiler makes sure this type is a ReadWriter
 // NewDevice creates a new Device at the provided address with options.
 // It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
 // portion of the tag tree is locked.
-func NewDevice(addr string, opts ...DeviceOptionFunc) (*Device, error) {
+func NewDevice(addr string, opts ...deviceOption) (*Device, error) {
 	if addr == "" {
 		return nil, errors.New("Device cannot be initialized without an address")
 	}
@@ -36,10 +35,7 @@ func NewDevice(addr string, opts ...DeviceOptionFunc) (*Device, error) {
 	}
 
 	for _, opt := range opts {
-		err := opt(dev)
-		if err != nil {
-			return nil, err
-		}
+		opt(dev)
 	}
 
 	conConf := "gateway=" + addr
@@ -48,20 +44,15 @@ func NewDevice(addr string, opts ...DeviceOptionFunc) (*Device, error) {
 	}
 
 	dev.rawDevice = newLibplctagDevice(conConf, dev.timeout)
-	dev.isConnected = true
 	return dev, nil
 }
 
-type DeviceOptionFunc func(*Device) error
+type deviceOption func(*Device)
 
 // Timeout sets the PLC connection timeout. Default is 5s.
-func Timeout(to time.Duration) DeviceOptionFunc {
-	return func(dev *Device) error {
-		if dev.isConnected {
-			return errors.New("Device timeout cannot be set after initialization")
-		}
+func Timeout(to time.Duration) deviceOption {
+	return func(dev *Device) {
 		dev.timeout = to
-		return nil
 	}
 }
 
@@ -70,16 +61,9 @@ func Timeout(to time.Duration) DeviceOptionFunc {
 // 	- protocol (default: "ab_eip")
 // 	- path (default: "1,0")
 // 	- cpu (default: "controllogix")
-func LibplctagOption(name, val string) DeviceOptionFunc {
-	return func(dev *Device) error {
-		if dev.isConnected {
-			return errors.New("Libplctag options cannot be set after initialization")
-		}
-		if name == "" {
-			return errors.New("Libplctag option name was not set")
-		}
+func LibplctagOption(name, val string) deviceOption {
+	return func(dev *Device) {
 		dev.conf[name] = val
-		return nil
 	}
 }
 
