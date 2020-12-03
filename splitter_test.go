@@ -1,9 +1,10 @@
 package plc
 
 import (
+	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func newSplitReaderForTesting() (SplitReader, FakeReadWriter) {
@@ -12,11 +13,23 @@ func newSplitReaderForTesting() (SplitReader, FakeReadWriter) {
 }
 
 func TestSplitReader(t *testing.T) {
-	sr, fakeRW := newSplitReaderForTesting()
-	fakeRW[testTagName] = 7
+	testCases := []interface{}{
+		uint8(7),
+	}
 
-	var actual int
-	err := sr.ReadTag(testTagName, &actual)
-	assert.NoError(t, err)
-	assert.Equal(t, 7, actual)
+	for _, tc := range testCases {
+		t.Run(reflect.TypeOf(tc).String(), func(tt *testing.T) {
+			sr, fakeRW := newSplitReaderForTesting()
+			fakeRW[testTagName] = tc
+
+			// Create an actual variable of the type we want to test
+			actual := reflect.New(reflect.TypeOf(tc)).Interface()
+			require.Equal(tt, reflect.TypeOf(actual), reflect.PtrTo(reflect.TypeOf(tc)), "Created type must match desired type")
+
+			// Now read the variable and make sure it is the same
+			err := sr.ReadTag(testTagName, actual)
+			require.NoError(tt, err)
+			require.Equal(tt, tc, reflect.ValueOf(actual).Elem().Interface())
+		})
+	}
 }
