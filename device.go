@@ -47,13 +47,8 @@ func NewDevice(addr string, opts ...DeviceOptionFunc) (*Device, error) {
 		conConf += "&" + name + "=" + val
 	}
 
-	raw, err := newLibplctagDevice(conConf, dev.timeout)
-	if err != nil {
-		return nil, err
-	}
-
+	dev.rawDevice = newLibplctagDevice(conConf, dev.timeout)
 	dev.isConnected = true
-	dev.rawDevice = &raw
 	return dev, nil
 }
 
