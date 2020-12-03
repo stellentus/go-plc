@@ -35,10 +35,7 @@ func NewDevice(addr string, opts ...deviceOption) (*Device, error) {
 	}
 
 	for _, opt := range opts {
-		err := opt(dev)
-		if err != nil {
-			return nil, err
-		}
+		opt(dev)
 	}
 
 	conConf := "gateway=" + addr
@@ -50,13 +47,12 @@ func NewDevice(addr string, opts ...deviceOption) (*Device, error) {
 	return dev, nil
 }
 
-type deviceOption func(*Device) error
+type deviceOption func(*Device)
 
 // Timeout sets the PLC connection timeout. Default is 5s.
 func Timeout(to time.Duration) deviceOption {
-	return func(dev *Device) error {
+	return func(dev *Device) {
 		dev.timeout = to
-		return nil
 	}
 }
 
@@ -66,12 +62,8 @@ func Timeout(to time.Duration) deviceOption {
 // 	- path (default: "1,0")
 // 	- cpu (default: "controllogix")
 func LibplctagOption(name, val string) deviceOption {
-	return func(dev *Device) error {
-		if name == "" {
-			return errors.New("Libplctag option name was not set")
-		}
+	return func(dev *Device) {
 		dev.conf[name] = val
-		return nil
 	}
 }
 
