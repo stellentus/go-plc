@@ -42,3 +42,21 @@ func TestSplitReader(t *testing.T) {
 		})
 	}
 }
+
+// TestSplitReaderError is sort of testing the FakeReadWriter, not so much the SplitReader.
+func TestSplitReaderError(t *testing.T) {
+	for _, tc := range manyTypesToTest {
+		t.Run(reflect.TypeOf(tc).String(), func(tt *testing.T) {
+			sr, fakeRW := newSplitReaderForTesting()
+			fakeRW[testTagName] = int(7)
+
+			// Create an actual variable of the type we want to test
+			actual := reflect.New(reflect.TypeOf(tc)).Interface()
+			require.Equal(tt, reflect.TypeOf(actual), reflect.PtrTo(reflect.TypeOf(tc)), "Created type must match desired type") // If this fails, it's a bug in test code, not the underlying code.
+
+			// Read fails because the data type is different. Note int!=int32 or any other size.
+			err := sr.ReadTag(testTagName, actual)
+			require.Error(tt, err)
+		})
+	}
+}
