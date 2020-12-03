@@ -12,12 +12,21 @@ func newSplitReaderForTesting() (SplitReader, FakeReadWriter) {
 	return NewSplitReader(fakeRW), fakeRW
 }
 
-func TestSplitReader(t *testing.T) {
-	testCases := []interface{}{
-		uint8(7),
-	}
+var manyTypesToTest = []interface{}{
+	uint8(7),
+	uint16(7),
+	uint32(7),
+	uint64(7),
+	int8(7),
+	int16(7),
+	int32(7),
+	int64(7),
+	float32(7),
+	float64(7),
+}
 
-	for _, tc := range testCases {
+func TestSplitReader(t *testing.T) {
+	for _, tc := range manyTypesToTest {
 		t.Run(reflect.TypeOf(tc).String(), func(tt *testing.T) {
 			sr, fakeRW := newSplitReaderForTesting()
 			fakeRW[testTagName] = tc
