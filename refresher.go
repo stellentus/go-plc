@@ -1,18 +1,10 @@
 package plc
 
-/*
-#include <stdint.h>
-*/
-import "C"
 import (
 	"reflect"
 	"sync"
 	"time"
 )
-
-var tagTypes = map[C.uint16_t]interface{}{
-	2: "",
-}
 
 // A Refresher can be used to periodically reissue the read for every seen value, so that values are readily available in a cache.
 type Refresher struct {
