@@ -247,6 +247,16 @@ func TestSplitWriteStructTag(t *testing.T) {
 	assert.Equal(t, expected.BIG, fakeRW[testTagName+".myName"])
 }
 
+func TestSplitWriteOmitEmpty(t *testing.T) {
+	expected := structWithTags{BIG: 0, unexported: 57}
+	sw, fakeRW := newSplitWriterForTesting()
+
+	err := sw.WriteTag(testTagName, expected)
+	require.NoError(t, err)
+
+	assert.Equal(t, FakeReadWriter{}, fakeRW, "No values should be written")
+}
+
 func TestSplitWriteStructTagIgnored(t *testing.T) {
 	expected := structIgnoringTag{MEDIUM: 7}
 	sw, fakeRW := newSplitWriterForTesting()

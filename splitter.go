@@ -86,9 +86,12 @@ func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 			}
 
 			// Generate the name of the struct's field and recurse
-			fieldName, _ := getNameOfField(str, i)
+			fieldName, omitempty := getNameOfField(str, i)
 			if fieldName == "" {
 				continue // Can't touch that
+			}
+			if omitempty && str.Field(i).IsZero() {
+				continue // Skip zero values
 			}
 			fieldName = name + "." + fieldName // add prefix
 			fieldPointer := str.Field(i).Interface()
