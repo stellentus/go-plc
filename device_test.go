@@ -78,8 +78,8 @@ func TestWriteTag(t *testing.T) {
 	assert.Equal(t, 9, fake.DeviceFake[testTagName])
 }
 
-var _ = ReadWriter(&RawDeviceFake{}) // Compiler makes sure this type is a ReadWriter
-var _ = rawDevice(&RawDeviceFake{})  // Compiler makes sure this type is a rawDevice
+var _ = ReadWriter(RawDeviceFake{}) // Compiler makes sure this type is a ReadWriter
+var _ = rawDevice(RawDeviceFake{})  // Compiler makes sure this type is a rawDevice
 
 // RawDeviceFake adds lower APIs to a DeviceFake
 type RawDeviceFake struct {
