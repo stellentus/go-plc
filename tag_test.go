@@ -16,6 +16,8 @@ var parserTests = []struct {
 	{"\n", nil, "Whitespace"},
 	{"\b", nil, "Non-ASCII"},
 	{"标志名称", nil, "Non-ASCII"},
+	{"4UMMY_AQUA_TEST_0", nil, "Field begins with a non-alpha"},
+	{"_UMMY_AQUA_TEST_0", nil, "Field begins with a non-alpha"},
 	{"DUMMY_AQUA_TEST_0", []string{"DUMMY_AQUA_TEST_0"}, ""},
 	{"DUMMY_AQUA_TEST_0.DUMMY_AQUA_TEST_1", []string{"DUMMY_AQUA_TEST_0", "DUMMY_AQUA_TEST_1"}, ""},
 	{"DUMMY_AQUA_TEST_0..DUMMY_AQUA_TEST_1", nil, "Empty"},
@@ -28,7 +30,11 @@ var parserTests = []struct {
 	{"ARRAY[0][", nil, "'[' without ']'"},
 	{"ARRAY0]", nil, "']' without '['"},
 	{"DUMMY_AQUA_TEST.[0]", nil, "'[' without array identifier"},
+	{"ARRAY[]", nil, "Invalid array index"},
+	{"ARRAY[0,,2]", nil, "Invalid array index"},
+	{"ARRAY[0,foo,2]", nil, "Invalid array index"},
 	{"ARRAY[0][1][2]", []string{"ARRAY", "0", "1", "2"}, ""},
+	{"ARRAY[0,1,2]", []string{"ARRAY", "0", "1", "2"}, ""},
 	{"Field.Array[42].Member[16]", []string{"Field", "Array", "42", "Member", "16"}, ""},
 }
 

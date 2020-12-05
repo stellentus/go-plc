@@ -5,6 +5,7 @@ package plc
 */
 import "C"
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 	"strings"
@@ -61,11 +62,24 @@ func (tag Tag) ElemCount() int {
 // array index) and splits them into their respresentative
 // parts.
 //
-// Grammar: QualifiedTagName -> TagName (TagSeparator TagName)*
-//          TagSeparator     -> ArrayIndex+ | FieldSeparator
-//          TagName          -> (PRINTABLE_ASCII_CHARACTER)+
-//          ArrayIndex       -> "[" NUMBER "]"
-//          FieldSeparator   -> "."
+// From libplctag (we are ignoring bit_seg)
+/*
+ * The EBNF is:
+ *
+ * tag ::= SYMBOLIC_SEG ( tag_seg )* ( bit_seg )?
+ *
+ * tag_seg ::= '.' SYMBOLIC_SEG
+ *             '[' array_seg ']'
+ *
+ * bit_seg ::= '.' [0-9]+
+ *
+ * array_seg ::= NUMERIC_SEG ( ',' NUMERIC_SEG )*
+ *
+ * SYMBOLIC_SEG ::= [a-zA-Z]([a-zA-Z0-9_]*)
+ *
+ * NUMERIC_SEG ::= [0-9]+
+ *
+ */
 func ParseQualifiedTagName(qtn string) ([]string, error) {
 	var ret []string
 
@@ -85,6 +99,9 @@ func ParseQualifiedTagName(qtn string) ([]string, error) {
 	for i, f := range fields {
 		if f == "" {
 			return nil, fmt.Errorf("Field #%d: Empty tagname supplied", i+1)
+		}
+		if bytes.ContainsAny([]byte{f[0]}, "0123456789_") {
+			return nil, fmt.Errorf("Field #%d: Field begins with a non-alpha character '%c'", i+1, f[0])
 		}
 		openBracketIdx := strings.Index(f, "[")
 		if openBracketIdx == -1 {
@@ -108,11 +125,13 @@ func ParseQualifiedTagName(qtn string) ([]string, error) {
 				if closing == -1 {
 					return nil, fmt.Errorf("Field #%d: '[' without ']'", i+1)
 				}
-				idx := a[:closing]
-				if _, err := strconv.ParseUint(idx, 10, 32); err != nil {
-					return nil, fmt.Errorf("Field #%d: Invalid array index: %v", i+1, err)
+				arrayContents := a[:closing]
+				for _, arrayIdx := range strings.Split(arrayContents, ",") {
+					if _, err := strconv.ParseUint(arrayIdx, 10, 32); err != nil {
+						return nil, fmt.Errorf("Field #%d: Invalid array index %v: %v", i+1, arrayIdx, err)
+					}
+					ret = append(ret, arrayIdx)
 				}
-				ret = append(ret, idx)
 			}
 		}
 	}
