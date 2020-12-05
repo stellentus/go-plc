@@ -77,7 +77,7 @@ func ParseQualifiedTagName(qtn string) ([]string, error) {
 	var ret []string
 	i := 0
 
-	alpha := "abcdefhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	alpha := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	num := "0123456789"
 	alphanum := alpha + num + "_"
 
