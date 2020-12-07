@@ -86,13 +86,29 @@ func ParseQualifiedTagName(qtn string) ([]string, error) {
 	if qtn == "" {
 		return nil, fmt.Errorf("Empty tagname supplied")
 	}
+	insideBrackets := false
 	for i, c := range qtn {
-		if unicode.IsSpace(c) {
+		if c == '[' {
+			if insideBrackets {
+				return nil, fmt.Errorf("Nested brackets at index %d", i)
+			}
+			insideBrackets = true
+		}
+		if c == ']' {
+			if !insideBrackets {
+				return nil, fmt.Errorf("Mis-matched brackets at index %d", i)
+			}
+			insideBrackets = false
+		}
+		if unicode.IsSpace(c) && !insideBrackets {
 			return nil, fmt.Errorf("Whitespace character at index %d", i)
 		}
 		if c < 32 || c > unicode.MaxASCII {
 			return nil, fmt.Errorf("Non-ASCII character (codepoint %d) at index %d", int(c), i)
 		}
+	}
+	if insideBrackets {
+		return nil, fmt.Errorf("']' without '['")
 	}
 
 	fields := strings.Split(qtn, ".")
@@ -109,7 +125,7 @@ func ParseQualifiedTagName(qtn string) ([]string, error) {
 			if strings.Index(f, "]") == -1 {
 				ret = append(ret, f)
 			} else {
-				return nil, fmt.Errorf("Field #%d: ']' without '['", i+1)
+				return nil, fmt.Errorf("Field #%d: ']' without '['", i+1) // We've already checked for this case
 			}
 		} else if openBracketIdx == 0 {
 			// The field begins with an open bracket; we're missing the field name
@@ -123,10 +139,11 @@ func ParseQualifiedTagName(qtn string) ([]string, error) {
 				// and a valid unsigned int for the index?
 				closing := strings.Index(a, "]")
 				if closing == -1 {
-					return nil, fmt.Errorf("Field #%d: '[' without ']'", i+1)
+					return nil, fmt.Errorf("Field #%d: '[' without ']'", i+1) // We've already checked for this case
 				}
 				arrayContents := a[:closing]
 				for _, arrayIdx := range strings.Split(arrayContents, ",") {
+					arrayIdx = strings.TrimSpace(arrayIdx)
 					if _, err := strconv.ParseUint(arrayIdx, 10, 32); err != nil {
 						return nil, fmt.Errorf("Field #%d: Invalid array index %v: %v", i+1, arrayIdx, err)
 					}

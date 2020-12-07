@@ -26,15 +26,16 @@ var parserTests = []struct {
 	{"ARRAY[foo]", nil, "Invalid array index"},
 	{"ARRAY[-1]", nil, "Invalid array index"},
 	{"ARRAY[0", nil, "'[' without ']'"},
-	{"ARRAY[[0", nil, "'[' without ']'"},
+	{"ARRAY[[0", nil, "Nested brackets"},
 	{"ARRAY[0][", nil, "'[' without ']'"},
-	{"ARRAY0]", nil, "']' without '['"},
+	{"ARRAY0]", nil, "Mis-matched brackets"},
 	{"DUMMY_AQUA_TEST.[0]", nil, "'[' without array identifier"},
 	{"ARRAY[]", nil, "Invalid array index"},
 	{"ARRAY[0,,2]", nil, "Invalid array index"},
 	{"ARRAY[0,foo,2]", nil, "Invalid array index"},
 	{"ARRAY[0][1][2]", []string{"ARRAY", "0", "1", "2"}, ""},
 	{"ARRAY[0,1,2]", []string{"ARRAY", "0", "1", "2"}, ""},
+	{"ARRAY[ 0 ,  1  , 2 ]", []string{"ARRAY", "0", "1", "2"}, ""},
 	{"Field.Array[42].Member[16]", []string{"Field", "Array", "42", "Member", "16"}, ""},
 }
 
