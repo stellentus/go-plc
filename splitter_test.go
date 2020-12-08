@@ -114,6 +114,9 @@ type structIgnoringTagDashComma struct {
 	MEDIUM int32 `plctag:""`
 	SMALL  int8  `plctag:"-,"`
 }
+type structWithPointer struct {
+	POINT *uint64 `plctag:",omitempty"`
+}
 
 func TestSplitReadStruct(t *testing.T) {
 	expected := testStructType{7, 3.14}
@@ -277,4 +280,26 @@ func TestSplitWriteStructTagIgnoredDashComma(t *testing.T) {
 
 	assert.Equal(t, 1, len(fakeRW), "Only 1 value should be written")
 	assert.Equal(t, expected.MEDIUM, fakeRW[testTagName+".MEDIUM"])
+}
+
+func TestSplitWriteStructTagWithPointer(t *testing.T) {
+	val := uint64(0) // Should be set, even though it's 0 and omitempty
+	expected := structWithPointer{POINT: &val}
+	sw, fakeRW := newSplitWriterForTesting()
+
+	err := sw.WriteTag(testTagName, expected)
+	require.NoError(t, err)
+
+	assert.Equal(t, 1, len(fakeRW), "Only 1 value should be written")
+	assert.Equal(t, *expected.POINT, fakeRW[testTagName+".POINT"])
+}
+
+func TestSplitWriteStructTagWithNilPointer(t *testing.T) {
+	expected := structWithPointer{} // No value set
+	sw, fakeRW := newSplitWriterForTesting()
+
+	err := sw.WriteTag(testTagName, expected)
+	require.NoError(t, err)
+
+	assert.Equal(t, 0, len(fakeRW), "Omitempty pointer should not be written")
 }
