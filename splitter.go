@@ -34,8 +34,8 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 			}
 
 			// Generate the name of the struct's field and recurse
-			fieldName, _ := getNameOfField(str, i)
-			if fieldName == "" {
+			fieldName, ok := getNameOfField(str, i, false)
+			if !ok {
 				continue // Can't touch that
 			}
 			fieldName = name + "." + fieldName // add prefix
@@ -97,12 +97,9 @@ func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 			}
 
 			// Generate the name of the struct's field and recurse
-			fieldName, omitempty := getNameOfField(str, i)
-			if fieldName == "" {
+			fieldName, ok := getNameOfField(str, i, true)
+			if !ok {
 				continue // Can't touch that
-			}
-			if omitempty && str.Field(i).IsZero() {
-				continue // Skip zero values
 			}
 			fieldName = name + "." + fieldName // add prefix
 			fieldPointer := str.Field(i).Interface()
@@ -120,27 +117,37 @@ func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 	return err
 }
 
-func getNameOfField(str reflect.Value, i int) (string, bool) {
-	omitEmpty := false
-
+// getNameOfField gets the name of field i in the provided struct str.
+// The second return argument indicates whether it's ok to use the field. If false,
+// the field should be skipped.
+// It does not consider any struct fields other than 'omitempty', which indicates
+// the field should be skipped if it's a zero value. This is only relevant if
+// allowOmitEmpty is true.
+func getNameOfField(str reflect.Value, i int, allowOmitEmpty bool) (string, bool) {
 	field := str.Type().Field(i)
 	plctag := field.Tag.Get("plctag")
 	if plctag == "" {
-		return field.Name, omitEmpty
+		return field.Name, true
 	}
 	opts := strings.Split(plctag, ",")
-	switch opts[0] {
+	name := opts[0]
+	switch name {
 	case "-":
-		return "", omitEmpty // Ignore this field
+		return "", false // Ignore this field
 	case "":
-		opts[0] = field.Name // Use the field name as the name
+		name = field.Name // Use the field name as the name
+	}
+
+	if !allowOmitEmpty {
+		return name, true
 	}
 
 	for _, opt := range opts[1:] {
 		if opt == "omitempty" {
-			omitEmpty = true
-		} // else an unused option was included
+			return name, !str.Field(i).IsZero()
+		}
+		// else an unused option was included, which is odd but not an error
 	}
 
-	return opts[0], omitEmpty
+	return name, true
 }
