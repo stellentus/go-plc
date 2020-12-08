@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newCacheForTesting() (*Cache, DeviceFake) {
-	devFake := DeviceFake(map[string]interface{}{})
-	return NewCache(devFake), devFake
+func newCacheForTesting() (*Cache, FakeReadWriter) {
+	fakeRW := FakeReadWriter(map[string]interface{}{})
+	return NewCache(fakeRW), fakeRW
 }
 
 func TestNewCache(t *testing.T) {
@@ -18,8 +18,8 @@ func TestNewCache(t *testing.T) {
 }
 
 func TestCachePassthroughInt(t *testing.T) {
-	cache, deviceFake := newCacheForTesting()
-	deviceFake[testTagName] = 7
+	cache, fakeRW := newCacheForTesting()
+	fakeRW[testTagName] = 7
 
 	var actual int
 	err := cache.ReadTag(testTagName, &actual)
@@ -28,14 +28,14 @@ func TestCachePassthroughInt(t *testing.T) {
 }
 
 func TestCachePassthroughTwiceInt(t *testing.T) {
-	cache, deviceFake := newCacheForTesting()
-	deviceFake[testTagName] = 7
+	cache, fakeRW := newCacheForTesting()
+	fakeRW[testTagName] = 7
 
 	var unused int
 	err := cache.ReadTag(testTagName, &unused)
 	require.NoError(t, err)
 
-	deviceFake[testTagName] = 85
+	fakeRW[testTagName] = 85
 
 	var actual int
 	err = cache.ReadTag(testTagName, &actual)
@@ -44,8 +44,8 @@ func TestCachePassthroughTwiceInt(t *testing.T) {
 }
 
 func TestCacheInt(t *testing.T) {
-	cache, deviceFake := newCacheForTesting()
-	deviceFake[testTagName] = 7
+	cache, fakeRW := newCacheForTesting()
+	fakeRW[testTagName] = 7
 
 	var unused int
 	err := cache.ReadTag(testTagName, &unused)
@@ -53,7 +53,7 @@ func TestCacheInt(t *testing.T) {
 
 	// Mess up both values to ensure we're not just getting a pointer
 	unused++
-	deviceFake[testTagName] = 13
+	fakeRW[testTagName] = 13
 
 	var actual int
 	err = cache.ReadCachedTag(testTagName, &actual)
@@ -62,8 +62,8 @@ func TestCacheInt(t *testing.T) {
 }
 
 func TestCacheAfterUpdateInt(t *testing.T) {
-	cache, deviceFake := newCacheForTesting()
-	deviceFake[testTagName] = 7
+	cache, fakeRW := newCacheForTesting()
+	fakeRW[testTagName] = 7
 
 	// Update the cache with a value we'll never look at
 	var unused int
@@ -71,7 +71,7 @@ func TestCacheAfterUpdateInt(t *testing.T) {
 	require.NoError(t, err)
 
 	// Set the value to 85 and read it, expecting this to end up in the cache
-	deviceFake[testTagName] = 85
+	fakeRW[testTagName] = 85
 	err = cache.ReadTag(testTagName, &unused)
 	require.NoError(t, err)
 
@@ -84,9 +84,9 @@ func TestCacheAfterUpdateInt(t *testing.T) {
 const secondTestTagName = "secondTag"
 
 func TestCacheSecondTag(t *testing.T) {
-	cache, deviceFake := newCacheForTesting()
-	deviceFake[testTagName] = 7
-	deviceFake[secondTestTagName] = 99
+	cache, fakeRW := newCacheForTesting()
+	fakeRW[testTagName] = 7
+	fakeRW[secondTestTagName] = 99
 
 	var unused int
 	err := cache.ReadTag(testTagName, &unused)
@@ -105,9 +105,9 @@ func TestCacheSecondTag(t *testing.T) {
 }
 
 func TestCacheReader(t *testing.T) {
-	cache, deviceFake := newCacheForTesting()
+	cache, fakeRW := newCacheForTesting()
 	cacheReader := cache.CacheReader()
-	deviceFake[testTagName] = 7
+	fakeRW[testTagName] = 7
 
 	var unused int
 	err := cache.ReadTag(testTagName, &unused)
@@ -115,7 +115,7 @@ func TestCacheReader(t *testing.T) {
 
 	// Mess up both values to ensure we're not just getting a pointer
 	unused++
-	deviceFake[testTagName] = 13
+	fakeRW[testTagName] = 13
 
 	var actual int
 	err = cacheReader.ReadTag(testTagName, &actual)
