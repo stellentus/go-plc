@@ -39,11 +39,22 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 				continue // Can't touch that
 			}
 			fieldName = name + "." + fieldName // add prefix
-			if !str.Field(i).CanAddr() {
+			field := str.Field(i)
+			if !field.CanAddr() {
 				err = fmt.Errorf("Cannot address %s", fieldName)
 				break
 			}
-			fieldPointer := str.Field(i).Addr().Interface()
+
+			fieldPointer := field.Addr().Interface()
+			if field.Kind() == reflect.Ptr {
+				// Since field actually is a pointer, we want its value instead.
+				if field.IsNil() {
+					// It's currently a nil pointer, so we need to allocate and set the value
+					newVal := reflect.New(field.Type().Elem())
+					field.Set(newVal)
+				}
+				fieldPointer = field.Interface()
+			}
 
 			err = r.ReadTag(fieldName, fieldPointer)
 			if err != nil {

@@ -194,6 +194,18 @@ func TestSplitReadStructTagIgnoredDashComma(t *testing.T) {
 	require.Equal(t, expected, actual)
 }
 
+func TestSplitReadStructTagWithPointer(t *testing.T) {
+	expected := uint64(14)
+
+	sr, fakeRW := newSplitReaderForTesting()
+	fakeRW[testTagName+".POINT"] = expected
+
+	actual := structWithPointer{}
+	err := sr.ReadTag(testTagName, &actual)
+	require.NoError(t, err)
+	require.Equal(t, expected, *actual.POINT)
+}
+
 func TestSplitWriteStruct(t *testing.T) {
 	expected := testStructType{7, 3.14}
 	sw, fakeRW := newSplitWriterForTesting()
