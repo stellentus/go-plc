@@ -90,82 +90,82 @@ func (dev *libplctagDevice) getID(tagName string) (C.int32_t, error) {
 func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
 	id, err := dev.getID(name)
 	if err != nil {
-		return err
+		return fmt.Errorf("ReadTag: %w", err)
 	}
 
 	if err := newLibplctagError(C.plc_tag_read(id, dev.timeout)); err != nil {
-		return err
+		return fmt.Errorf("ReadTag: %w", err)
 	}
 
 	switch val := value.(type) {
 	case *bool:
 		result, err := getUint8(id, noOffset)
 		if err != nil {
-			return err
+			return fmt.Errorf("ReadTag: %w", err)
 		}
 		*val = uint8(result) > 0
 	case *uint8:
 		result, err := getUint8(id, noOffset)
 		if err != nil {
-			return err
+			return fmt.Errorf("ReadTag: %w", err)
 		}
 		*val = uint8(result)
 	case *uint16:
 		result, err := getUint16(id, noOffset)
 		if err != nil {
-			return err
+			return fmt.Errorf("ReadTag: %w", err)
 		}
 		*val = uint16(result)
 	case *uint32:
 		result, err := getUint32(id, noOffset)
 		if err != nil {
-			return err
+			return fmt.Errorf("ReadTag: %w", err)
 		}
 		*val = uint32(result)
 	case *uint64:
 		result, err := getUint64(id, noOffset)
 		if err != nil {
-			return err
+			return fmt.Errorf("ReadTag: %w", err)
 		}
 		*val = uint64(result)
 	case *int8:
 		result, err := getInt8(id, noOffset)
 		if err != nil {
-			return err
+			return fmt.Errorf("ReadTag: %w", err)
 		}
 		*val = int8(result)
 	case *int16:
 		result, err := getInt16(id, noOffset)
 		if err != nil {
-			return err
+			return fmt.Errorf("ReadTag: %w", err)
 		}
 		*val = int16(result)
 	case *int32:
 		result, err := getInt32(id, noOffset)
 		if err != nil {
-			return err
+			return fmt.Errorf("ReadTag: %w", err)
 		}
 		*val = int32(result)
 	case *int64:
 		result, err := getInt64(id, noOffset)
 		if err != nil {
-			return err
+			return fmt.Errorf("ReadTag: %w", err)
 		}
 		*val = int64(result)
 	case *float32:
 		result, err := getFloat32(id, noOffset)
 		if err != nil {
-			return err
+			return fmt.Errorf("ReadTag: %w", err)
 		}
 		*val = float32(result)
 	case *float64:
 		result, err := getFloat64(id, noOffset)
 		if err != nil {
-			return err
+			return fmt.Errorf("ReadTag: %w", err)
 		}
 		*val = float64(result)
 	default:
-		return fmt.Errorf("Type %T is unknown and can't be read (%v)", val, val)
+		return fmt.Errorf("ReadTag: %w: unknown type %T (%v)", ErrBadRequest, val, val)
 	}
 
 	return nil
@@ -177,7 +177,7 @@ func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
 func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
 	id, err := dev.getID(name)
 	if err != nil {
-		return err
+		return fmt.Errorf("WriteTag: %w", err)
 	}
 
 	switch val := value.(type) {
@@ -211,7 +211,7 @@ func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
 		// write the string length
 		err = newLibplctagError(C.plc_tag_set_int32(id, noOffset, C.int32_t(len(val))))
 		if err != nil {
-			return err
+			return fmt.Errorf("WriteTag: %w", err)
 		}
 
 		// copy the data
@@ -223,19 +223,19 @@ func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
 
 			err = newLibplctagError(C.plc_tag_set_uint8(id, C.int(stringDataOffset+str_index), C.uint8_t(byt)))
 			if err != nil {
-				return err
+				return fmt.Errorf("WriteTag: %w", err)
 			}
 		}
 	default:
 		err = fmt.Errorf("Type %T is unknown and can't be written (%v)", val, val)
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("WriteTag: %w", err)
 	}
 
 	// Read. If non-zero, value is true. Otherwise, it's false.
 	if err := newLibplctagError(C.plc_tag_write(id, dev.timeout)); err != nil {
-		return err
+		return fmt.Errorf("WriteTag: %w", err)
 	}
 
 	return nil
@@ -250,11 +250,11 @@ func (dev *libplctagDevice) GetList(listName, prefix string) ([]Tag, []string, e
 
 	id, err := dev.getID(listName)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("GetList: %w", err)
 	}
 
 	if err := newLibplctagError(C.plc_tag_read(id, dev.timeout)); err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("GetList: %w", err)
 	}
 
 	tags := []Tag{}
@@ -300,7 +300,7 @@ func (dev *libplctagDevice) GetList(listName, prefix string) ([]Tag, []string, e
 		} else {
 			numDimensions := int((tag.tagType & TagDimensionMask) >> 13)
 			if numDimensions != len(tag.dimensions) {
-				return nil, nil, fmt.Errorf("Tag '%s' claims to have %d dimensions but has %d", tag.name, numDimensions, len(tag.dimensions))
+				return nil, nil, fmt.Errorf("GetList: %w: tag '%s' claims to have %d dimensions but has %d", ErrPlcInternal, tag.name, numDimensions, len(tag.dimensions))
 			}
 
 			tags = append(tags, tag)
