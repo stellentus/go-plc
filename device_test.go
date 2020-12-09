@@ -23,8 +23,8 @@ func TestNewDeviceRequiresAddress(t *testing.T) {
 	// Ideally we'd call assert.IsError, but it's not available yet.
 	// All we really care about is `errors.Is`, not strict equality.
 	// So use errors.Is for the soft check, but use assert.Equal for pretty printing.
-	if !errors.Is(err, ErrNoAddress) {
-		assert.Equal(t, err, ErrNoAddress, "Error should be of correct type")
+	if !errors.Is(err, ErrBadRequest) {
+		assert.Equal(t, err, ErrBadRequest, "Error should be of correct type")
 	}
 }
 
@@ -48,8 +48,7 @@ func TestReadTagRequiresPointer(t *testing.T) {
 	err := dev.ReadTag(testTagName, notAPointer)
 	require.Error(t, err)
 
-	unusedErrType := ErrNonPointerRead{}
-	if !errors.As(err, &unusedErrType) {
+	if !errors.Is(err, ErrBadRequest) {
 		require.Failf(t, "Incorrect error type for non-pointer read", "Received error: %v", err)
 	}
 

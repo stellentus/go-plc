@@ -1,7 +1,6 @@
 package plc
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -16,16 +15,12 @@ type Device struct {
 
 var _ = ReadWriter(&Device{}) // Compiler makes sure this type is a ReadWriter
 
-var (
-	ErrNoAddress = errors.New("Device cannot be initialized without an address")
-)
-
 // NewDevice creates a new Device at the provided address with options.
 // It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
 // portion of the tag tree is locked.
 func NewDevice(addr string, opts ...deviceOption) (*Device, error) {
 	if addr == "" {
-		return nil, ErrNoAddress
+		return nil, fmt.Errorf("%w: no address for connection", ErrBadRequest)
 	}
 
 	// Initialize with default connection options
@@ -176,3 +171,5 @@ func newErrNonPointerRead(tn string, k reflect.Kind) ErrNonPointerRead {
 func (err ErrNonPointerRead) Error() string {
 	return fmt.Sprintf("ReadTag expects a pointer type but got %v for tag '%s'", err.Kind, err.TagName)
 }
+
+func (err ErrNonPointerRead) Unwrap() error { return ErrBadRequest } // Even though we don't say "bad request", that's still this error's type
