@@ -85,3 +85,5 @@ type TagNotFoundError struct {
 func (err TagNotFoundError) Error() string {
 	return "Cache tag '" + err.Name + "' could not be found"
 }
+
+func (err TagNotFoundError) Unwrap() error { return ErrBadRequest }
