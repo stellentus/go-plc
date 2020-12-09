@@ -15,7 +15,7 @@ var (
 	Pending        = errors.New("The PLC has not yet provided a result for the non-blocking request")
 )
 
-func newError(code C.int32_t) error {
+func newLibplctagError(code C.int32_t) error {
 	switch code {
 	case C.PLCTAG_STATUS_OK:
 		return nil

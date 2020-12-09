@@ -53,7 +53,7 @@ func newLibplctagDevice(conConf string, timeout time.Duration) *libplctagDevice 
 // Close should be called on the libplctagDevice to clean up its resources.
 func (dev *libplctagDevice) Close() error {
 	for _, id := range dev.ids {
-		err := newError(C.plc_tag_destroy(id))
+		err := newLibplctagError(C.plc_tag_destroy(id))
 		if err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ func (dev *libplctagDevice) getID(tagName string) (C.int32_t, error) {
 
 	id = C.plc_tag_create(cattrib_str, dev.timeout)
 	if id < 0 {
-		return id, newError(id)
+		return id, newLibplctagError(id)
 	}
 	dev.ids[tagName] = id
 	return id, nil
@@ -93,7 +93,7 @@ func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
 		return err
 	}
 
-	if err := newError(C.plc_tag_read(id, dev.timeout)); err != nil {
+	if err := newLibplctagError(C.plc_tag_read(id, dev.timeout)); err != nil {
 		return err
 	}
 
@@ -186,30 +186,30 @@ func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
 		if val {
 			b = C.uint8_t(255)
 		}
-		err = newError(C.plc_tag_set_uint8(id, noOffset, b))
+		err = newLibplctagError(C.plc_tag_set_uint8(id, noOffset, b))
 	case uint8:
-		err = newError(C.plc_tag_set_uint8(id, noOffset, C.uint8_t(val)))
+		err = newLibplctagError(C.plc_tag_set_uint8(id, noOffset, C.uint8_t(val)))
 	case uint16:
-		err = newError(C.plc_tag_set_uint16(id, noOffset, C.uint16_t(val)))
+		err = newLibplctagError(C.plc_tag_set_uint16(id, noOffset, C.uint16_t(val)))
 	case uint32:
-		err = newError(C.plc_tag_set_uint32(id, noOffset, C.uint32_t(val)))
+		err = newLibplctagError(C.plc_tag_set_uint32(id, noOffset, C.uint32_t(val)))
 	case uint64:
-		err = newError(C.plc_tag_set_uint64(id, noOffset, C.uint64_t(val)))
+		err = newLibplctagError(C.plc_tag_set_uint64(id, noOffset, C.uint64_t(val)))
 	case int8:
-		err = newError(C.plc_tag_set_int8(id, noOffset, C.int8_t(val)))
+		err = newLibplctagError(C.plc_tag_set_int8(id, noOffset, C.int8_t(val)))
 	case int16:
-		err = newError(C.plc_tag_set_int16(id, noOffset, C.int16_t(val)))
+		err = newLibplctagError(C.plc_tag_set_int16(id, noOffset, C.int16_t(val)))
 	case int32:
-		err = newError(C.plc_tag_set_int32(id, noOffset, C.int32_t(val)))
+		err = newLibplctagError(C.plc_tag_set_int32(id, noOffset, C.int32_t(val)))
 	case int64:
-		err = newError(C.plc_tag_set_int64(id, noOffset, C.int64_t(val)))
+		err = newLibplctagError(C.plc_tag_set_int64(id, noOffset, C.int64_t(val)))
 	case float32:
-		err = newError(C.plc_tag_set_float32(id, noOffset, C.float(val)))
+		err = newLibplctagError(C.plc_tag_set_float32(id, noOffset, C.float(val)))
 	case float64:
-		err = newError(C.plc_tag_set_float64(id, noOffset, C.double(val)))
+		err = newLibplctagError(C.plc_tag_set_float64(id, noOffset, C.double(val)))
 	case string:
 		// write the string length
-		err = newError(C.plc_tag_set_int32(id, noOffset, C.int32_t(len(val))))
+		err = newLibplctagError(C.plc_tag_set_int32(id, noOffset, C.int32_t(len(val))))
 		if err != nil {
 			return err
 		}
@@ -221,7 +221,7 @@ func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
 				byt = val[str_index]
 			}
 
-			err = newError(C.plc_tag_set_uint8(id, C.int(stringDataOffset+str_index), C.uint8_t(byt)))
+			err = newLibplctagError(C.plc_tag_set_uint8(id, C.int(stringDataOffset+str_index), C.uint8_t(byt)))
 			if err != nil {
 				return err
 			}
@@ -234,7 +234,7 @@ func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
 	}
 
 	// Read. If non-zero, value is true. Otherwise, it's false.
-	if err := newError(C.plc_tag_write(id, dev.timeout)); err != nil {
+	if err := newLibplctagError(C.plc_tag_write(id, dev.timeout)); err != nil {
 		return err
 	}
 
@@ -253,7 +253,7 @@ func (dev *libplctagDevice) GetList(listName, prefix string) ([]Tag, []string, e
 		return nil, nil, err
 	}
 
-	if err := newError(C.plc_tag_read(id, dev.timeout)); err != nil {
+	if err := newLibplctagError(C.plc_tag_read(id, dev.timeout)); err != nil {
 		return nil, nil, err
 	}
 
@@ -323,7 +323,7 @@ func getUint8(id C.int32_t, offset C.int) (uint8, error) {
 	result := uint8(C.plc_tag_get_uint8(id, offset))
 	if result == math.MaxUint8 {
 		// If libplctag returns this value, it might be an error, so check
-		return result, newError(C.plc_tag_status(id))
+		return result, newLibplctagError(C.plc_tag_status(id))
 	}
 	return result, nil
 }
@@ -332,7 +332,7 @@ func getUint16(id C.int32_t, offset C.int) (uint16, error) {
 	result := uint16(C.plc_tag_get_uint16(id, offset))
 	if result == math.MaxUint16 {
 		// If libplctag returns this value, it might be an error, so check
-		return result, newError(C.plc_tag_status(id))
+		return result, newLibplctagError(C.plc_tag_status(id))
 	}
 	return result, nil
 }
@@ -341,7 +341,7 @@ func getUint32(id C.int32_t, offset C.int) (uint32, error) {
 	result := uint32(C.plc_tag_get_uint32(id, offset))
 	if result == math.MaxUint32 {
 		// If libplctag returns this value, it might be an error, so check
-		return result, newError(C.plc_tag_status(id))
+		return result, newLibplctagError(C.plc_tag_status(id))
 	}
 	return result, nil
 }
@@ -350,7 +350,7 @@ func getUint64(id C.int32_t, offset C.int) (uint64, error) {
 	result := uint64(C.plc_tag_get_uint64(id, offset))
 	if result == math.MaxUint64 {
 		// If libplctag returns this value, it might be an error, so check
-		return result, newError(C.plc_tag_status(id))
+		return result, newLibplctagError(C.plc_tag_status(id))
 	}
 	return result, nil
 }
@@ -359,7 +359,7 @@ func getInt8(id C.int32_t, offset C.int) (int8, error) {
 	result := int8(C.plc_tag_get_int8(id, offset))
 	if result == math.MinInt8 {
 		// If libplctag returns this value, it might be an error, so check
-		return result, newError(C.plc_tag_status(id))
+		return result, newLibplctagError(C.plc_tag_status(id))
 	}
 	return result, nil
 }
@@ -368,7 +368,7 @@ func getInt16(id C.int32_t, offset C.int) (int16, error) {
 	result := int16(C.plc_tag_get_int16(id, offset))
 	if result == math.MinInt16 {
 		// If libplctag returns this value, it might be an error, so check
-		return result, newError(C.plc_tag_status(id))
+		return result, newLibplctagError(C.plc_tag_status(id))
 	}
 	return result, nil
 }
@@ -377,7 +377,7 @@ func getInt32(id C.int32_t, offset C.int) (int32, error) {
 	result := int32(C.plc_tag_get_int32(id, offset))
 	if result == math.MinInt32 {
 		// If libplctag returns this value, it might be an error, so check
-		return result, newError(C.plc_tag_status(id))
+		return result, newLibplctagError(C.plc_tag_status(id))
 	}
 	return result, nil
 }
@@ -386,7 +386,7 @@ func getInt64(id C.int32_t, offset C.int) (int64, error) {
 	result := int64(C.plc_tag_get_int64(id, offset))
 	if result == math.MinInt64 {
 		// If libplctag returns this value, it might be an error, so check
-		return result, newError(C.plc_tag_status(id))
+		return result, newLibplctagError(C.plc_tag_status(id))
 	}
 	return result, nil
 }
@@ -395,7 +395,7 @@ func getFloat32(id C.int32_t, offset C.int) (float32, error) {
 	result := float32(C.plc_tag_get_float32(id, offset))
 	if result == math.SmallestNonzeroFloat32 {
 		// If libplctag returns this value, it might be an error, so check
-		return result, newError(C.plc_tag_status(id))
+		return result, newLibplctagError(C.plc_tag_status(id))
 	}
 	return result, nil
 }
@@ -404,7 +404,7 @@ func getFloat64(id C.int32_t, offset C.int) (float64, error) {
 	result := float64(C.plc_tag_get_float64(id, offset))
 	if result == math.SmallestNonzeroFloat64 {
 		// If libplctag returns this value, it might be an error, so check
-		return result, newError(C.plc_tag_status(id))
+		return result, newLibplctagError(C.plc_tag_status(id))
 	}
 	return result, nil
 }
