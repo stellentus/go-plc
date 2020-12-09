@@ -49,7 +49,7 @@ func (r *Cache) ReadCachedTag(name string, value interface{}) error {
 
 	val := reflect.ValueOf(value)
 	if val.Kind() != reflect.Ptr {
-		return errors.New("ReadCachedTag for '" + name + "' requires a reference, not a value")
+		return newErrNonPointerRead(name, val.Kind())
 	}
 	vToSet := val.Elem()
 	if !vToSet.CanSet() {

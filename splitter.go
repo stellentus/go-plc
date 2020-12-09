@@ -21,7 +21,7 @@ func NewSplitReader(rd Reader) SplitReader {
 func (r SplitReader) ReadTag(name string, value interface{}) error {
 	v := reflect.ValueOf(value)
 	if v.Kind() != reflect.Ptr {
-		return fmt.Errorf("ReadTag expects a pointer type but got %v", v.Kind())
+		return newErrNonPointerRead(name, v.Kind())
 	}
 
 	err := error(nil)
