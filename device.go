@@ -16,12 +16,16 @@ type Device struct {
 
 var _ = ReadWriter(&Device{}) // Compiler makes sure this type is a ReadWriter
 
+var (
+	ErrNoAddress = errors.New("Device cannot be initialized without an address")
+)
+
 // NewDevice creates a new Device at the provided address with options.
 // It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
 // portion of the tag tree is locked.
 func NewDevice(addr string, opts ...deviceOption) (*Device, error) {
 	if addr == "" {
-		return nil, errors.New("Device cannot be initialized without an address")
+		return nil, ErrNoAddress
 	}
 
 	// Initialize with default connection options
@@ -85,7 +89,7 @@ func TagWithIndex(name string, index int) string {
 func (dev *Device) ReadTag(name string, value interface{}) error {
 	v := reflect.ValueOf(value)
 	if v.Kind() != reflect.Ptr {
-		return fmt.Errorf("ReadTag expects a pointer type but got %v", v.Kind())
+		return newErrNonPointerRead(name, v.Kind())
 	}
 
 	switch v.Elem().Kind() {
@@ -145,4 +149,17 @@ func (dev *Device) GetAllPrograms() ([]string, error) {
 	}
 
 	return programs, nil
+}
+
+type ErrNonPointerRead struct {
+	TagName string
+	reflect.Kind
+}
+
+func newErrNonPointerRead(tn string, k reflect.Kind) ErrNonPointerRead {
+	return ErrNonPointerRead{TagName: tn, Kind: k}
+}
+
+func (err ErrNonPointerRead) Error() string {
+	return fmt.Sprintf("ReadTag expects a pointer type but got %v for tag '%s'", err.Kind, err.TagName)
 }
