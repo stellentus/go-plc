@@ -73,7 +73,11 @@ func LibplctagOption(name, val string) deviceOption {
 
 // Close should be called on the Device to clean up its resources.
 func (dev *Device) Close() error {
-	return dev.rawDevice.Close()
+	err := dev.rawDevice.Close()
+	if err != nil {
+		return fmt.Errorf("device close: %w", err)
+	}
+	return nil
 }
 
 // TagWithIndex provides the fully qualified tag for the given index of an array.
@@ -97,9 +101,10 @@ func (dev *Device) ReadTag(name string, value interface{}) error {
 		bytes := make([]byte, stringMaxLength)
 		for str_index := 0; str_index < stringMaxLength; str_index++ {
 			var val byte
-			err := dev.rawDevice.ReadTag(TagWithIndex(name, str_index), &val)
+			tagWithIndex := TagWithIndex(name, str_index)
+			err := dev.rawDevice.ReadTag(tagWithIndex, &val)
 			if err != nil {
-				return err
+				return fmt.Errorf("ReadTag '%s' as string: %w", tagWithIndex, err)
 			}
 			if val == 0 {
 				// We found a null, which is the end of the string
@@ -110,30 +115,38 @@ func (dev *Device) ReadTag(name string, value interface{}) error {
 		}
 		result := string(bytes)
 		v.Elem().Set(reflect.ValueOf(result))
-		return nil
 	default:
-		return dev.rawDevice.ReadTag(name, value)
+		err := dev.rawDevice.ReadTag(name, value)
+		if err != nil {
+			return fmt.Errorf("ReadTag '%s': %w", name, err)
+		}
 	}
+
+	return nil
 }
 
 // WriteTag writes the provided tag and value.
 // It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
 // portion of the tag tree is locked.
 func (dev *Device) WriteTag(name string, value interface{}) error {
-	return dev.rawDevice.WriteTag(name, value)
+	err := dev.rawDevice.WriteTag(name, value)
+	if err != nil {
+		return fmt.Errorf("WriteTag '%s': %w", name, err)
+	}
+	return nil
 }
 
 // GetAllTags gets a list of all tags available on the Device.
 func (dev *Device) GetAllTags() ([]Tag, error) {
 	tags, programs, err := dev.rawDevice.GetList("", "")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetAllTags: %w", err)
 	}
 
 	for _, progName := range programs {
 		progTags, _, err := dev.rawDevice.GetList(progName, "")
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("GetAllTags for program '%s': %w", progName, err)
 		}
 		tags = append(tags, progTags...)
 	}
@@ -145,7 +158,7 @@ func (dev *Device) GetAllTags() ([]Tag, error) {
 func (dev *Device) GetAllPrograms() ([]string, error) {
 	_, programs, err := dev.rawDevice.GetList("", "")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetAllPrograms: %w", err)
 	}
 
 	return programs, nil
