@@ -2,6 +2,7 @@ package plc
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"sync"
 )
@@ -27,7 +28,7 @@ func NewCache(reader Reader) *Cache {
 func (r *Cache) ReadTag(name string, value interface{}) error {
 	err := r.reader.ReadTag(name, value)
 	if err != nil {
-		return err
+		return fmt.Errorf("Cache: %w", err)
 	}
 
 	r.mutex.Lock()
@@ -70,7 +71,11 @@ func (r *Cache) CacheReader() CacheReader {
 }
 
 func (r CacheReader) ReadTag(name string, value interface{}) error {
-	return r.cache.ReadCachedTag(name, value)
+	err := r.cache.ReadCachedTag(name, value)
+	if err != nil {
+		return fmt.Errorf("CacheReader: %w", err)
+	}
+	return nil
 }
 
 type TagNotFoundError struct {
@@ -78,5 +83,5 @@ type TagNotFoundError struct {
 }
 
 func (err TagNotFoundError) Error() string {
-	return "Tag '" + err.Name + "' could not be found"
+	return "Cache tag '" + err.Name + "' could not be found"
 }
