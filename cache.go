@@ -39,13 +39,13 @@ func (r *Cache) ReadTag(name string, value interface{}) error {
 }
 
 // ReadCachedTag acts the same as ReadTag, but returns the cached value.
-// A read of a value not in the cache will return TagNotFoundError.
+// A read of a value not in the cache will return ErrTagNotFound.
 func (r *Cache) ReadCachedTag(name string, value interface{}) error {
 	r.mutex.RLock()
 	cVal, ok := r.cache[name]
 	r.mutex.RUnlock()
 	if !ok {
-		return TagNotFoundError{name}
+		return ErrTagNotFound{name}
 	}
 
 	val := reflect.ValueOf(value)
@@ -78,12 +78,12 @@ func (r CacheReader) ReadTag(name string, value interface{}) error {
 	return nil
 }
 
-type TagNotFoundError struct {
+type ErrTagNotFound struct {
 	Name string
 }
 
-func (err TagNotFoundError) Error() string {
+func (err ErrTagNotFound) Error() string {
 	return "Cache tag '" + err.Name + "' could not be found"
 }
 
-func (err TagNotFoundError) Unwrap() error { return ErrBadRequest }
+func (err ErrTagNotFound) Unwrap() error { return ErrBadRequest }
