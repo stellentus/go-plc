@@ -58,13 +58,18 @@ type Controller struct {
 }
 
 type RedundancyInfo struct {
+	Enabled                   bool `xml:",attr"`
+	KeepTestEditsOnSwitchOver bool `xml:",attr"`
+	IOMemoryPadPercentage     int  `xml:",attr"`
+	DataTablePadPercentage    int  `xml:",attr"`
 }
 
 type Security struct {
+	Code            int    `xml:",attr"`
+	ChangesToDetect string `xml:",attr"`
 }
 
-type SecurityInfo struct {
-}
+type SecurityInfo struct{}
 
 type DataTypes struct {
 }
@@ -85,24 +90,34 @@ type Tasks struct {
 }
 
 type CST struct {
+	MasterID int `xml:",attr"`
 }
 
 type WallClockTime struct {
+	LocalTimeAdjustment int `xml:",attr"`
+	TimeZone            int `xml:",attr"`
 }
 
 type Trends struct {
 }
 
-type DataLogs struct {
-}
+type DataLogs struct{}
 
 type TimeSynchronize struct {
+	Priority1 int  `xml:",attr"`
+	Priority2 int  `xml:",attr"`
+	PTPEnable bool `xml:",attr"`
 }
 
 type EthernetPorts struct {
 }
 
 type EthernetNetwork struct {
+	SupervisorModeEnabled bool `xml:",attr"`
+	SupervisorPrecedence  int  `xml:",attr"`
+	BeaconInterval        int  `xml:",attr"`
+	BeaconTimeout         int  `xml:",attr"`
+	VLANID                int  `xml:",attr"`
 }
 
 type rsLogixTime time.Time
