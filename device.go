@@ -143,7 +143,10 @@ func (dev *Device) GetAllTags() ([]Tag, error) {
 		if err != nil {
 			return nil, fmt.Errorf("GetAllTags for program '%s': %w", progName, err)
 		}
-		tags = append(tags, progTags...)
+		for _, progTag := range progTags {
+			progTag.name = progName + "." + progTag.name
+			tags = append(tags, progTag)
+		}
 	}
 
 	return tags, nil
