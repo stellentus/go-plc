@@ -81,7 +81,7 @@ func newLibplctagError(code C.int32_t) error {
 		C.PLCTAG_ERR_WRITE,
 		C.PLCTAG_ERR_BUSY:
 		cstr := C.plc_tag_decode_error(C.int(code))
-		return fmt.Errorf("%w: %s", ErrBadRequest, C.GoString(cstr))
+		return fmt.Errorf("%w: %s", ErrPlcInternal, C.GoString(cstr))
 
 	default:
 		cstr := C.plc_tag_decode_error(C.int(code))
