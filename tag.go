@@ -261,7 +261,34 @@ func (tt TagType) HasName() bool {
 var tagTypeNames = map[TagType]string{
 	0x00C1: "BOOL",
 	0x00C2: "SINT",
+	0x00C3: "INT",
+	0x00C4: "DINT",
+	0x00C5: "LINT",
+	0x00C6: "USINT",
+	0x00C7: "UINT",
+	0x00C8: "UDINT",
+	0x00C9: "ULINT",
 	0x00CA: "REAL",
+	0x00CB: "LREAL",
+	0x00CC: "STIME",
+	0x00CD: "DATE",
+	0x00CE: "TIME_OF_DAY",
+	0x00CF: "DATE_AND_TIME",
+	0x00D0: "STRING",
+	0x00D1: "BYTE",
+	0x00D2: "WORD",
+	0x00D3: "DWORD",
+	0x00D4: "LWORD",
+	0x00D5: "STRING2",
+	0x00D6: "FTIME",
+	0x00D7: "LTIME",
+	0x00D8: "ITIME",
+	0x00D9: "STRINGN",
+	0x00DA: "SHORT_STRING",
+	0x00DB: "TIME",
+	0x00DC: "EPATH",
+	0x00DD: "ENGUNIT",
+	0x20C3: "INT",
 	0x20C4: "DINT",
 }
 
@@ -291,9 +318,36 @@ func (tt TagType) CanBeInstantiated() bool {
 
 var tagTypes = map[TagType]reflect.Type{
 	0x00C1: reflect.TypeOf(false),
-	0x00C2: reflect.TypeOf(uint16(0)), // TODO perhaps this should be signed?
+	0x00C2: reflect.TypeOf(int8(0)),
+	0x00C3: reflect.TypeOf(int16(0)),
+	0x00C4: reflect.TypeOf(int32(0)),
+	0x00C5: reflect.TypeOf(int64(0)),
+	0x00C6: reflect.TypeOf(uint8(0)),
+	0x00C7: reflect.TypeOf(uint16(0)),
+	0x00C8: reflect.TypeOf(uint32(0)),
+	0x00C9: reflect.TypeOf(uint64(0)),
 	0x00CA: reflect.TypeOf(float32(0)),
-	0x20C4: reflect.TypeOf(uint32(0)), // TODO perhaps this should be signed?
+	0x00CB: reflect.TypeOf(float64(0)),
+	// 0x00CC: reflect.TypeOf(SynchronousTime{}), // unsupported
+	// 0x00CD: reflect.TypeOf(Date{}), // unsupported
+	// 0x00CE: reflect.TypeOf(TimeOfDay{}), // unsupported
+	// 0x00CF: reflect.TypeOf(DateTime{}), // unsupported
+	0x00D0: reflect.TypeOf(string("")),
+	0x00D1: reflect.TypeOf(byte(0)),   // might not be correct; might be an array
+	0x00D2: reflect.TypeOf(uint16(0)), // might not be correct; might be an array
+	0x00D3: reflect.TypeOf(uint32(0)), // might not be correct; might be an array
+	0x00D4: reflect.TypeOf(uint64(0)), // might not be correct; might be an array
+	// 0x00D5: reflect.TypeOf(String2Byte{}), //unsupported
+	// 0x00D6: reflect.TypeOf(DurationHigh{}), //unsupported, but uses int32
+	// 0x00D7: reflect.TypeOf(DurationLong{}), //unsupported, but uses int64
+	// 0x00D8: reflect.TypeOf(DurationShort{}), //unsupported
+	// 0x00D9: reflect.TypeOf(CharStringNBytesPerCharacter{}), //unsupported
+	// 0x00DA: reflect.TypeOf(CharacterSTringWithLengthByte{}), //unsupported
+	// 0x00DB: reflect.TypeOf(Duration_ms{}), //unsupported
+	// 0x00DC: reflect.TypeOf(CipPathSegments{}), //unsupported
+	// 0x00DD: reflect.TypeOf(EngineeringUnits{}), //unsupported
+	0x20C3: reflect.TypeOf(int32(0)), // might actually be unsigned or 16 bits?
+	0x20C4: reflect.TypeOf(int32(0)),
 }
 
 // RegisterTagType registers the provided variable as the type of the provided TagType.
