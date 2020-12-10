@@ -84,8 +84,11 @@ type Member struct {
 	Dimension      int    `xml:",attr"`
 	Radix          string `xml:",attr"` // TODO: enum
 	Hidden         bool   `xml:",attr"`
-	BitNumber      int         `xml:",attr,omitempty"`
+	BitNumber      int    `xml:",attr,omitempty"`
 	ExternalAccess string `xml:",attr"` // TODO: enum
+	Description    struct {
+		Cdata string `xml:",cdata"`
+	} `xml:",omitempty"`
 }
 
 type Modules struct {
