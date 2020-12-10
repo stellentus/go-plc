@@ -15,10 +15,94 @@ type RSLogix5000Content struct {
 	ContainsContext  bool        `xml:",attr"`
 	ExportDate       rsLogixTime `xml:"ExportDate,attr"`
 	ExportOptions    stringSlice `xml:"ExportOptions,attr"`
-	Controller
+	Controller       Controller
 }
 
 type Controller struct {
+	Use                      string      `xml:",attr"`
+	Name                     string      `xml:",attr"`
+	ProcessorType            string      `xml:",attr"`
+	MajorRev                 int         `xml:",attr"`
+	MinorRev                 int         `xml:",attr"`
+	TimeSlice                int         `xml:",attr"`
+	ShareUnusedTimeSlice     int         `xml:",attr"`
+	ProjectCreationDate      rsLogixTime `xml:",attr"`
+	LastModifiedDate         rsLogixTime `xml:",attr"`
+	SFCExecutionControl      string      `xml:",attr"`
+	SFCRestartPosition       string      `xml:",attr"`
+	SFCLastScan              string      `xml:",attr"`
+	ProjectSN                string      `xml:",attr"`
+	MatchProjectToController bool        `xml:",attr"`
+	CanUseRPIFromProducer    bool        `xml:",attr"`
+	BlockAutoUpdate          bool        `xml:"InhibitAutomaticFirmwareUpdate,attr"`
+	PassThroughConfiguration string      `xml:",attr"`
+	DownloadProjDocs         bool        `xml:"DownloadProjectDocumentationAndExtendedProperties,attr"`
+	DownloadProjProps        bool        `xml:"DownloadProjectCustomProperties,attr"`
+	ReportMinorOverflow      bool        `xml:",attr"`
+	RedundancyInfo           RedundancyInfo
+	Security                 Security
+	SecurityInfo             SecurityInfo
+	DataTypes                DataTypes
+	Modules                  Modules
+	AddOnInstructions        AddOnInstructions `xml:"AddOnInstructionDefinitions"`
+	Tags                     Tags
+	Programs                 Programs
+	Tasks                    Tasks
+	CST                      CST
+	WallClockTime            WallClockTime
+	Trends                   Trends
+	DataLogs                 DataLogs
+	TimeSynchronize          TimeSynchronize
+	EthernetPorts            EthernetPorts
+	EthernetNetwork          EthernetNetwork
+}
+
+type RedundancyInfo struct {
+}
+
+type Security struct {
+}
+
+type SecurityInfo struct {
+}
+
+type DataTypes struct {
+}
+
+type Modules struct {
+}
+
+type AddOnInstructions struct {
+}
+
+type Tags struct {
+}
+
+type Programs struct {
+}
+
+type Tasks struct {
+}
+
+type CST struct {
+}
+
+type WallClockTime struct {
+}
+
+type Trends struct {
+}
+
+type DataLogs struct {
+}
+
+type TimeSynchronize struct {
+}
+
+type EthernetPorts struct {
+}
+
+type EthernetNetwork struct {
 }
 
 type rsLogixTime time.Time
