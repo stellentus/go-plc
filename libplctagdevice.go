@@ -33,53 +33,53 @@ func newLibplctagError(code C.int32_t) error {
 		return fmt.Errorf("%w", Pending)
 
 	// These are all bad requests
-	case C.PLCTAG_ERR_BAD_CONFIG:
-	case C.PLCTAG_ERR_BAD_DEVICE: // trying to address something that doesn't exist
-	case C.PLCTAG_ERR_BAD_PARAM: // this might indicate a problem with this go code
-	case C.PLCTAG_ERR_NOT_ALLOWED:
-	case C.PLCTAG_ERR_NOT_FOUND:
-	case C.PLCTAG_ERR_NO_DATA:
-	case C.PLCTAG_ERR_NO_MATCH:
-	case C.PLCTAG_ERR_OUT_OF_BOUNDS:
-	case C.PLCTAG_ERR_UNSUPPORTED:
+	case C.PLCTAG_ERR_BAD_CONFIG,
+		C.PLCTAG_ERR_BAD_DEVICE, // trying to address something that doesn't exist
+		C.PLCTAG_ERR_BAD_PARAM,  // this might indicate a problem with this go code
+		C.PLCTAG_ERR_NOT_ALLOWED,
+		C.PLCTAG_ERR_NOT_FOUND,
+		C.PLCTAG_ERR_NO_DATA,
+		C.PLCTAG_ERR_NO_MATCH,
+		C.PLCTAG_ERR_OUT_OF_BOUNDS,
+		C.PLCTAG_ERR_UNSUPPORTED:
 		cstr := C.plc_tag_decode_error(C.int(code))
 		return fmt.Errorf("%w: %s", ErrBadRequest, C.GoString(cstr))
 
 	// These are all connection issues
-	case C.PLCTAG_ERR_BAD_CONNECTION:
-	case C.PLCTAG_ERR_BAD_GATEWAY:
-	case C.PLCTAG_ERR_TIMEOUT:
-	case C.PLCTAG_ERR_PARTIAL:
+	case C.PLCTAG_ERR_BAD_CONNECTION,
+		C.PLCTAG_ERR_BAD_GATEWAY,
+		C.PLCTAG_ERR_TIMEOUT,
+		C.PLCTAG_ERR_PARTIAL:
 		cstr := C.plc_tag_decode_error(C.int(code))
 		return fmt.Errorf("%w: %s", ErrPlcConnection, C.GoString(cstr))
 
 	// These are all internal errors
-	case C.PLCTAG_ERR_ABORT: // This is likely a bug in this go code
-	case C.PLCTAG_ERR_BAD_DATA: // This could also be a connection issue
-	case C.PLCTAG_ERR_BAD_REPLY:
-	case C.PLCTAG_ERR_BAD_STATUS:
-	case C.PLCTAG_ERR_CLOSE:
-	case C.PLCTAG_ERR_CREATE:
-	case C.PLCTAG_ERR_DUPLICATE: // probably a libplctag error
-	case C.PLCTAG_ERR_ENCODE: // probably a libplctag error, but could be an input issue
-	case C.PLCTAG_ERR_MUTEX_DESTROY:
-	case C.PLCTAG_ERR_MUTEX_INIT:
-	case C.PLCTAG_ERR_MUTEX_LOCK:
-	case C.PLCTAG_ERR_MUTEX_UNLOCK:
-	case C.PLCTAG_ERR_NOT_IMPLEMENTED:
-	case C.PLCTAG_ERR_NO_MEM: // libplctag
-	case C.PLCTAG_ERR_NO_RESOURCES: // PLC
-	case C.PLCTAG_ERR_NULL_PTR: // could also occur if an invalid handle is used, which would be a bug in go code
-	case C.PLCTAG_ERR_OPEN:
-	case C.PLCTAG_ERR_READ:
-	case C.PLCTAG_ERR_REMOTE_ERR:
-	case C.PLCTAG_ERR_THREAD_CREATE: // This might need special handling, as it indicates libplctag is in a *very* bad state
-	case C.PLCTAG_ERR_THREAD_JOIN:
-	case C.PLCTAG_ERR_TOO_LARGE: // more data returned than expected
-	case C.PLCTAG_ERR_TOO_SMALL:
-	case C.PLCTAG_ERR_WINSOCK:
-	case C.PLCTAG_ERR_WRITE:
-	case C.PLCTAG_ERR_BUSY:
+	case C.PLCTAG_ERR_ABORT, // This is likely a bug in this go code
+		C.PLCTAG_ERR_BAD_DATA, // This could also be a connection issue
+		C.PLCTAG_ERR_BAD_REPLY,
+		C.PLCTAG_ERR_BAD_STATUS,
+		C.PLCTAG_ERR_CLOSE,
+		C.PLCTAG_ERR_CREATE,
+		C.PLCTAG_ERR_DUPLICATE, // probably a libplctag error
+		C.PLCTAG_ERR_ENCODE,    // probably a libplctag error, but could be an input issue
+		C.PLCTAG_ERR_MUTEX_DESTROY,
+		C.PLCTAG_ERR_MUTEX_INIT,
+		C.PLCTAG_ERR_MUTEX_LOCK,
+		C.PLCTAG_ERR_MUTEX_UNLOCK,
+		C.PLCTAG_ERR_NOT_IMPLEMENTED,
+		C.PLCTAG_ERR_NO_MEM,       // libplctag
+		C.PLCTAG_ERR_NO_RESOURCES, // PLC
+		C.PLCTAG_ERR_NULL_PTR,     // could also occur if an invalid handle is used, which would be a bug in go code
+		C.PLCTAG_ERR_OPEN,
+		C.PLCTAG_ERR_READ,
+		C.PLCTAG_ERR_REMOTE_ERR,
+		C.PLCTAG_ERR_THREAD_CREATE, // This might need special handling, as it indicates libplctag is in a *very* bad state
+		C.PLCTAG_ERR_THREAD_JOIN,
+		C.PLCTAG_ERR_TOO_LARGE, // more data returned than expected
+		C.PLCTAG_ERR_TOO_SMALL,
+		C.PLCTAG_ERR_WINSOCK,
+		C.PLCTAG_ERR_WRITE,
+		C.PLCTAG_ERR_BUSY:
 		cstr := C.plc_tag_decode_error(C.int(code))
 		return fmt.Errorf("%w: %s", ErrBadRequest, C.GoString(cstr))
 
@@ -87,8 +87,6 @@ func newLibplctagError(code C.int32_t) error {
 		cstr := C.plc_tag_decode_error(C.int(code))
 		return fmt.Errorf("%w: Unclassified error (%s)", ErrPlcInternal, C.GoString(cstr))
 	}
-
-	return nil // the default case already handles this
 }
 
 type LibplctagDebugLevel int
