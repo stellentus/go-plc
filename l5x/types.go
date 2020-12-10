@@ -42,7 +42,7 @@ type Controller struct {
 	RedundancyInfo           RedundancyInfo
 	Security                 Security
 	SecurityInfo             SecurityInfo
-	DataTypes                DataTypes
+	DataTypes                []DataType `xml:"DataTypes>DataType"`
 	Modules                  Modules
 	AddOnInstructions        AddOnInstructions `xml:"AddOnInstructionDefinitions"`
 	Tags                     Tags
@@ -71,7 +71,21 @@ type Security struct {
 
 type SecurityInfo struct{}
 
-type DataTypes struct {
+type DataType struct {
+	Name    string   `xml:",attr"`
+	Family  string   `xml:",attr"`
+	Class   string   `xml:",attr"` // TODO: enum
+	Members []Member `xml:"Members>Member"`
+}
+
+type Member struct {
+	Name           string `xml:",attr"`
+	DataType       string `xml:",attr"` // TODO: enum
+	Dimension      int    `xml:",attr"`
+	Radix          string `xml:",attr"` // TODO: enum
+	Hidden         bool   `xml:",attr"`
+	BitNumber      int         `xml:",attr,omitempty"`
+	ExternalAccess string `xml:",attr"` // TODO: enum
 }
 
 type Modules struct {
