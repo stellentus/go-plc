@@ -46,7 +46,7 @@ type Controller struct {
 	DataTypes                []DataType      `xml:"DataTypes>DataType"`
 	Modules                  []Module        `xml:"Modules>Module"`
 	AddOnInstrDefs           []AddOnInstrDef `xml:"AddOnInstructionDefinitions>AddOnInstructionDefinition"`
-	Tags                     Tags
+	Tags                     []Tag           `xml:"Tags>Tag"`
 	Programs                 Programs
 	Tasks                    Tasks
 	CST                      CST
@@ -137,6 +137,7 @@ type Data struct {
 	Format    string    `xml:",attr"`  // TODO: enum
 	L5K       string    `xml:",cdata"` // TODO: would be nice to omitempty
 	Structure Structure `xml:",omitempty"`
+	Array     Array     `xml:",omitempty"`
 }
 
 type DefaultData struct {
@@ -274,7 +275,16 @@ type Rung struct {
 	Text   Description
 }
 
-type Tags struct {
+type Tag struct {
+	Name           string `xml:",attr"`
+	TagType        string `xml:",attr"`
+	DataType       string `xml:",attr"` // TODO: enum
+	Dimensions     int    `xml:",attr"`
+	Radix          string `xml:",attr"` // TODO: enum
+	Constant       bool   `xml:",attr"`
+	ExternalAccess string `xml:",attr"` // TODO: enum
+	Description    Description
+	Data           Data
 }
 
 type Programs struct {
