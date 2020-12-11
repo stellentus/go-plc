@@ -48,7 +48,7 @@ type Controller struct {
 	AddOnInstrDefs           []AddOnInstrDef `xml:"AddOnInstructionDefinitions>AddOnInstructionDefinition"`
 	Tags                     []Tag           `xml:"Tags>Tag"`
 	Programs                 []Program       `xml:"Programs>Program"`
-	Tasks                    Tasks
+	Tasks                    []Task          `xml:"Tasks>Task"`
 	CST                      CST
 	WallClockTime            WallClockTime
 	Trends                   Trends
@@ -301,7 +301,16 @@ type Program struct {
 	Routines        []Routine `xml:"Routines>Routine"`
 }
 
-type Tasks struct {
+type Task struct {
+	Name                 string `xml:",attr"`
+	Type                 string `xml:",attr"` // TODO: enum
+	Priority             int    `xml:",attr"`
+	Watchdog             int    `xml:",attr"`
+	DisableUpdateOutputs bool   `xml:",attr"`
+	InhibitTask          bool   `xml:",attr"`
+	ScheduledPrograms    []struct {
+		Name string `xml:",attr"`
+	} `xml:"ScheduledPrograms>ScheduledProgram"`
 }
 
 type CST struct {
