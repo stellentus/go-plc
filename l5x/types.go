@@ -134,15 +134,9 @@ type ConfigTag struct {
 }
 
 type Data struct {
-	Format    string    `xml:",attr"`  // TODO: enum
-	L5K       string    `xml:",cdata"` // TODO: would be nice to omitempty
-	Structure Structure `xml:",omitempty"`
-	Array     Array     `xml:",omitempty"`
-}
-
-type DefaultData struct {
-	Format    string          `xml:",attr"`  // TODO: enum
-	L5K       string          `xml:",cdata"` // TODO: would be nice to omitempty
+	Format    string          `xml:",attr"` // TODO: enum
+	L5K       string          `xml:",cdata"`
+	Structure Structure       `xml:",omitempty"`
 	DataValue DataValueMember `xml:",omitempty"`
 	Array     Array           `xml:",omitempty"`
 }
@@ -241,16 +235,16 @@ type AddOnInstrDef struct {
 }
 
 type Parameter struct {
-	Name           string        `xml:",attr"`
-	TagType        string        `xml:",attr"`
-	DataType       string        `xml:",attr"` // TODO: enum
-	Usage          string        `xml:",attr"`
-	Radix          string        `xml:",attr"` // TODO: enum
-	Required       bool          `xml:",attr"`
-	Visible        bool          `xml:",attr"`
-	ExternalAccess string        `xml:",attr"` // TODO: enum
-	Description    Description   `xml:",omitempty"`
-	DefaultData    []DefaultData `xml:",omitempty"`
+	Name           string      `xml:",attr"`
+	TagType        string      `xml:",attr"`
+	DataType       string      `xml:",attr"` // TODO: enum
+	Usage          string      `xml:",attr"`
+	Radix          string      `xml:",attr"` // TODO: enum
+	Required       bool        `xml:",attr"`
+	Visible        bool        `xml:",attr"`
+	ExternalAccess string      `xml:",attr"` // TODO: enum
+	Description    Description `xml:",omitempty"`
+	DefaultData    []Data      `xml:",omitempty"`
 }
 
 type LocalTag struct {
@@ -260,7 +254,7 @@ type LocalTag struct {
 	Radix          string `xml:",attr"` // TODO: enum
 	ExternalAccess string `xml:",attr"` // TODO: enum
 	Description    Description
-	DefaultData    []DefaultData `xml:",omitempty"`
+	DefaultData    []Data `xml:",omitempty"`
 }
 
 type Routine struct {

@@ -441,11 +441,11 @@ var exampleController = Controller{
 				Visible:        true,
 				ExternalAccess: "Read/Write",
 				Description:    Description{Cdata: "\nExcitement High Alarm Setpoint\n"},
-				DefaultData: []DefaultData{
-					DefaultData{Format: "L5K",
+				DefaultData: []Data{
+					Data{Format: "L5K",
 						L5K: "\n0\n",
 					},
-					DefaultData{Format: "Decorated",
+					Data{Format: "Decorated",
 						L5K: "\n\n",
 						DataValue: DataValueMember{
 							DataType: "INT",
@@ -463,12 +463,12 @@ var exampleController = Controller{
 			Radix:          "Decimal",
 			ExternalAccess: "Read/Write",
 			Description:    Description{Cdata: "\nEarplug Array\n"},
-			DefaultData: []DefaultData{
-				DefaultData{
+			DefaultData: []Data{
+				Data{
 					Format: "L5K",
 					L5K:    "\n[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]\n",
 				},
-				DefaultData{Format: "Decorated",
+				Data{Format: "Decorated",
 					L5K: "\n\n",
 					Array: Array{
 						DataType:   "INT",
