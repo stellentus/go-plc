@@ -750,7 +750,7 @@ var exampleRslogixContent = RSLogix5000Content{
 }
 
 func TestParse(t *testing.T) {
-	l5x, err := ParseFromFile(testFilePath)
+	l5x, err := NewFromFile(testFilePath)
 	require.NoError(t, err)
 	require.Equal(t, &exampleRslogixContent, l5x)
 }
