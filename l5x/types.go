@@ -415,7 +415,10 @@ func (rlt iso8601Time) toString() string {
 }
 func (rlt *iso8601Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	var str string
-	d.DecodeElement(&str, &start)
+	err := d.DecodeElement(&str, &start)
+	if err != nil {
+		return err
+	}
 	return rlt.fromString(str)
 }
 func (rlt iso8601Time) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
@@ -442,7 +445,10 @@ func (ss stringSlice) toString() string {
 }
 func (ss *stringSlice) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	var str string
-	d.DecodeElement(&str, &start)
+	err := d.DecodeElement(&str, &start)
+	if err != nil {
+		return err
+	}
 	return ss.fromString(str)
 }
 func (ss stringSlice) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
