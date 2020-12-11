@@ -51,7 +51,7 @@ type Controller struct {
 	Tasks                    []Task          `xml:"Tasks>Task"`
 	CST                      CST
 	WallClockTime            WallClockTime
-	Trends                   Trends
+	Trends                   []Trend `xml:"Trends>Trend"`
 	DataLogs                 struct{}
 	TimeSynchronize          TimeSynchronize
 	EthernetPorts            EthernetPorts
@@ -322,7 +322,29 @@ type WallClockTime struct {
 	TimeZone            int `xml:",attr"`
 }
 
-type Trends struct {
+type Trend struct {
+	Name             string `xml:",attr"`
+	SamplePeriod     int    `xml:",attr"`
+	NumberOfCaptures int    `xml:",attr"`
+	CaptureSizeType  string `xml:",attr"`
+	CaptureSize      int    `xml:",attr"`
+	StartTriggerType string `xml:",attr"`
+	StopTriggerType  string `xml:",attr"`
+	TrendxVersion    string `xml:",attr"`
+	Template         string
+	Pens             []Pen `xml:"Pens>Pen"`
+}
+
+type Pen struct {
+	Name    string  `xml:",attr"`
+	Color   string  `xml:",attr"`
+	Visible bool    `xml:",attr"`
+	Style   int     `xml:",attr"`
+	Type    string  `xml:",attr"`
+	Width   int     `xml:",attr"`
+	Marker  int     `xml:",attr"`
+	Min     float32 `xml:",attr"`
+	Max     float32 `xml:",attr"`
 }
 
 type TimeSynchronize struct {
