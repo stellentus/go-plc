@@ -54,7 +54,7 @@ type Controller struct {
 	Trends                   []Trend `xml:"Trends>Trend"`
 	DataLogs                 struct{}
 	TimeSynchronize          TimeSynchronize
-	EthernetPorts            EthernetPorts
+	EthernetPorts            []EthernetPort `xml:"EthernetPorts>EthernetPort"`
 	EthernetNetwork          EthernetNetwork
 }
 
@@ -353,7 +353,10 @@ type TimeSynchronize struct {
 	PTPEnable bool `xml:",attr"`
 }
 
-type EthernetPorts struct {
+type EthernetPort struct {
+	Port        int  `xml:",attr"`
+	Label       int  `xml:",attr"`
+	PortEnabled bool `xml:",attr"`
 }
 
 type EthernetNetwork struct {
