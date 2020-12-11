@@ -84,9 +84,11 @@ type Member struct {
 	Hidden         bool   `xml:",attr"`
 	BitNumber      int    `xml:",attr,omitempty"`
 	ExternalAccess string `xml:",attr"` // TODO: enum
-	Description    struct {
+	Description    Description `xml:",omitempty"`
+}
+
+type Description struct {
 		Cdata string `xml:",cdata"`
-	} `xml:",omitempty"`
 }
 
 type Module struct {
