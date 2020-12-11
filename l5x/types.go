@@ -42,8 +42,8 @@ type Controller struct {
 	RedundancyInfo           RedundancyInfo
 	Security                 Security
 	SecurityInfo             SecurityInfo
-	DataTypes                []DataType `xml:"DataTypes>DataType"`
-	Modules                  Modules
+	DataTypes                []DataType        `xml:"DataTypes>DataType"`
+	Modules                  []Module          `xml:"Modules>Module"`
 	AddOnInstructions        AddOnInstructions `xml:"AddOnInstructionDefinitions"`
 	Tags                     Tags
 	Programs                 Programs
@@ -91,7 +91,91 @@ type Member struct {
 	} `xml:",omitempty"`
 }
 
-type Modules struct {
+type Module struct {
+	Name            string `xml:",attr"`
+	CatalogNumber   string `xml:",attr"`
+	Vendor          int    `xml:",attr"`
+	ProductType     int    `xml:",attr"`
+	ProductCode     int    `xml:",attr"`
+	Major           int    `xml:",attr"`
+	Minor           int    `xml:",attr"`
+	ParentModule    string `xml:",attr"`
+	ParentModPortId int    `xml:",attr"`
+	Inhibited       bool   `xml:",attr"`
+	MajorFault      bool   `xml:",attr"`
+	EKey            struct {
+		State string `xml:",attr"`
+	}
+	Ports              []Port `xml:"Ports>Port"`
+	Communications     Communications
+	ExtendedProperties ExtendedProperties
+}
+
+type Port struct {
+	Id       int    `xml:",attr"`
+	Address  int    `xml:",attr,omitempty"`
+	Type     string `xml:",attr"` // TODO: enum
+	Upstream bool   `xml:",attr"`
+	Bus      struct {
+		Size int `xml:",attr,omitempty"`
+	}
+}
+
+type Communications struct {
+	ConfigTag   ConfigTag
+	Connections []Connection `xml:"Connections>Connection"`
+}
+
+type ConfigTag struct {
+	ConfigSize     int    `xml:",attr"`
+	ExternalAccess string `xml:",attr"` // TODO: enum
+	Data           []Data
+}
+
+type Data struct {
+	Format    string    `xml:",attr"`  // TODO: enum
+	L5K       string    `xml:",cdata"` // TODO: would be nice to omitempty
+	Structure Structure `xml:",omitempty"`
+}
+
+type Structure struct {
+	DataType        string `xml:",attr"`
+	DataValueMember []DataValueMember
+}
+
+type DataValueMember struct {
+	Name     string `xml:",attr"`
+	DataType string `xml:",attr"` // TODO: enum
+	Radix    string `xml:",attr"` // TODO: enum
+	Value    string `xml:",attr"`
+}
+
+type Connection struct {
+	Name        string `xml:",attr"`
+	RPI         int    `xml:",attr"`
+	Type        string `xml:",attr"`
+	EventID     int    `xml:",attr"`
+	SendTrigger bool   `xml:"ProgrammaticallySendEventTrigger,attr"`
+	InputTag    IOTag
+	OutputTag   IOTag
+}
+
+type IOTag struct {
+	ExternalAccess string    `xml:",attr"`
+	Comments       []Comment `xml:"Comments>Comment,omitempty"`
+	Data           []Data
+}
+
+type Comment struct {
+	Operand string `xml:",attr"`
+	Cdata   string `xml:",cdata"`
+}
+
+type ExtendedProperties struct {
+	Public struct {
+		ConfigID int
+		CatNum   string
+	} `xml:"public"`
 }
 
 type AddOnInstructions struct {
