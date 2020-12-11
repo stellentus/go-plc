@@ -367,48 +367,65 @@ type EthernetNetwork struct {
 	VLANID                int  `xml:",attr"`
 }
 
+const (
+	iso8601Format = "2006-01-02T15:04:05.000Z"
+	rsLogixFormat = "Mon Jan 2 15:04:05 2006"
+)
+
 type rsLogixTime time.Time
 
 func (rlt *rsLogixTime) fromString(str string) error {
-	const layout = "Mon Jan 2 15:04:05 2006"
-	parse, err := time.Parse(layout, str)
+	parse, err := time.Parse(rsLogixFormat, str)
 	if err != nil {
 		return err
 	}
 	*rlt = rsLogixTime(parse)
 	return nil
 }
-
+func (rlt rsLogixTime) toString() string {
+	return time.Time(rlt).Format(rsLogixFormat)
+}
 func (rlt *rsLogixTime) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	var str string
 	d.DecodeElement(&str, &start)
 	return rlt.fromString(str)
 }
-
+func (rlt rsLogixTime) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	return e.EncodeElement(rlt.toString(), start)
+}
 func (rlt *rsLogixTime) UnmarshalXMLAttr(attr xml.Attr) error {
 	return rlt.fromString(attr.Value)
+}
+func (rlt rsLogixTime) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	return xml.Attr{Name: name, Value: rlt.toString()}, nil
 }
 
 type iso8601Time time.Time
 
 func (rlt *iso8601Time) fromString(str string) error {
-	const layout = "2006-01-02T15:04:05.000Z"
-	parse, err := time.Parse(layout, str)
+	parse, err := time.Parse(iso8601Format, str)
 	if err != nil {
 		return err
 	}
 	*rlt = iso8601Time(parse)
 	return nil
 }
-
+func (rlt iso8601Time) toString() string {
+	return time.Time(rlt).Format(iso8601Format)
+}
 func (rlt *iso8601Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	var str string
 	d.DecodeElement(&str, &start)
 	return rlt.fromString(str)
 }
-
+func (rlt iso8601Time) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	return e.EncodeElement(rlt.toString(), start)
+}
 func (rlt *iso8601Time) UnmarshalXMLAttr(attr xml.Attr) error {
 	return rlt.fromString(attr.Value)
+}
+func (rlt iso8601Time) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	return xml.Attr{Name: name, Value: rlt.toString()}, nil
 }
 
 // stringSlice is imported from a string of space-separated strings
@@ -420,13 +437,20 @@ func (ss *stringSlice) fromString(str string) error {
 	}
 	return nil
 }
-
+func (ss stringSlice) toString() string {
+	return strings.Join(ss.strings, " ")
+}
 func (ss *stringSlice) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	var str string
 	d.DecodeElement(&str, &start)
 	return ss.fromString(str)
 }
-
+func (ss stringSlice) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	return e.EncodeElement(ss.toString(), start)
+}
 func (ss *stringSlice) UnmarshalXMLAttr(attr xml.Attr) error {
 	return ss.fromString(attr.Value)
+}
+func (ss stringSlice) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	return xml.Attr{Name: name, Value: ss.toString()}, nil
 }
