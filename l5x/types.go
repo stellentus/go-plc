@@ -47,7 +47,7 @@ type Controller struct {
 	Modules                  []Module        `xml:"Modules>Module"`
 	AddOnInstrDefs           []AddOnInstrDef `xml:"AddOnInstructionDefinitions>AddOnInstructionDefinition"`
 	Tags                     []Tag           `xml:"Tags>Tag"`
-	Programs                 Programs
+	Programs                 []Program       `xml:"Programs>Program"`
 	Tasks                    Tasks
 	CST                      CST
 	WallClockTime            WallClockTime
@@ -150,6 +150,7 @@ type DefaultData struct {
 type Structure struct {
 	DataType        string `xml:",attr"`
 	DataValueMember []DataValueMember
+	ArrayMember     Array `xml:",omitempty"`
 }
 
 type DataValueMember struct {
@@ -160,6 +161,7 @@ type DataValueMember struct {
 }
 
 type Array struct {
+	Name       string    `xml:",attr,omitempty"`
 	DataType   string    `xml:",attr"` // TODO: enum
 	Dimensions int       `xml:",attr"`
 	Radix      string    `xml:",attr"` // TODO: enum
@@ -262,32 +264,41 @@ type LocalTag struct {
 }
 
 type Routine struct {
-	Name       string `xml:",attr"`
-	Type       string `xml:",attr"`
-	RLLContent struct {
+	Name        string `xml:",attr"`
+	Type        string `xml:",attr"`
+	Description Description
+	RLLContent  struct {
 		Rungs []Rung `xml:"Rung"`
 	}
 }
 
 type Rung struct {
-	Number int    `xml:",attr"`
-	Type   string `xml:",attr"`
-	Text   Description
+	Number  int    `xml:",attr"`
+	Type    string `xml:",attr"`
+	Comment Description
+	Text    Description
 }
 
 type Tag struct {
 	Name           string `xml:",attr"`
 	TagType        string `xml:",attr"`
 	DataType       string `xml:",attr"` // TODO: enum
-	Dimensions     int    `xml:",attr"`
-	Radix          string `xml:",attr"` // TODO: enum
+	Dimensions     int    `xml:",attr,omitempty"`
+	Radix          string `xml:",attr,omitempty"` // TODO: enum
 	Constant       bool   `xml:",attr"`
 	ExternalAccess string `xml:",attr"` // TODO: enum
 	Description    Description
 	Data           Data
 }
 
-type Programs struct {
+type Program struct {
+	Name            string    `xml:",attr"`
+	TestEdits       bool      `xml:",attr"`
+	MainRoutineName string    `xml:",attr"`
+	Disabled        bool      `xml:",attr"`
+	UseAsFolder     bool      `xml:",attr"`
+	Tags            []Tag     `xml:"Tags>Tag"`
+	Routines        []Routine `xml:"Routines>Routine"`
 }
 
 type Tasks struct {
