@@ -6,7 +6,8 @@ import (
 	"os"
 )
 
-func ParseFromFile(path string) (*RSLogix5000Content, error) {
+// NewFromFile parses the RSLogix5000 L5X file at the provided path.
+func NewFromFile(path string) (*RSLogix5000Content, error) {
 	xmlFile, err := os.Open(path)
 	if err != nil {
 		return nil, err
