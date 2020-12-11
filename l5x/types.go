@@ -41,7 +41,7 @@ type Controller struct {
 	ReportMinorOverflow      bool        `xml:",attr"`
 	RedundancyInfo           RedundancyInfo
 	Security                 Security
-	SecurityInfo             SecurityInfo
+	SecurityInfo             struct{}
 	DataTypes                []DataType        `xml:"DataTypes>DataType"`
 	Modules                  []Module          `xml:"Modules>Module"`
 	AddOnInstructions        AddOnInstructions `xml:"AddOnInstructionDefinitions"`
@@ -51,7 +51,7 @@ type Controller struct {
 	CST                      CST
 	WallClockTime            WallClockTime
 	Trends                   Trends
-	DataLogs                 DataLogs
+	DataLogs                 struct{}
 	TimeSynchronize          TimeSynchronize
 	EthernetPorts            EthernetPorts
 	EthernetNetwork          EthernetNetwork
@@ -68,8 +68,6 @@ type Security struct {
 	Code            int    `xml:",attr"`
 	ChangesToDetect string `xml:",attr"`
 }
-
-type SecurityInfo struct{}
 
 type DataType struct {
 	Name    string   `xml:",attr"`
@@ -201,8 +199,6 @@ type WallClockTime struct {
 
 type Trends struct {
 }
-
-type DataLogs struct{}
 
 type TimeSynchronize struct {
 	Priority1 int  `xml:",attr"`
