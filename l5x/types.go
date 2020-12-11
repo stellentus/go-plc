@@ -2,6 +2,7 @@ package l5x
 
 import (
 	"encoding/xml"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -42,9 +43,9 @@ type Controller struct {
 	RedundancyInfo           RedundancyInfo
 	Security                 Security
 	SecurityInfo             struct{}
-	DataTypes                []DataType        `xml:"DataTypes>DataType"`
-	Modules                  []Module          `xml:"Modules>Module"`
-	AddOnInstructions        AddOnInstructions `xml:"AddOnInstructionDefinitions"`
+	DataTypes                []DataType      `xml:"DataTypes>DataType"`
+	Modules                  []Module        `xml:"Modules>Module"`
+	AddOnInstrDefs           []AddOnInstrDef `xml:"AddOnInstructionDefinitions>AddOnInstructionDefinition"`
 	Tags                     Tags
 	Programs                 Programs
 	Tasks                    Tasks
@@ -77,18 +78,18 @@ type DataType struct {
 }
 
 type Member struct {
-	Name           string `xml:",attr"`
-	DataType       string `xml:",attr"` // TODO: enum
-	Dimension      int    `xml:",attr"`
-	Radix          string `xml:",attr"` // TODO: enum
-	Hidden         bool   `xml:",attr"`
-	BitNumber      int    `xml:",attr,omitempty"`
-	ExternalAccess string `xml:",attr"` // TODO: enum
+	Name           string      `xml:",attr"`
+	DataType       string      `xml:",attr"` // TODO: enum
+	Dimension      int         `xml:",attr"`
+	Radix          string      `xml:",attr"` // TODO: enum
+	Hidden         bool        `xml:",attr"`
+	BitNumber      int         `xml:",attr,omitempty"`
+	ExternalAccess string      `xml:",attr"` // TODO: enum
 	Description    Description `xml:",omitempty"`
 }
 
 type Description struct {
-		Cdata string `xml:",cdata"`
+	Cdata string `xml:",cdata"`
 }
 
 type Module struct {
@@ -138,16 +139,55 @@ type Data struct {
 	Structure Structure `xml:",omitempty"`
 }
 
+type DefaultData struct {
+	Format    string          `xml:",attr"`  // TODO: enum
+	L5K       string          `xml:",cdata"` // TODO: would be nice to omitempty
+	DataValue DataValueMember `xml:",omitempty"`
+	Array     Array           `xml:",omitempty"`
+}
+
 type Structure struct {
 	DataType        string `xml:",attr"`
 	DataValueMember []DataValueMember
 }
 
 type DataValueMember struct {
-	Name     string `xml:",attr"`
+	Name     string `xml:",attr,omitempty"`
 	DataType string `xml:",attr"` // TODO: enum
 	Radix    string `xml:",attr"` // TODO: enum
 	Value    string `xml:",attr"`
+}
+
+type Array struct {
+	DataType   string    `xml:",attr"` // TODO: enum
+	Dimensions int       `xml:",attr"`
+	Radix      string    `xml:",attr"` // TODO: enum
+	Elements   []Element `xml:"Element"`
+}
+
+type Element struct {
+	Index Index  `xml:",attr"`
+	Value string `xml:",attr"`
+}
+
+type Index int
+
+func (idx *Index) fromString(str string) error {
+	_, err := fmt.Sscanf(str, "[%d]", idx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (idx *Index) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	var str string
+	d.DecodeElement(&str, &start)
+	return idx.fromString(str)
+}
+
+func (idx *Index) UnmarshalXMLAttr(attr xml.Attr) error {
+	return idx.fromString(attr.Value)
 }
 
 type Connection struct {
@@ -178,7 +218,60 @@ type ExtendedProperties struct {
 	} `xml:"public"`
 }
 
-type AddOnInstructions struct {
+type AddOnInstrDef struct {
+	Name                 string      `xml:",attr"`
+	Revision             string      `xml:",attr"`
+	RevisionExtension    string      `xml:",attr"`
+	Vendor               string      `xml:",attr"`
+	ExecutePrescan       bool        `xml:",attr"`
+	ExecutePostscan      bool        `xml:",attr"`
+	ExecuteEnableInFalse bool        `xml:",attr"`
+	CreatedDate          iso8601Time `xml:",attr"`
+	CreatedBy            string      `xml:",attr"`
+	EditedDate           iso8601Time `xml:",attr"`
+	EditedBy             string      `xml:",attr"`
+	SoftwareRevision     string      `xml:",attr"`
+	Description          Description `xml:",omitempty"`
+	Parameters           []Parameter `xml:"Parameters>Parameter"`
+	LocalTags            []LocalTag  `xml:"LocalTags>LocalTag"`
+	Routines             []Routine   `xml:"Routines>Routine"`
+}
+
+type Parameter struct {
+	Name           string        `xml:",attr"`
+	TagType        string        `xml:",attr"`
+	DataType       string        `xml:",attr"` // TODO: enum
+	Usage          string        `xml:",attr"`
+	Radix          string        `xml:",attr"` // TODO: enum
+	Required       bool          `xml:",attr"`
+	Visible        bool          `xml:",attr"`
+	ExternalAccess string        `xml:",attr"` // TODO: enum
+	Description    Description   `xml:",omitempty"`
+	DefaultData    []DefaultData `xml:",omitempty"`
+}
+
+type LocalTag struct {
+	Name           string `xml:",attr"`
+	DataType       string `xml:",attr"` // TODO: enum
+	Dimensions     int    `xml:",attr"`
+	Radix          string `xml:",attr"` // TODO: enum
+	ExternalAccess string `xml:",attr"` // TODO: enum
+	Description    Description
+	DefaultData    []DefaultData `xml:",omitempty"`
+}
+
+type Routine struct {
+	Name       string `xml:",attr"`
+	Type       string `xml:",attr"`
+	RLLContent struct {
+		Rungs []Rung `xml:"Rung"`
+	}
+}
+
+type Rung struct {
+	Number int    `xml:",attr"`
+	Type   string `xml:",attr"`
+	Text   Description
 }
 
 type Tags struct {
@@ -238,6 +331,28 @@ func (rlt *rsLogixTime) UnmarshalXML(d *xml.Decoder, start xml.StartElement) err
 }
 
 func (rlt *rsLogixTime) UnmarshalXMLAttr(attr xml.Attr) error {
+	return rlt.fromString(attr.Value)
+}
+
+type iso8601Time time.Time
+
+func (rlt *iso8601Time) fromString(str string) error {
+	const layout = "2006-01-02T15:04:05.000Z"
+	parse, err := time.Parse(layout, str)
+	if err != nil {
+		return err
+	}
+	*rlt = iso8601Time(parse)
+	return nil
+}
+
+func (rlt *iso8601Time) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	var str string
+	d.DecodeElement(&str, &start)
+	return rlt.fromString(str)
+}
+
+func (rlt *iso8601Time) UnmarshalXMLAttr(attr xml.Attr) error {
 	return rlt.fromString(attr.Value)
 }
 
