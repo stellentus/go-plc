@@ -754,3 +754,8 @@ func TestParse(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &exampleRslogixContent, l5x)
 }
+
+func TestMarshall(t *testing.T) {
+	t.Skip()
+	require.Fail(t, "Marshal tests aren't implemented yet")
+}
