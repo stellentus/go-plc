@@ -11,28 +11,28 @@ var parserTests = []struct {
 	errMsg string
 }{
 	{"", nil, "Empty tagname"},
-	{" ", nil, "Whitespace"},
-	{"\t", nil, "Whitespace"},
-	{"\n", nil, "Whitespace"},
-	{"\b", nil, "Non-ASCII"},
+	{" ", nil, "whitespace"},
+	{"\t", nil, "whitespace"},
+	{"\n", nil, "whitespace"},
+	{"\b", nil, "non-alphabetic character"},
 	{"标志名称", nil, "Non-ASCII"},
-	{"4UMMY_AQUA_TEST_0", nil, "Field begins with a non-alpha"},
-	{"_UMMY_AQUA_TEST_0", nil, "Field begins with a non-alpha"},
+	{"4UMMY_AQUA_TEST_0", nil, "begins with a non-alphabetic character '4'"},
+	{"_UMMY_AQUA_TEST_0", nil, "begins with a non-alphabetic character '_'"},
 	{"DUMMY_AQUA_TEST_0", []string{"DUMMY_AQUA_TEST_0"}, ""},
 	{"DUMMY_AQUA_TEST_0.DUMMY_AQUA_TEST_1", []string{"DUMMY_AQUA_TEST_0", "DUMMY_AQUA_TEST_1"}, ""},
-	{"DUMMY_AQUA_TEST_0..DUMMY_AQUA_TEST_1", nil, "Empty"},
-	{"[0]", nil, "'[' without array identifier"},
+	{"DUMMY_AQUA_TEST_0..DUMMY_AQUA_TEST_1", nil, "begins with a non-alphabetic character '.'"},
+	{"[0]", nil, "begins with a non-alphabetic character '['"},
 	{"ARRAY[0]", []string{"ARRAY", "0"}, ""},
-	{"ARRAY[foo]", nil, "Invalid array index"},
-	{"ARRAY[-1]", nil, "Invalid array index"},
-	{"ARRAY[0", nil, "'[' without ']'"},
-	{"ARRAY[[0", nil, "Nested brackets"},
-	{"ARRAY[0][", nil, "'[' without ']'"},
-	{"ARRAY0]", nil, "Mis-matched brackets"},
-	{"DUMMY_AQUA_TEST.[0]", nil, "'[' without array identifier"},
-	{"ARRAY[]", nil, "Invalid array index"},
-	{"ARRAY[0,,2]", nil, "Invalid array index"},
-	{"ARRAY[0,foo,2]", nil, "Invalid array index"},
+	{"ARRAY[foo]", nil, "Expected digit"},
+	{"ARRAY[-1]", nil, "Expected digit"},
+	{"ARRAY[0", nil, "expected ']'"},
+	{"ARRAY[[0", nil, "Expected digit"},
+	{"ARRAY[0][", nil, "expected number"},
+	{"ARRAY0]", nil, "expected '.' or '['"},
+	{"DUMMY_AQUA_TEST.[0]", nil, "non-alphabetic character '['"},
+	{"ARRAY[]", nil, "Expected digit"},
+	{"ARRAY[0,,2]", nil, "Expected digit"},
+	{"ARRAY[0,foo,2]", nil, "Expected digit"},
 	{"ARRAY[0][1][2]", []string{"ARRAY", "0", "1", "2"}, ""},
 	{"ARRAY[0,1,2]", []string{"ARRAY", "0", "1", "2"}, ""},
 	{"ARRAY[ 0 ,  1  , 2 ]", []string{"ARRAY", "0", "1", "2"}, ""},
@@ -55,17 +55,17 @@ func TestParser(t *testing.T) {
 	for _, test := range parserTests {
 		out, err := ParseQualifiedTagName(test.in)
 		if !compareStrSlices(out, test.out) {
-			t.Errorf("ParseQualifiedTagName(\"%v\"): Return value: Got %v, expected %v", test.in, out, test.out)
+			t.Errorf(`ParseQualifiedTagName("%v"): Return value: Got "%v", expected "%v"`, test.in, out, test.out)
 		}
 		if err == nil && test.errMsg != "" {
-			t.Errorf("ParseQualifiedTagName(\"%v\"): Error value: Got nil error, expected error containing %v", test.in, test.errMsg)
+			t.Errorf(`"ParseQualifiedTagName("%v"): Error value: Got nil error, expected error containing "%v"`, test.in, test.errMsg)
 		}
 		if err != nil && test.errMsg == "" {
-			t.Errorf("ParseQualifiedTagName(\"%v\"): Return value: Got non-nil error %v, expected nil error", test.in, err)
+			t.Errorf(`ParseQualifiedTagName("%v"): Return value: Got non-nil error %v, expected nil error`, test.in, err)
 		}
 		if err != nil {
 			if !strings.Contains(err.Error(), test.errMsg) {
-				t.Errorf("ParseQualifiedTagName(\"%v\"): Error value: Got \"%v\", should contain \"%v\"", test.in, err.Error(), test.errMsg)
+				t.Errorf(`ParseQualifiedTagName("%v"): Error value: Got "%v", should contain "%v"`, test.in, err.Error(), test.errMsg)
 			}
 		}
 	}

@@ -73,7 +73,7 @@ func (tag Tag) ElemCount() int {
  *
  * bit_seg ::= '.' [0-9]+
  *
- * array_seg ::= NUMERIC_SEG ( ',' NUMERIC_SEG )*
+ * array_seg ::= NUMERIC_SEQ ( ',' NUMERIC_SEQ )*
  *
  * SYMBOLIC_SEG ::= [a-zA-Z]([a-zA-Z0-9_]*)
  *
@@ -82,75 +82,156 @@ func (tag Tag) ElemCount() int {
  */
 func ParseQualifiedTagName(qtn string) ([]string, error) {
 	var ret []string
+	i := 0
 
-	if qtn == "" {
-		return nil, fmt.Errorf("Empty tagname supplied")
+	alpha := "abcdefhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	num := "0123456789"
+	alphanum := alpha + num + "_"
+
+	/* SYMBOLIC_SEG := [a-zA-Z][a-zA-Z0-9_]* */
+	parseSymbolicSegment := func() error {
+		begin := i
+
+		/* [a-zA-Z] */
+		if i >= len(qtn) {
+			return fmt.Errorf("Expected alphabetic character")
+		}
+		if unicode.IsSpace(rune(qtn[i])) {
+			return fmt.Errorf("Expected alphabetic character, got whitespace")
+		}
+		if !bytes.ContainsAny([]byte{qtn[i]}, alpha) {
+			return fmt.Errorf("symbolic sequence begins with a non-alphabetic character '%c'", qtn[i])
+		}
+
+		/* [a-zA-Z0-9_]* */
+		for ; i < len(qtn); i++ {
+			if unicode.IsSpace(rune(qtn[i])) {
+				return fmt.Errorf("Expected alphanumeric character, got whitespace")
+			}
+			if !bytes.ContainsAny([]byte{qtn[i]}, alphanum) {
+				break
+			}
+		}
+		ret = append(ret, qtn[begin:i])
+		return nil
 	}
-	insideBrackets := false
+
+	/* NUMERIC_SEG := [:space:]* [0-9]+ [:space:]* */
+	parseNumericSegment := func() error {
+		var begin, end int
+
+		/* [:space:]* */
+		if i >= len(qtn) {
+			return fmt.Errorf("expected number")
+		}
+		for ; i < len(qtn); i++ {
+			if !unicode.IsSpace(rune(qtn[i])) {
+				break
+			}
+		}
+
+		/* [0-9]+ */
+		begin = i
+
+		/* [0-9]  */
+		if i >= len(qtn) {
+			return fmt.Errorf("expected number")
+		}
+		if !bytes.ContainsAny([]byte{qtn[i]}, num) {
+			return fmt.Errorf("Expected digit, got '%c'", qtn[i])
+		}
+		i++
+		/* [0-9]* */
+		for ; i < len(qtn); i++ {
+			if unicode.IsSpace(rune(qtn[i])) {
+				break
+			}
+			if !bytes.ContainsAny([]byte{qtn[i]}, num) {
+				break
+			}
+		}
+		end = i
+
+		/* [:space:]* */
+		for ; i < len(qtn); i++ {
+			if !unicode.IsSpace(rune(qtn[i])) {
+				break
+			}
+		}
+
+		asUint64, err := strconv.ParseUint(qtn[begin:end], 10, 32)
+		if err != nil {
+			return fmt.Errorf("Invalid array index '%s'", qtn[begin:end])
+		}
+		ret = append(ret, fmt.Sprintf("%d", asUint64))
+		return nil
+	}
+
+	/* array_seg ::= numeric_seg ( ',' numeric_seg )* */
+	parseArraySegment := func() error {
+		if err := parseNumericSegment(); err != nil {
+			return err
+		}
+		for i < len(qtn) {
+			if qtn[i] != ',' {
+				return nil
+			}
+			i++
+			if err := parseNumericSegment(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	/* tag_seg ::= '.' SYMBOLIC_SEG | '[' array_seg ']' */
+	parseTagSegment := func() error {
+		if i >= len(qtn) {
+			return fmt.Errorf("expected '.' or '['")
+		}
+		switch qtn[i] {
+		case '.':
+			i++
+			return parseSymbolicSegment()
+		case '[':
+			i++
+			if err := parseArraySegment(); err != nil {
+				return err
+			}
+			if i >= len(qtn) {
+				return fmt.Errorf("expected ']'")
+			}
+			if qtn[i] != ']' {
+				return fmt.Errorf("expected ']'; got '%c'", qtn[i])
+			}
+			i++
+		default:
+			return fmt.Errorf("expected '.' or '['; got '%c'", qtn[i])
+		}
+		return nil
+	}
+
+	/* Check position-independent invariants: the tagname must be nonempty and
+	 * must only contain alphanumeric characters.
+	 */
+	if qtn == "" {
+		return nil, fmt.Errorf("Empty tagname")
+	}
 	for i, c := range qtn {
-		if c == '[' {
-			if insideBrackets {
-				return nil, fmt.Errorf("Nested brackets at index %d", i)
-			}
-			insideBrackets = true
-		}
-		if c == ']' {
-			if !insideBrackets {
-				return nil, fmt.Errorf("Mis-matched brackets at index %d", i)
-			}
-			insideBrackets = false
-		}
-		if unicode.IsSpace(c) && !insideBrackets {
-			return nil, fmt.Errorf("Whitespace character at index %d", i)
-		}
-		if c < 32 || c > unicode.MaxASCII {
+		if c > unicode.MaxASCII {
 			return nil, fmt.Errorf("Non-ASCII character (codepoint %d) at index %d", int(c), i)
 		}
 	}
-	if insideBrackets {
-		return nil, fmt.Errorf("']' without '['")
+
+	/* tag ::= SYMBOLIC_SEG ( tag_seg )* */
+	if err := parseSymbolicSegment(); err != nil {
+		return nil, err
+	}
+	for i < len(qtn) {
+		if err := parseTagSegment(); err != nil {
+			return nil, err
+		}
 	}
 
-	fields := strings.Split(qtn, ".")
-	for i, f := range fields {
-		if f == "" {
-			return nil, fmt.Errorf("Field #%d: Empty tagname supplied", i+1)
-		}
-		if bytes.ContainsAny([]byte{f[0]}, "0123456789_") {
-			return nil, fmt.Errorf("Field #%d: Field begins with a non-alpha character '%c'", i+1, f[0])
-		}
-		openBracketIdx := strings.Index(f, "[")
-		if openBracketIdx == -1 {
-			// No '['; ensure the rest of the field has no unmatched ']'
-			if strings.Index(f, "]") == -1 {
-				ret = append(ret, f)
-			} else {
-				return nil, fmt.Errorf("Field #%d: ']' without '['", i+1) // We've already checked for this case
-			}
-		} else if openBracketIdx == 0 {
-			// The field begins with an open bracket; we're missing the field name
-			return nil, fmt.Errorf("Field #%d: '[' without array identifier", i+1)
-		} else {
-			arrayName := f[:openBracketIdx]
-			ret = append(ret, arrayName)
-			arrayIndices := strings.Split(f[openBracketIdx+1:], "[")
-			for _, a := range arrayIndices {
-				// We've gotten as far as "FieldName["; do we have a matching ']'
-				// and a valid unsigned int for the index?
-				closing := strings.Index(a, "]")
-				if closing == -1 {
-					return nil, fmt.Errorf("Field #%d: '[' without ']'", i+1) // We've already checked for this case
-				}
-				arrayContents := a[:closing]
-				for _, arrayIdx := range strings.Split(arrayContents, ",") {
-					arrayIdx = strings.TrimSpace(arrayIdx)
-					if _, err := strconv.ParseUint(arrayIdx, 10, 32); err != nil {
-						return nil, fmt.Errorf("Field #%d: Invalid array index %v: %v", i+1, arrayIdx, err)
-					}
-					ret = append(ret, arrayIdx)
-				}
-			}
-		}
-	}
 	return ret, nil
 }
