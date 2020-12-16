@@ -84,6 +84,7 @@ type Member struct {
 	Radix          string      `xml:",attr"` // TODO: enum
 	Hidden         bool        `xml:",attr"`
 	BitNumber      int         `xml:",attr,omitempty"`
+	Target         string      `xml:",attr,omitempty"`
 	ExternalAccess string      `xml:",attr"` // TODO: enum
 	Description    Description `xml:",omitempty"`
 }
