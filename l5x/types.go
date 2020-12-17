@@ -71,22 +71,22 @@ type Security struct {
 }
 
 type DataType struct {
-	Name    string   `xml:",attr"`
-	Family  string   `xml:",attr"`
-	Class   string   `xml:",attr"` // TODO: enum
-	Members []Member `xml:"Members>Member"`
+	Name    string         `xml:",attr"`
+	Family  DataTypeFamily `xml:",attr"`
+	Class   Class          `xml:",attr"`
+	Members []Member       `xml:"Members>Member"`
 }
 
 type Member struct {
-	Name           string      `xml:",attr"`
-	DataType       string      `xml:",attr"` // TODO: enum
-	Dimension      int         `xml:",attr"`
-	Radix          string      `xml:",attr"` // TODO: enum
-	Hidden         bool        `xml:",attr"`
-	BitNumber      int         `xml:",attr,omitempty"`
-	Target         string      `xml:",attr,omitempty"`
-	ExternalAccess string      `xml:",attr"` // TODO: enum
-	Description    Description `xml:",omitempty"`
+	Name           string         `xml:",attr"`
+	DataType       string         `xml:",attr"` // TODO: enum
+	Dimension      int            `xml:",attr"`
+	Radix          Radix          `xml:",attr"`
+	Hidden         bool           `xml:",attr"`
+	BitNumber      int            `xml:",attr,omitempty"`
+	Target         string         `xml:",attr,omitempty"` // TODO: must match another Member's name
+	ExternalAccess ExternalAccess `xml:",attr"`
+	Description    Description    `xml:",omitempty"`
 }
 
 type Description struct {
@@ -94,30 +94,32 @@ type Description struct {
 }
 
 type Module struct {
-	Name            string `xml:",attr"`
-	CatalogNumber   string `xml:",attr"`
-	Vendor          int    `xml:",attr"`
-	ProductType     int    `xml:",attr"`
-	ProductCode     int    `xml:",attr"`
-	Major           int    `xml:",attr"`
-	Minor           int    `xml:",attr"`
-	ParentModule    string `xml:",attr"`
-	ParentModPortId int    `xml:",attr"`
-	Inhibited       bool   `xml:",attr"`
-	MajorFault      bool   `xml:",attr"`
-	EKey            struct {
-		State string `xml:",attr"`
-	}
+	Name               string `xml:",attr"`
+	CatalogNumber      string `xml:",attr"`
+	Vendor             int    `xml:",attr"`
+	ProductType        int    `xml:",attr"`
+	ProductCode        int    `xml:",attr"`
+	Major              int    `xml:",attr"`
+	Minor              int    `xml:",attr"`
+	ParentModule       string `xml:",attr"` // TODO: must match another module name
+	ParentModPortId    int    `xml:",attr"`
+	Inhibited          bool   `xml:",attr"`
+	MajorFault         bool   `xml:",attr"`
+	EKey               EKeyState_s
 	Ports              []Port `xml:"Ports>Port"`
 	Communications     Communications
 	ExtendedProperties ExtendedProperties
 }
 
+type EKeyState_s struct {
+	State EKeyState `xml:",attr"`
+}
+
 type Port struct {
-	Id       int    `xml:",attr"`
-	Address  int    `xml:",attr,omitempty"`
-	Type     string `xml:",attr"` // TODO: enum
-	Upstream bool   `xml:",attr"`
+	Id       int      `xml:",attr"`
+	Address  int      `xml:",attr,omitempty"`
+	Type     PortType `xml:",attr"`
+	Upstream bool     `xml:",attr"`
 	Bus      struct {
 		Size int `xml:",attr,omitempty"`
 	}
@@ -129,13 +131,13 @@ type Communications struct {
 }
 
 type ConfigTag struct {
-	ConfigSize     int    `xml:",attr"`
-	ExternalAccess string `xml:",attr"` // TODO: enum
+	ConfigSize     int            `xml:",attr"`
+	ExternalAccess ExternalAccess `xml:",attr"`
 	Data           []Data
 }
 
 type Data struct {
-	Format    string          `xml:",attr"` // TODO: enum
+	Format    DataFormat      `xml:",attr"`
 	L5K       string          `xml:",cdata"`
 	Structure Structure       `xml:",omitempty"`
 	DataValue DataValueMember `xml:",omitempty"`
@@ -143,7 +145,7 @@ type Data struct {
 }
 
 type Structure struct {
-	DataType        string `xml:",attr"`
+	DataType        string `xml:",attr"` // TODO: enum
 	DataValueMember []DataValueMember
 	ArrayMember     Array `xml:",omitempty"`
 }
@@ -151,7 +153,7 @@ type Structure struct {
 type DataValueMember struct {
 	Name     string `xml:",attr,omitempty"`
 	DataType string `xml:",attr"` // TODO: enum
-	Radix    string `xml:",attr"` // TODO: enum
+	Radix    Radix  `xml:",attr"`
 	Value    string `xml:",attr"`
 }
 
@@ -159,7 +161,7 @@ type Array struct {
 	Name       string    `xml:",attr,omitempty"`
 	DataType   string    `xml:",attr"` // TODO: enum
 	Dimensions int       `xml:",attr"`
-	Radix      string    `xml:",attr"` // TODO: enum
+	Radix      Radix     `xml:",attr"`
 	Elements   []Element `xml:"Element"`
 }
 
@@ -191,7 +193,7 @@ func (idx *Index) UnmarshalXMLAttr(attr xml.Attr) error {
 type Connection struct {
 	Name        string `xml:",attr"`
 	RPI         int    `xml:",attr"`
-	Type        string `xml:",attr"`
+	Type        IOType `xml:",attr"`
 	EventID     int    `xml:",attr"`
 	SendTrigger bool   `xml:"ProgrammaticallySendEventTrigger,attr"`
 	InputTag    IOTag
@@ -199,8 +201,8 @@ type Connection struct {
 }
 
 type IOTag struct {
-	ExternalAccess string    `xml:",attr"`
-	Comments       []Comment `xml:"Comments>Comment,omitempty"`
+	ExternalAccess ExternalAccess `xml:",attr"`
+	Comments       []Comment      `xml:"Comments>Comment,omitempty"`
 	Data           []Data
 }
 
@@ -236,31 +238,31 @@ type AddOnInstrDef struct {
 }
 
 type Parameter struct {
-	Name           string      `xml:",attr"`
-	TagType        string      `xml:",attr"`
-	DataType       string      `xml:",attr"` // TODO: enum
-	Usage          string      `xml:",attr"`
-	Radix          string      `xml:",attr"` // TODO: enum
-	Required       bool        `xml:",attr"`
-	Visible        bool        `xml:",attr"`
-	ExternalAccess string      `xml:",attr"` // TODO: enum
-	Description    Description `xml:",omitempty"`
-	DefaultData    []Data      `xml:",omitempty"`
+	Name           string         `xml:",attr"`
+	TagType        TagType        `xml:",attr"`
+	DataType       string         `xml:",attr"` // TODO: enum
+	Usage          IOType         `xml:",attr"`
+	Radix          Radix          `xml:",attr"`
+	Required       bool           `xml:",attr"`
+	Visible        bool           `xml:",attr"`
+	ExternalAccess ExternalAccess `xml:",attr"`
+	Description    Description    `xml:",omitempty"`
+	DefaultData    []Data         `xml:",omitempty"`
 }
 
 type LocalTag struct {
-	Name           string `xml:",attr"`
-	DataType       string `xml:",attr"` // TODO: enum
-	Dimensions     int    `xml:",attr"`
-	Radix          string `xml:",attr"` // TODO: enum
-	ExternalAccess string `xml:",attr"` // TODO: enum
+	Name           string         `xml:",attr"`
+	DataType       string         `xml:",attr"` // TODO: enum
+	Dimensions     int            `xml:",attr"`
+	Radix          Radix          `xml:",attr"`
+	ExternalAccess ExternalAccess `xml:",attr"`
 	Description    Description
 	DefaultData    []Data `xml:",omitempty"`
 }
 
 type Routine struct {
-	Name        string `xml:",attr"`
-	Type        string `xml:",attr"`
+	Name        string      `xml:",attr"`
+	Type        RoutineType `xml:",attr"`
 	Description Description
 	RLLContent  struct {
 		Rungs []Rung `xml:"Rung"`
@@ -268,20 +270,20 @@ type Routine struct {
 }
 
 type Rung struct {
-	Number  int    `xml:",attr"`
-	Type    string `xml:",attr"`
+	Number  int      `xml:",attr"`
+	Type    RungType `xml:",attr"`
 	Comment Description
 	Text    Description
 }
 
 type Tag struct {
-	Name           string `xml:",attr"`
-	TagType        string `xml:",attr"`
-	DataType       string `xml:",attr"` // TODO: enum
-	Dimensions     int    `xml:",attr,omitempty"`
-	Radix          string `xml:",attr,omitempty"` // TODO: enum
-	Constant       bool   `xml:",attr"`
-	ExternalAccess string `xml:",attr"` // TODO: enum
+	Name           string         `xml:",attr"`
+	TagType        TagType        `xml:",attr"`
+	DataType       string         `xml:",attr"` // TODO: enum
+	Dimensions     int            `xml:",attr,omitempty"`
+	Radix          Radix          `xml:",attr,omitempty"`
+	Constant       bool           `xml:",attr"`
+	ExternalAccess ExternalAccess `xml:",attr"`
 	Description    Description
 	Data           Data
 }
@@ -297,12 +299,12 @@ type Program struct {
 }
 
 type Task struct {
-	Name                 string `xml:",attr"`
-	Type                 string `xml:",attr"` // TODO: enum
-	Priority             int    `xml:",attr"`
-	Watchdog             int    `xml:",attr"`
-	DisableUpdateOutputs bool   `xml:",attr"`
-	InhibitTask          bool   `xml:",attr"`
+	Name                 string   `xml:",attr"`
+	Type                 TaskType `xml:",attr"`
+	Priority             int      `xml:",attr"`
+	Watchdog             int      `xml:",attr"`
+	DisableUpdateOutputs bool     `xml:",attr"`
+	InhibitTask          bool     `xml:",attr"`
 	ScheduledPrograms    []struct {
 		Name string `xml:",attr"`
 	} `xml:"ScheduledPrograms>ScheduledProgram"`
