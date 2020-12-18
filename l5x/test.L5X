@@ -100,6 +100,11 @@ BHAIG29GI]]>
 <![CDATA[Steps required to burn enough calories]]>
 </Description>
 </Member>
+<Member Name="soMuchData" DataType="big_data_type" Dimension="0" Radix="NullType" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Example of embedded struct]]>
+</Description>
+</Member>
 </Members>
 </DataType>
 </DataTypes>

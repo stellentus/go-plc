@@ -2,6 +2,7 @@ package l5x
 
 import (
 	"fmt"
+	"io"
 	"strings"
 	"unicode"
 )
@@ -76,6 +77,20 @@ func NewTypeList() TypeList {
 		typeDWORD,
 		typeLWORD,
 	}
+}
+
+func (tl TypeList) WriteDefinitions(wr io.Writer) error {
+	for _, ty := range tl {
+		str := TypeDefinition(ty)
+		if str == "" {
+			continue
+		}
+		_, err := wr.Write([]byte(str + "\n\n"))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // AddControlLogixTypes adds a couple of types that are (I think) built into ControlLogix

@@ -2,6 +2,7 @@ package l5x
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,6 +59,54 @@ func ExampleTypeDefinition() {
 	// type FancyThing struct {
 	// 	COUNT int16
 	// 	dsInstance DemoStruct
+	// }
+}
+
+func ExampleTypeList_WriteDefinitions() {
+	err := expectedTypeList.WriteDefinitions(os.Stdout)
+	if err != nil {
+		fmt.Println("ERROR:", err)
+	}
+	// Output:
+	// type TIMER struct {
+	// 	PRE int32
+	// 	ACC int32
+	// 	EN bool
+	// 	TT bool
+	// 	DN bool
+	// }
+	//
+	// type COUNTER struct {
+	// 	PRE int32
+	// 	ACC int32
+	// 	CU bool
+	// 	CD bool
+	// 	DN bool
+	// 	OV bool
+	// 	UN bool
+	// }
+	//
+	// type dow struct {
+	// 	DayOW int16
+	// 	Month int32
+	// 	MonthCode int32
+	// 	DayOW1 float32
+	// }
+	//
+	// type big_data_type struct {
+	// 	XprivateX_cleaning_c0 int8
+	// 	CLEAN_MODE int16
+	// 	XprivateX_cleaning_c7 int8
+	// }
+	//
+	// type datas_for_eating struct {
+	// 	XprivateX_cleaning_c0 int8
+	// 	FOOD_TIMER TIMER
+	// 	MEAL_PREP_TIMER TIMER
+	// 	BHAIG29GI TIMER
+	// 	COUNTDOWN_TO_DESSERT TIMER
+	// 	STEPS_REQUIRED int16
+	// 	SoMuchData big_data_type `plc:"soMuchData"`
 	// }
 }
 

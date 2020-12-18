@@ -10,6 +10,160 @@ import (
 
 const testFilePath = "test.L5X"
 
+var exampleDataTypes = []DataType{
+	DataType{
+		Name: "dow",
+		Members: []Member{
+			Member{
+				Name:     "DayOW",
+				DataType: "INT",
+			},
+			Member{
+				Name:     "Month",
+				DataType: "DINT",
+			},
+			Member{
+				Name:      "MonthCode",
+				DataType:  "DINT",
+				Dimension: 13,
+			},
+			Member{
+				Name:     "DayOW1",
+				DataType: "REAL",
+				Radix:    RadixFloat,
+			},
+		},
+	},
+	DataType{
+		Name: "big_data_type",
+		Members: []Member{
+			Member{
+				Name:     "XprivateX_cleaning_c0",
+				DataType: "SINT",
+				Hidden:   true,
+			},
+			Member{
+				Name:        "CLEAN_RATE",
+				DataType:    "BIT",
+				BitNumber:   0,
+				Target:      "XprivateX_cleaning_c0",
+				Description: Description{Cdata: "\nRate at which cleaning occurs\n"},
+			},
+			Member{
+				Name:        "CLEAN_COMPLEXITY",
+				DataType:    "BIT",
+				BitNumber:   1,
+				Target:      "XprivateX_cleaning_c0",
+				Description: Description{Cdata: "\nComplexity of cleaning job\n"},
+			},
+			Member{
+				Name:        "FUN_FACTOR",
+				DataType:    "BIT",
+				BitNumber:   2,
+				Target:      "XprivateX_cleaning_c0",
+				Description: Description{Cdata: "\nMeasure of how fun the job is\n"},
+			},
+			Member{
+				Name:        "PRODUCT_COST",
+				DataType:    "BIT",
+				BitNumber:   3,
+				Target:      "XprivateX_cleaning_c0",
+				Description: Description{Cdata: "\nAccumulated cost of all products used\n"},
+			},
+			Member{
+				Name:        "AJIBSH_35",
+				DataType:    "BIT",
+				BitNumber:   4,
+				Target:      "XprivateX_cleaning_c0",
+				Description: Description{Cdata: "\nSettings for the AJIBSH_35\n"},
+			},
+			Member{
+				Name:        "CLEAN_MODE",
+				DataType:    "INT",
+				Description: Description{Cdata: "\nCleaning Mode 0=Constant, 1=Cyclic, 2=Up/Down, 3=None, 4=Lasers\n"},
+			},
+			Member{
+				Name:     "XprivateX_cleaning_c7",
+				DataType: "SINT",
+				Hidden:   true,
+			},
+			Member{
+				Name:        "VALVE_ENABLE",
+				DataType:    "BIT",
+				BitNumber:   0,
+				Target:      "XprivateX_cleaning_c7",
+				Description: Description{Cdata: "\nValve Enable\n"},
+			},
+			Member{
+				Name:        "TIGER_SUBSYSTEM",
+				DataType:    "BIT",
+				BitNumber:   1,
+				Target:      "XprivateX_cleaning_c7",
+				Description: Description{Cdata: "\nEnable the tiger system\n"},
+			},
+			Member{
+				Name:        "REVERSE_TIME_BUTTON",
+				DataType:    "BIT",
+				BitNumber:   2,
+				Target:      "XprivateX_cleaning_c7",
+				Description: Description{Cdata: "\nToggle status of the reverse time button\n"},
+			},
+		},
+	},
+	DataType{
+		Name: "datas_for_eating",
+		Members: []Member{
+			Member{
+				Name:     "XprivateX_cleaning_c0",
+				DataType: "SINT",
+				Hidden:   true,
+			},
+			Member{
+				Name:        "DEMAND",
+				DataType:    "BIT",
+				BitNumber:   0,
+				Target:      "XprivateX_cleaning_c0",
+				Description: Description{Cdata: "\nHow much eating is demanded?\n"},
+			},
+			Member{
+				Name:        "FOOD_TIMER",
+				DataType:    "TIMER",
+				Radix:       RadixNullType,
+				Description: Description{Cdata: "\nTimer tracking the food consumption\n"},
+			},
+			Member{
+				Name:        "MEAL_PREP_TIMER",
+				DataType:    "TIMER",
+				Radix:       RadixNullType,
+				Description: Description{Cdata: "\nTimer for amount of meal prep time\n"},
+			},
+			Member{
+				Name:        "BHAIG29GI",
+				DataType:    "TIMER",
+				Radix:       RadixNullType,
+				Description: Description{Cdata: "\nTimer\nfor the\nBHAIG29GI\n"},
+			},
+			Member{
+				Name:        "COUNTDOWN_TO_DESSERT",
+				DataType:    "TIMER",
+				Radix:       RadixNullType,
+				Description: Description{Cdata: "\nIndicates when dessert is done\n"},
+			},
+			Member{
+				Name:        "STEPS_REQUIRED",
+				DataType:    "INT",
+				Description: Description{Cdata: "\nSteps required to burn enough calories\n"},
+			},
+			Member{
+				Name:        "soMuchData",
+				DataType:    "big_data_type",
+				Radix:       RadixNullType,
+				Description: Description{Cdata: "\nExample of embedded struct\n"},
+			},
+		},
+	},
+}
+
 var exampleController = Controller{
 	Use:                      "Target",
 	Name:                     "EXAMPLE_FACTORY",
@@ -33,153 +187,7 @@ var exampleController = Controller{
 	},
 	Security:     Security{ChangesToDetect: "16#ffff_ffff_ffff_ffff"},
 	SecurityInfo: struct{}{},
-	DataTypes: []DataType{
-		DataType{
-			Name: "dow",
-			Members: []Member{
-				Member{
-					Name:     "DayOW",
-					DataType: "INT",
-				},
-				Member{
-					Name:     "Month",
-					DataType: "DINT",
-				},
-				Member{
-					Name:      "MonthCode",
-					DataType:  "DINT",
-					Dimension: 13,
-				},
-				Member{
-					Name:     "DayOW1",
-					DataType: "REAL",
-					Radix:    RadixFloat,
-				},
-			},
-		},
-		DataType{
-			Name: "big_data_type",
-			Members: []Member{
-				Member{
-					Name:     "XprivateX_cleaning_c0",
-					DataType: "SINT",
-					Hidden:   true,
-				},
-				Member{
-					Name:        "CLEAN_RATE",
-					DataType:    "BIT",
-					BitNumber:   0,
-					Target:      "XprivateX_cleaning_c0",
-					Description: Description{Cdata: "\nRate at which cleaning occurs\n"},
-				},
-				Member{
-					Name:        "CLEAN_COMPLEXITY",
-					DataType:    "BIT",
-					BitNumber:   1,
-					Target:      "XprivateX_cleaning_c0",
-					Description: Description{Cdata: "\nComplexity of cleaning job\n"},
-				},
-				Member{
-					Name:        "FUN_FACTOR",
-					DataType:    "BIT",
-					BitNumber:   2,
-					Target:      "XprivateX_cleaning_c0",
-					Description: Description{Cdata: "\nMeasure of how fun the job is\n"},
-				},
-				Member{
-					Name:        "PRODUCT_COST",
-					DataType:    "BIT",
-					BitNumber:   3,
-					Target:      "XprivateX_cleaning_c0",
-					Description: Description{Cdata: "\nAccumulated cost of all products used\n"},
-				},
-				Member{
-					Name:        "AJIBSH_35",
-					DataType:    "BIT",
-					BitNumber:   4,
-					Target:      "XprivateX_cleaning_c0",
-					Description: Description{Cdata: "\nSettings for the AJIBSH_35\n"},
-				},
-				Member{
-					Name:        "CLEAN_MODE",
-					DataType:    "INT",
-					Description: Description{Cdata: "\nCleaning Mode 0=Constant, 1=Cyclic, 2=Up/Down, 3=None, 4=Lasers\n"},
-				},
-				Member{
-					Name:     "XprivateX_cleaning_c7",
-					DataType: "SINT",
-					Hidden:   true,
-				},
-				Member{
-					Name:        "VALVE_ENABLE",
-					DataType:    "BIT",
-					BitNumber:   0,
-					Target:      "XprivateX_cleaning_c7",
-					Description: Description{Cdata: "\nValve Enable\n"},
-				},
-				Member{
-					Name:        "TIGER_SUBSYSTEM",
-					DataType:    "BIT",
-					BitNumber:   1,
-					Target:      "XprivateX_cleaning_c7",
-					Description: Description{Cdata: "\nEnable the tiger system\n"},
-				},
-				Member{
-					Name:        "REVERSE_TIME_BUTTON",
-					DataType:    "BIT",
-					BitNumber:   2,
-					Target:      "XprivateX_cleaning_c7",
-					Description: Description{Cdata: "\nToggle status of the reverse time button\n"},
-				},
-			},
-		},
-		DataType{
-			Name: "datas_for_eating",
-			Members: []Member{
-				Member{
-					Name:     "XprivateX_cleaning_c0",
-					DataType: "SINT",
-					Hidden:   true,
-				},
-				Member{
-					Name:        "DEMAND",
-					DataType:    "BIT",
-					BitNumber:   0,
-					Target:      "XprivateX_cleaning_c0",
-					Description: Description{Cdata: "\nHow much eating is demanded?\n"},
-				},
-				Member{
-					Name:        "FOOD_TIMER",
-					DataType:    "TIMER",
-					Radix:       RadixNullType,
-					Description: Description{Cdata: "\nTimer tracking the food consumption\n"},
-				},
-				Member{
-					Name:        "MEAL_PREP_TIMER",
-					DataType:    "TIMER",
-					Radix:       RadixNullType,
-					Description: Description{Cdata: "\nTimer for amount of meal prep time\n"},
-				},
-				Member{
-					Name:        "BHAIG29GI",
-					DataType:    "TIMER",
-					Radix:       RadixNullType,
-					Description: Description{Cdata: "\nTimer\nfor the\nBHAIG29GI\n"},
-				},
-				Member{
-					Name:        "COUNTDOWN_TO_DESSERT",
-					DataType:    "TIMER",
-					Radix:       RadixNullType,
-					Description: Description{Cdata: "\nIndicates when dessert is done\n"},
-				},
-				Member{
-					Name:        "STEPS_REQUIRED",
-					DataType:    "INT",
-					Description: Description{Cdata: "\nSteps required to burn enough calories\n"},
-				},
-			},
-		},
-	},
+	DataTypes:    exampleDataTypes,
 	Modules: []Module{
 		Module{
 			Name:            "Local",
@@ -747,4 +755,60 @@ func TestXmlFromFile(t *testing.T) {
 func TestXmlMarshall(t *testing.T) {
 	t.Skip()
 	require.Fail(t, "Marshal tests aren't implemented yet")
+}
+
+var exampleTimerType = structType{
+	name: "TIMER",
+	members: []NamedType{
+		NamedType{GoName: "PRE", Type: typeDINT},
+		NamedType{GoName: "ACC", Type: typeDINT},
+		NamedType{GoName: "EN", Type: typeBOOL},
+		NamedType{GoName: "TT", Type: typeBOOL},
+		NamedType{GoName: "DN", Type: typeBOOL},
+	},
+}
+
+var exampleBigDataType = structType{
+	name: "big_data_type",
+	members: []NamedType{
+		NamedType{GoName: "XprivateX_cleaning_c0", Type: typeSINT},
+		NamedType{GoName: "CLEAN_MODE", Type: typeINT},
+		NamedType{GoName: "XprivateX_cleaning_c7", Type: typeSINT},
+	},
+}
+
+var expectedTypeList = TypeList{
+	typeBOOL, typeSINT, typeINT, typeDINT, typeLINT, typeUSINT, typeUINT, typeUDINT, typeULINT, typeREAL, typeLREAL, typeSTRING, typeBYTE, typeWORD, typeDWORD, typeLWORD,
+	exampleTimerType,
+	structType{name: "COUNTER", members: []NamedType{
+		NamedType{GoName: "PRE", Type: typeDINT},
+		NamedType{GoName: "ACC", Type: typeDINT},
+		NamedType{GoName: "CU", Type: typeBOOL},
+		NamedType{GoName: "CD", Type: typeBOOL},
+		NamedType{GoName: "DN", Type: typeBOOL},
+		NamedType{GoName: "OV", Type: typeBOOL},
+		NamedType{GoName: "UN", Type: typeBOOL},
+	}},
+	structType{name: "dow", members: []NamedType{
+		NamedType{GoName: "DayOW", Type: typeINT},
+		NamedType{GoName: "Month", Type: typeDINT},
+		NamedType{GoName: "MonthCode", Type: arrayType{elementInfo: typeDINT, count: 13}},
+		NamedType{GoName: "DayOW1", Type: typeREAL},
+	}},
+	exampleBigDataType,
+	structType{name: "datas_for_eating", members: []NamedType{
+		NamedType{GoName: "XprivateX_cleaning_c0", Type: typeSINT},
+		NamedType{GoName: "FOOD_TIMER", Type: exampleTimerType},
+		NamedType{GoName: "MEAL_PREP_TIMER", Type: exampleTimerType},
+		NamedType{GoName: "BHAIG29GI", Type: exampleTimerType},
+		NamedType{GoName: "COUNTDOWN_TO_DESSERT", Type: exampleTimerType},
+		NamedType{GoName: "STEPS_REQUIRED", Type: typeINT},
+		NamedType{PlcName: "soMuchData", GoName: "SoMuchData", Type: exampleBigDataType},
+	}},
+}
+
+func TestControllerTypeList(t *testing.T) {
+	tl, err := exampleController.TypeList()
+	require.NoError(t, err)
+	require.Equal(t, expectedTypeList, tl)
 }
