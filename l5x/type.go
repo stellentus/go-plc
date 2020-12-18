@@ -260,8 +260,8 @@ type arrayType struct {
 	count       int
 }
 
-func (ati arrayType) PlcName() string { return ati.elementInfo.PlcName() } // Should be unused
-func (ati arrayType) GoName() string  { return ati.elementInfo.GoName() }
+func (ati arrayType) PlcName() string { return "" }
+func (ati arrayType) GoName() string  { return ati.GoTypeString() }
 func (ati arrayType) GoTypeString() string {
 	return fmt.Sprintf("[%d]%v", ati.count, ati.elementInfo.GoName())
 }
