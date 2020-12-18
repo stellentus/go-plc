@@ -37,7 +37,7 @@ func TypeDefinition(ty Type) string {
 		// This type shouldn't be defined
 		return ""
 	}
-	return "type " + ty.GoName() + " " + ty.GoTypeString()
+	return "type " + makeValidIdentifier(ty.GoName()) + " " + ty.GoTypeString()
 }
 
 var (
