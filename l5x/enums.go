@@ -7,11 +7,11 @@ import (
 type ExternalAccess int
 
 const (
-	ExternalAccessReadOnly ExternalAccess = iota
-	ExternalAccessReadWrite
+	ExternalAccessReadWrite ExternalAccess = iota
+	ExternalAccessReadOnly
 )
 
-var externalAccessNames = []string{"Read Only", "Read/Write"}
+var externalAccessNames = []string{"Read/Write", "Read Only"}
 
 func (enum *ExternalAccess) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	return enumUnmarshalXML((*int)(enum), externalAccessNames, d, start)
@@ -102,12 +102,12 @@ func (enum PortType) String() string { return enumToString(int(enum), portTypeNa
 type DataFormat int
 
 const (
-	DataFormatL5K DataFormat = iota
-	DataFormatDecorated
+	DataFormatDecorated DataFormat = iota
+	DataFormatL5K
 	DataFormatMessage
 )
 
-var dataFormatNames = []string{"L5K", "Decorated", "Message"}
+var dataFormatNames = []string{"Decorated", "L5K", "Message"}
 
 func (enum *DataFormat) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	return enumUnmarshalXML((*int)(enum), dataFormatNames, d, start)
@@ -148,11 +148,11 @@ func (enum TaskType) String() string { return enumToString(int(enum), taskTypeNa
 type DataTypeFamily int
 
 const (
-	DataTypeFamilyString DataTypeFamily = iota
-	DataTypeFamilyNone
+	DataTypeFamilyNone DataTypeFamily = iota
+	DataTypeFamilyString
 )
 
-var dataTypeFamilyNames = []string{"StringFamily", "NoFamily"}
+var dataTypeFamilyNames = []string{"NoFamily", "StringFamily"}
 
 func (enum *DataTypeFamily) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	return enumUnmarshalXML((*int)(enum), dataTypeFamilyNames, d, start)
@@ -240,12 +240,12 @@ func (enum TagType) String() string { return enumToString(int(enum), tagTypeName
 type RoutineType int
 
 const (
-	RoutineTypeST RoutineType = iota
+	RoutineTypeRLL RoutineType = iota
+	RoutineTypeST
 	RoutineTypeFBD
-	RoutineTypeRLL
 )
 
-var routineTypeNames = []string{"ST", "FBD", "RLL"}
+var routineTypeNames = []string{"RLL", "ST", "FBD"}
 
 func (enum *RoutineType) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	return enumUnmarshalXML((*int)(enum), routineTypeNames, d, start)
