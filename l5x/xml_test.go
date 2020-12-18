@@ -195,14 +195,16 @@ var exampleController = Controller{
 			MajorFault:      true,
 			Ports: []Port{
 				Port{
-					Id:   1,
-					Type: PortTypeCompact,
+					Id:      1,
+					Address: "0",
+					Type:    PortTypeCompact,
 					Bus: struct {
 						Size int `xml:",attr,omitempty"`
 					}{Size: 99},
 				},
 				Port{
-					Id: 2,
+					Id:      2,
+					Address: "192.168.1.170",
 				},
 			},
 		},
@@ -220,7 +222,7 @@ var exampleController = Controller{
 			Ports: []Port{
 				Port{
 					Id:       1,
-					Address:  1,
+					Address:  "1",
 					Type:     PortTypeCompact,
 					Upstream: true,
 				},

@@ -111,7 +111,7 @@ BHAIG29GI]]>
 <Port Id="1" Address="0" Type="Compact" Upstream="false">
 <Bus Size="99"/>
 </Port>
-<Port Id="2" Type="Ethernet" Upstream="false">
+<Port Id="2" Address="192.168.1.170" Type="Ethernet" Upstream="false">
 <Bus/>
 </Port>
 </Ports>
