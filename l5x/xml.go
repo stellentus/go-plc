@@ -148,7 +148,7 @@ type EKeyState_s struct {
 
 type Port struct {
 	Id       int      `xml:",attr"`
-	Address  int      `xml:",attr,omitempty"`
+	Address  string   `xml:",attr"`
 	Type     PortType `xml:",attr"`
 	Upstream bool     `xml:",attr"`
 	Bus      struct {
