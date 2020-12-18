@@ -470,15 +470,25 @@ var exampleController = Controller{
 		Tag{
 			Name:     "ALARM_P",
 			DataType: "alarm_info",
-			Data: Data{
-				L5K: "\n\n",
-				Structure: Structure{
-					DataType: "alarm_info",
-					DataValueMember: []DataValueMember{DataValueMember{
-						Name:     "ALM_ACTIVE",
-						DataType: "BOOL",
-						Value:    "0",
-					}},
+			Data: []Data{
+				Data{
+					Format: DataFormatL5K,
+					L5K:    "\n[[0,0,0],0]\n",
+				},
+				Data{
+					L5K: "\n\n",
+					Structure: Structure{
+						DataType: "alarm_info",
+						StructureMember: []DataValueMember{
+							{Name: "PRE", DataType: "DINT", Value: "0"},
+							{Name: "ACC", DataType: "DINT", Value: "0"},
+							{Name: "EN", DataType: "BOOL", Value: "1"},
+							{Name: "TT", DataType: "BOOL", Value: "0"},
+						},
+						DataValueMember: []DataValueMember{
+							{Name: "ALM_ACTIVE", DataType: "BOOL", Value: "0"},
+						},
+					},
 				},
 			},
 		},
@@ -487,15 +497,21 @@ var exampleController = Controller{
 			DataType:    "INT",
 			Dimensions:  2,
 			Description: Description{Cdata: "\nInfo data\n"},
-			Data: Data{
-				L5K: "\n\n",
-				Array: Array{
-					DataType:   "INT",
-					Dimensions: 2,
-					Radix:      RadixDecimal,
-					Elements: []Element{
-						Element{Index: 0, Value: "-2925"},
-						Element{Index: 1, Value: "1952"},
+			Data: []Data{
+				Data{
+					Format: DataFormatL5K,
+					L5K:    "\n[-2925,1952]\n",
+				},
+				Data{
+					L5K: "\n\n",
+					Array: Array{
+						DataType:   "INT",
+						Dimensions: 2,
+						Radix:      RadixDecimal,
+						Elements: []Element{
+							Element{Index: 0, Value: "-2925"},
+							Element{Index: 1, Value: "1952"},
+						},
 					},
 				},
 			},
@@ -504,56 +520,62 @@ var exampleController = Controller{
 			Name:        "BIGGD",
 			DataType:    "big_data_type",
 			Description: Description{Cdata: "\nBig Data Lots\n"},
-			Data: Data{
-				L5K: "\n\n",
-				Structure: Structure{
-					DataType: "big_data_type",
-					DataValueMember: []DataValueMember{
-						DataValueMember{
-							Name:     "CLEAN_RATE",
-							DataType: "BOOL",
-							Value:    "0",
-						},
-						DataValueMember{
-							Name:     "CLEAN_COMPLEXITY",
-							DataType: "BOOL",
-							Value:    "1",
-						},
-						DataValueMember{
-							Name:     "FUN_FACTOR",
-							DataType: "BOOL",
-							Value:    "0",
-						},
-						DataValueMember{
-							Name:     "PRODUCT_COST",
-							DataType: "BOOL",
-							Value:    "0",
-						},
-						DataValueMember{
-							Name:     "AJIBSH_35",
-							DataType: "BOOL",
-							Value:    "0",
-						},
-						DataValueMember{
-							Name:     "CLEAN_MODE",
-							DataType: "INT",
-							Radix:    RadixDecimal,
-							Value:    "7",
-						},
-						DataValueMember{
-							Name:     "VALVE_ENABLE",
-							DataType: "BOOL",
-							Value:    "1",
-						},
-						DataValueMember{
-							Name:     "TIGER_SUBSYSTEM",
-							DataType: "BOOL",
-							Value:    "1",
-						},
-						DataValueMember{
-							Name:     "REVERSE_TIME_BUTTON",
-							DataType: "BOOL",
-							Value:    "0",
+			Data: []Data{
+				Data{
+					Format: DataFormatL5K,
+					L5K:    "\n[1,7,3]\n",
+				},
+				Data{
+					L5K: "\n\n",
+					Structure: Structure{
+						DataType: "big_data_type",
+						DataValueMember: []DataValueMember{
+							DataValueMember{
+								Name:     "CLEAN_RATE",
+								DataType: "BOOL",
+								Value:    "0",
+							},
+							DataValueMember{
+								Name:     "CLEAN_COMPLEXITY",
+								DataType: "BOOL",
+								Value:    "1",
+							},
+							DataValueMember{
+								Name:     "FUN_FACTOR",
+								DataType: "BOOL",
+								Value:    "0",
+							},
+							DataValueMember{
+								Name:     "PRODUCT_COST",
+								DataType: "BOOL",
+								Value:    "0",
+							},
+							DataValueMember{
+								Name:     "AJIBSH_35",
+								DataType: "BOOL",
+								Value:    "0",
+							},
+							DataValueMember{
+								Name:     "CLEAN_MODE",
+								DataType: "INT",
+								Radix:    RadixDecimal,
+								Value:    "7",
+							},
+							DataValueMember{
+								Name:     "VALVE_ENABLE",
+								DataType: "BOOL",
+								Value:    "1",
+							},
+							DataValueMember{
+								Name:     "TIGER_SUBSYSTEM",
+								DataType: "BOOL",
+								Value:    "1",
+							},
+							DataValueMember{
+								Name:     "REVERSE_TIME_BUTTON",
+								DataType: "BOOL",
+								Value:    "0",
+							},
 						},
 					},
 				},
@@ -567,33 +589,39 @@ var exampleController = Controller{
 			Name:        "DOW",
 			DataType:    "dow",
 			Description: Description{Cdata: "\nDay of the Week\n"},
-			Data: Data{
-				L5K: "\n\n",
-				Structure: Structure{
-					DataType: "dow",
-					DataValueMember: []DataValueMember{
-						DataValueMember{Name: "DayOW", DataType: "INT", Value: "3"},
-						DataValueMember{Name: "Month", DataType: "DINT", Value: "12"},
-						DataValueMember{Name: "DayOW1", DataType: "REAL", Radix: RadixFloat, Value: "6.2"},
-					},
-					ArrayMember: Array{Name: "MonthCode",
-						DataType:   "DINT",
-						Dimensions: 13,
-						Radix:      RadixDecimal,
-						Elements: []Element{
-							Element{Index: 0, Value: "0"},
-							Element{Index: 1, Value: "5"},
-							Element{Index: 2, Value: "2"},
-							Element{Index: 3, Value: "7"},
-							Element{Index: 4, Value: "5"},
-							Element{Index: 5, Value: "0"},
-							Element{Index: 6, Value: "2"},
-							Element{Index: 7, Value: "5"},
-							Element{Index: 8, Value: "1"},
-							Element{Index: 9, Value: "4"},
-							Element{Index: 10, Value: "6"},
-							Element{Index: 11, Value: "3"},
-							Element{Index: 12, Value: "4"},
+			Data: []Data{
+				Data{
+					Format: DataFormatL5K,
+					L5K:    "\n[3,12,[0,5,2,7,5,0,2,5,1,4,6,3,4],6.2]\n",
+				},
+				Data{
+					L5K: "\n\n",
+					Structure: Structure{
+						DataType: "dow",
+						DataValueMember: []DataValueMember{
+							DataValueMember{Name: "DayOW", DataType: "INT", Value: "3"},
+							DataValueMember{Name: "Month", DataType: "DINT", Value: "12"},
+							DataValueMember{Name: "DayOW1", DataType: "REAL", Radix: RadixFloat, Value: "6.2"},
+						},
+						ArrayMember: Array{Name: "MonthCode",
+							DataType:   "DINT",
+							Dimensions: 13,
+							Radix:      RadixDecimal,
+							Elements: []Element{
+								Element{Index: 0, Value: "0"},
+								Element{Index: 1, Value: "5"},
+								Element{Index: 2, Value: "2"},
+								Element{Index: 3, Value: "7"},
+								Element{Index: 4, Value: "5"},
+								Element{Index: 5, Value: "0"},
+								Element{Index: 6, Value: "2"},
+								Element{Index: 7, Value: "5"},
+								Element{Index: 8, Value: "1"},
+								Element{Index: 9, Value: "4"},
+								Element{Index: 10, Value: "6"},
+								Element{Index: 11, Value: "3"},
+								Element{Index: 12, Value: "4"},
+							},
 						},
 					},
 				},
