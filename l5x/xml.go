@@ -90,6 +90,25 @@ type Controller struct {
 	EthernetNetwork          EthernetNetwork
 }
 
+func (ctrl Controller) TypeList() (TypeList, error) {
+	tl := NewTypeList()
+	err := tl.AddControlLogixTypes()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, dt := range ctrl.DataTypes {
+		ty, err := dt.AsType(tl)
+		if err != nil {
+			return nil, err
+		}
+
+		tl = append(tl, ty)
+	}
+
+	return tl, nil
+}
+
 type RedundancyInfo struct {
 	Enabled                   bool `xml:",attr"`
 	KeepTestEditsOnSwitchOver bool `xml:",attr"`
