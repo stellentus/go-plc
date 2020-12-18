@@ -35,6 +35,58 @@ var exampleDataTypes = []DataType{
 		},
 	},
 	DataType{
+		Name: "datas_for_eating",
+		Members: []Member{
+			Member{
+				Name:     "XprivateX_cleaning_c0",
+				DataType: "SINT",
+				Hidden:   true,
+			},
+			Member{
+				Name:        "DEMAND",
+				DataType:    "BIT",
+				BitNumber:   0,
+				Target:      "XprivateX_cleaning_c0",
+				Description: Description{Cdata: "\nHow much eating is demanded?\n"},
+			},
+			Member{
+				Name:        "FOOD_TIMER",
+				DataType:    "TIMER",
+				Radix:       RadixNullType,
+				Description: Description{Cdata: "\nTimer tracking the food consumption\n"},
+			},
+			Member{
+				Name:        "MEAL_PREP_TIMER",
+				DataType:    "TIMER",
+				Radix:       RadixNullType,
+				Description: Description{Cdata: "\nTimer for amount of meal prep time\n"},
+			},
+			Member{
+				Name:        "BHAIG29GI",
+				DataType:    "TIMER",
+				Radix:       RadixNullType,
+				Description: Description{Cdata: "\nTimer\nfor the\nBHAIG29GI\n"},
+			},
+			Member{
+				Name:        "COUNTDOWN_TO_DESSERT",
+				DataType:    "TIMER",
+				Radix:       RadixNullType,
+				Description: Description{Cdata: "\nIndicates when dessert is done\n"},
+			},
+			Member{
+				Name:        "STEPS_REQUIRED",
+				DataType:    "INT",
+				Description: Description{Cdata: "\nSteps required to burn enough calories\n"},
+			},
+			Member{
+				Name:        "soMuchData",
+				DataType:    "big_data_type",
+				Radix:       RadixNullType,
+				Description: Description{Cdata: "\nExample of embedded struct\n"},
+			},
+		},
+	},
+	DataType{
 		Name: "big_data_type",
 		Members: []Member{
 			Member{
@@ -107,58 +159,6 @@ var exampleDataTypes = []DataType{
 				BitNumber:   2,
 				Target:      "XprivateX_cleaning_c7",
 				Description: Description{Cdata: "\nToggle status of the reverse time button\n"},
-			},
-		},
-	},
-	DataType{
-		Name: "datas_for_eating",
-		Members: []Member{
-			Member{
-				Name:     "XprivateX_cleaning_c0",
-				DataType: "SINT",
-				Hidden:   true,
-			},
-			Member{
-				Name:        "DEMAND",
-				DataType:    "BIT",
-				BitNumber:   0,
-				Target:      "XprivateX_cleaning_c0",
-				Description: Description{Cdata: "\nHow much eating is demanded?\n"},
-			},
-			Member{
-				Name:        "FOOD_TIMER",
-				DataType:    "TIMER",
-				Radix:       RadixNullType,
-				Description: Description{Cdata: "\nTimer tracking the food consumption\n"},
-			},
-			Member{
-				Name:        "MEAL_PREP_TIMER",
-				DataType:    "TIMER",
-				Radix:       RadixNullType,
-				Description: Description{Cdata: "\nTimer for amount of meal prep time\n"},
-			},
-			Member{
-				Name:        "BHAIG29GI",
-				DataType:    "TIMER",
-				Radix:       RadixNullType,
-				Description: Description{Cdata: "\nTimer\nfor the\nBHAIG29GI\n"},
-			},
-			Member{
-				Name:        "COUNTDOWN_TO_DESSERT",
-				DataType:    "TIMER",
-				Radix:       RadixNullType,
-				Description: Description{Cdata: "\nIndicates when dessert is done\n"},
-			},
-			Member{
-				Name:        "STEPS_REQUIRED",
-				DataType:    "INT",
-				Description: Description{Cdata: "\nSteps required to burn enough calories\n"},
-			},
-			Member{
-				Name:        "soMuchData",
-				DataType:    "big_data_type",
-				Radix:       RadixNullType,
-				Description: Description{Cdata: "\nExample of embedded struct\n"},
 			},
 		},
 	},

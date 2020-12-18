@@ -1,6 +1,7 @@
 package l5x
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -150,7 +151,7 @@ func (mb Member) AsNamedType(knownTypes TypeList) (NamedType, error) {
 		}
 	}
 	if nt.Type == nil {
-		return NamedType{}, fmt.Errorf("Unhandled member type '%s' named '%s'", mb.DataType, mb.Name)
+		return NamedType{}, ErrUnknownType
 	}
 
 	if mb.Dimension > 1 {
@@ -192,6 +193,9 @@ func parseStruct(name string, membs []Member, knownTypes TypeList) (Type, error)
 		}
 		nm, err := memb.AsNamedType(knownTypes)
 		if err != nil {
+			if errors.Is(err, ErrUnknownType) {
+				err = errUnknownTypeSpecific{name, memb.DataType}
+			}
 			return nil, err
 		}
 		sti.members = append(sti.members, nm)
@@ -359,4 +363,18 @@ func isValidIdentiferRune(r rune) bool {
 		return true
 	}
 	return r == '_'
+}
+
+var ErrUnknownType = errors.New("unknown type")
+
+type errUnknownTypeSpecific struct {
+	typ, requires string
+}
+
+func (err errUnknownTypeSpecific) Error() string {
+	return fmt.Sprintf("Type '%s' requires type '%s'", err.typ, err.requires)
+}
+
+func (err errUnknownTypeSpecific) Unwrap() error {
+	return ErrUnknownType
 }
