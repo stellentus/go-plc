@@ -2,6 +2,7 @@ package l5x
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -97,13 +98,35 @@ func (ctrl Controller) TypeList() (TypeList, error) {
 		return nil, err
 	}
 
-	for _, dt := range ctrl.DataTypes {
-		ty, err := dt.AsType(tl)
-		if err != nil {
-			return nil, err
+	// This loop isn't the most elegant code, but it's fast enough and it's
+	// reasonably readable. We loop through the types, creating each one.
+	// However, if a type requires a type we haven't yet processed (i.e. we
+	// get ErrUnknownType), then we skip it for now. We keep looping through
+	// the types until we've created all of them.
+	typesToParse := ctrl.DataTypes
+	foundAtLeastOne := true // We keep looping as long as the last iteration found one type
+	for len(typesToParse) > 0 && foundAtLeastOne {
+		foundAtLeastOne = false
+		nextLoopMustParse := make([]DataType, 0, len(typesToParse))
+		for _, dt := range typesToParse {
+			var typ Type
+			typ, err = dt.AsType(tl)
+			if err != nil {
+				if !errors.Is(err, ErrUnknownType) {
+					// Whatever err type this is, it's not one that will go away
+					return TypeList{}, err
+				}
+				nextLoopMustParse = append(nextLoopMustParse, dt)
+				continue
+			}
+			tl = append(tl, typ)
+			foundAtLeastOne = true
 		}
+		typesToParse = nextLoopMustParse
+	}
 
-		tl = append(tl, ty)
+	if len(typesToParse) > 0 {
+		return TypeList{}, err
 	}
 
 	return tl, nil
