@@ -86,20 +86,20 @@ func ExampleTypeList_WriteDefinitions() {
 	// 	UN bool
 	// }
 	//
-	// type dow struct {
+	// type Dow struct {
 	// 	DayOW int16
 	// 	Month int32
 	// 	MonthCode [13]int32
 	// 	DayOW1 float32
 	// }
 	//
-	// type big_data_type struct {
+	// type Big_data_type struct {
 	// 	XprivateX_cleaning_c0 int8
 	// 	CLEAN_MODE int16
 	// 	XprivateX_cleaning_c7 int8
 	// }
 	//
-	// type datas_for_eating struct {
+	// type Datas_for_eating struct {
 	// 	XprivateX_cleaning_c0 int8
 	// 	FOOD_TIMER TIMER
 	// 	MEAL_PREP_TIMER TIMER
