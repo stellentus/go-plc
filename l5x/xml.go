@@ -176,7 +176,8 @@ type Data struct {
 }
 
 type Structure struct {
-	DataType        string `xml:",attr"` // TODO: enum
+	DataType        string            `xml:",attr"` // TODO: enum
+	StructureMember []DataValueMember `xml:"StructureMember>DataValueMember"`
 	DataValueMember []DataValueMember
 	ArrayMember     Array `xml:",omitempty"`
 }
@@ -316,7 +317,7 @@ type Tag struct {
 	Constant       bool           `xml:",attr"`
 	ExternalAccess ExternalAccess `xml:",attr"`
 	Description    Description
-	Data           Data
+	Data           []Data
 }
 
 type Program struct {
