@@ -89,7 +89,7 @@ func ExampleTypeList_WriteDefinitions() {
 	// type dow struct {
 	// 	DayOW int16
 	// 	Month int32
-	// 	MonthCode int32
+	// 	MonthCode [13]int32
 	// 	DayOW1 float32
 	// }
 	//
