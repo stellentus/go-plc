@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -192,7 +193,7 @@ type DataValueMember struct {
 type Array struct {
 	Name       string    `xml:",attr,omitempty"`
 	DataType   string    `xml:",attr"` // TODO: enum
-	Dimensions int       `xml:",attr"`
+	Dimensions ArrayDims `xml:",attr"`
 	Radix      Radix     `xml:",attr"`
 	Elements   []Element `xml:"Element"`
 }
@@ -200,26 +201,6 @@ type Array struct {
 type Element struct {
 	Index Index  `xml:",attr"`
 	Value string `xml:",attr"`
-}
-
-type Index int
-
-func (idx *Index) fromString(str string) error {
-	_, err := fmt.Sscanf(str, "[%d]", idx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (idx *Index) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-	var str string
-	d.DecodeElement(&str, &start)
-	return idx.fromString(str)
-}
-
-func (idx *Index) UnmarshalXMLAttr(attr xml.Attr) error {
-	return idx.fromString(attr.Value)
 }
 
 type Connection struct {
@@ -312,7 +293,7 @@ type Tag struct {
 	Name           string         `xml:",attr"`
 	TagType        TagType        `xml:",attr"`
 	DataType       string         `xml:",attr"` // TODO: enum
-	Dimensions     int            `xml:",attr,omitempty"`
+	Dimensions     TagDims        `xml:",attr,omitempty"`
 	Radix          Radix          `xml:",attr,omitempty"`
 	Constant       bool           `xml:",attr"`
 	ExternalAccess ExternalAccess `xml:",attr"`
@@ -488,4 +469,52 @@ func (ss *stringSlice) UnmarshalXMLAttr(attr xml.Attr) error {
 }
 func (ss stringSlice) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
 	return xml.Attr{Name: name, Value: ss.toString()}, nil
+}
+
+type TagDims []int
+type ArrayDims TagDims
+
+func (dims *TagDims) fromString(str string, sep string) error {
+	strs := strings.Split(str, sep)
+	ints := make([]int, len(strs))
+	for i, str := range strs {
+		val, err := strconv.ParseInt(str, 10, 32)
+		if err != nil {
+			return err
+		}
+		ints[i] = int(val)
+	}
+	*dims = ints
+	return nil
+}
+func (dims TagDims) toString(sep string) string {
+	strs := make([]string, len(dims))
+	for i, val := range dims {
+		strs[i] = strconv.Itoa(val)
+	}
+	return strings.Join(strs, sep)
+}
+func (dims *TagDims) UnmarshalXMLAttr(attr xml.Attr) error {
+	return dims.fromString(attr.Value, " ")
+}
+func (dims TagDims) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	return xml.Attr{Name: name, Value: dims.toString(" ")}, nil
+}
+func (dims *ArrayDims) UnmarshalXMLAttr(attr xml.Attr) error {
+	return (*TagDims)(dims).fromString(attr.Value, ",")
+}
+func (dims ArrayDims) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	return xml.Attr{Name: name, Value: TagDims(dims).toString(",")}, nil
+}
+
+type Index TagDims
+
+func (dims *Index) UnmarshalXMLAttr(attr xml.Attr) error {
+	if attr.Value[0] != '[' || attr.Value[len(attr.Value)-1] != ']' {
+		return fmt.Errorf("index attribute '%s' should be enclosed by brackets", attr.Value)
+	}
+	return (*TagDims)(dims).fromString(attr.Value[1:len(attr.Value)-1], ",")
+}
+func (dims Index) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	return xml.Attr{Name: name, Value: "[" + TagDims(dims).toString(" ") + "]"}, nil
 }
