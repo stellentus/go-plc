@@ -1,12 +1,14 @@
 package plc
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewDevice(t *testing.T) {
@@ -14,9 +16,16 @@ func TestNewDevice(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestNewDeviceRequiresGateway(t *testing.T) {
+func TestNewDeviceRequiresAddress(t *testing.T) {
 	_, err := NewDevice("")
-	assert.Error(t, err)
+	require.Error(t, err)
+
+	// Ideally we'd call assert.IsError, but it's not available yet.
+	// All we really care about is `errors.Is`, not strict equality.
+	// So use errors.Is for the soft check, but use assert.Equal for pretty printing.
+	if !errors.Is(err, ErrBadRequest) {
+		assert.Equal(t, err, ErrBadRequest, "Error should be of correct type")
+	}
 }
 
 func TestNewDeviceParsesTimeout(t *testing.T) {
@@ -37,7 +46,14 @@ func TestReadTagRequiresPointer(t *testing.T) {
 
 	var notAPointer int
 	err := dev.ReadTag(testTagName, notAPointer)
-	assert.Error(t, err)
+	require.Error(t, err)
+
+	if !errors.Is(err, ErrBadRequest) {
+		require.Failf(t, "Incorrect error type for non-pointer read", "Received error: %v", err)
+	}
+
+	expectedError := ErrNonPointerRead{TagName: testTagName, Kind: reflect.Int}
+	assert.Equal(t, err, expectedError, "Error should be of correct type")
 }
 
 func TestReadString(t *testing.T) {

@@ -2,6 +2,7 @@ package plc
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"sync"
 )
@@ -27,7 +28,7 @@ func NewCache(reader Reader) *Cache {
 func (r *Cache) ReadTag(name string, value interface{}) error {
 	err := r.reader.ReadTag(name, value)
 	if err != nil {
-		return err
+		return fmt.Errorf("Cache: %w", err)
 	}
 
 	r.mutex.Lock()
@@ -38,18 +39,18 @@ func (r *Cache) ReadTag(name string, value interface{}) error {
 }
 
 // ReadCachedTag acts the same as ReadTag, but returns the cached value.
-// A read of a value not in the cache will return TagNotFoundError.
+// A read of a value not in the cache will return ErrTagNotFound.
 func (r *Cache) ReadCachedTag(name string, value interface{}) error {
 	r.mutex.RLock()
 	cVal, ok := r.cache[name]
 	r.mutex.RUnlock()
 	if !ok {
-		return TagNotFoundError{name}
+		return ErrTagNotFound{name}
 	}
 
 	val := reflect.ValueOf(value)
 	if val.Kind() != reflect.Ptr {
-		return errors.New("ReadCachedTag for '" + name + "' requires a reference, not a value")
+		return newErrNonPointerRead(name, val.Kind())
 	}
 	vToSet := val.Elem()
 	if !vToSet.CanSet() {
@@ -70,13 +71,19 @@ func (r *Cache) CacheReader() CacheReader {
 }
 
 func (r CacheReader) ReadTag(name string, value interface{}) error {
-	return r.cache.ReadCachedTag(name, value)
+	err := r.cache.ReadCachedTag(name, value)
+	if err != nil {
+		return fmt.Errorf("CacheReader: %w", err)
+	}
+	return nil
 }
 
-type TagNotFoundError struct {
+type ErrTagNotFound struct {
 	Name string
 }
 
-func (err TagNotFoundError) Error() string {
-	return "Tag '" + err.Name + "' could not be found"
+func (err ErrTagNotFound) Error() string {
+	return "Cache tag '" + err.Name + "' could not be found"
 }
+
+func (err ErrTagNotFound) Unwrap() error { return ErrBadRequest }
