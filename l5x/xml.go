@@ -2,10 +2,43 @@ package l5x
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
+	"io"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 )
+
+// NewFromFile parses the RSLogix5000 L5X file at the provided path.
+func NewFromFile(path string) (*RSLogix5000Content, error) {
+	xmlFile, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer xmlFile.Close()
+
+	content, err := NewFromReader(xmlFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return content, nil
+}
+
+// NewFromReader parses a reader which provides data in RSLogix5000 L5X format.
+func NewFromReader(rd io.Reader) (*RSLogix5000Content, error) {
+	dec := xml.NewDecoder(rd)
+
+	content := &RSLogix5000Content{}
+	err := dec.Decode(content)
+	if err != nil {
+		return nil, err
+	}
+
+	return content, nil
+}
 
 type RSLogix5000Content struct {
 	XMLName          xml.Name    `xml:"RSLogix5000Content"`
@@ -58,6 +91,47 @@ type Controller struct {
 	EthernetNetwork          EthernetNetwork
 }
 
+func (ctrl Controller) TypeList() (TypeList, error) {
+	tl := NewTypeList()
+	err := tl.AddControlLogixTypes()
+	if err != nil {
+		return nil, err
+	}
+
+	// This loop isn't the most elegant code, but it's fast enough and it's
+	// reasonably readable. We loop through the types, creating each one.
+	// However, if a type requires a type we haven't yet processed (i.e. we
+	// get ErrUnknownType), then we skip it for now. We keep looping through
+	// the types until we've created all of them.
+	typesToParse := ctrl.DataTypes
+	foundAtLeastOne := true // We keep looping as long as the last iteration found one type
+	for len(typesToParse) > 0 && foundAtLeastOne {
+		foundAtLeastOne = false
+		nextLoopMustParse := make([]DataType, 0, len(typesToParse))
+		for _, dt := range typesToParse {
+			var typ Type
+			typ, err = dt.AsType(tl)
+			if err != nil {
+				if !errors.Is(err, ErrUnknownType) {
+					// Whatever err type this is, it's not one that will go away
+					return TypeList{}, err
+				}
+				nextLoopMustParse = append(nextLoopMustParse, dt)
+				continue
+			}
+			tl = append(tl, typ)
+			foundAtLeastOne = true
+		}
+		typesToParse = nextLoopMustParse
+	}
+
+	if len(typesToParse) > 0 {
+		return TypeList{}, err
+	}
+
+	return tl, nil
+}
+
 type RedundancyInfo struct {
 	Enabled                   bool `xml:",attr"`
 	KeepTestEditsOnSwitchOver bool `xml:",attr"`
@@ -71,21 +145,22 @@ type Security struct {
 }
 
 type DataType struct {
-	Name    string   `xml:",attr"`
-	Family  string   `xml:",attr"`
-	Class   string   `xml:",attr"` // TODO: enum
-	Members []Member `xml:"Members>Member"`
+	Name    string         `xml:",attr"`
+	Family  DataTypeFamily `xml:",attr"`
+	Class   Class          `xml:",attr"`
+	Members []Member       `xml:"Members>Member"`
 }
 
 type Member struct {
-	Name           string      `xml:",attr"`
-	DataType       string      `xml:",attr"` // TODO: enum
-	Dimension      int         `xml:",attr"`
-	Radix          string      `xml:",attr"` // TODO: enum
-	Hidden         bool        `xml:",attr"`
-	BitNumber      int         `xml:",attr,omitempty"`
-	ExternalAccess string      `xml:",attr"` // TODO: enum
-	Description    Description `xml:",omitempty"`
+	Name           string         `xml:",attr"`
+	DataType       string         `xml:",attr"` // TODO: enum
+	Dimension      int            `xml:",attr"`
+	Radix          Radix          `xml:",attr"`
+	Hidden         bool           `xml:",attr"`
+	BitNumber      int            `xml:",attr,omitempty"`
+	Target         string         `xml:",attr,omitempty"` // TODO: must match another Member's name
+	ExternalAccess ExternalAccess `xml:",attr"`
+	Description    Description    `xml:",omitempty"`
 }
 
 type Description struct {
@@ -93,30 +168,32 @@ type Description struct {
 }
 
 type Module struct {
-	Name            string `xml:",attr"`
-	CatalogNumber   string `xml:",attr"`
-	Vendor          int    `xml:",attr"`
-	ProductType     int    `xml:",attr"`
-	ProductCode     int    `xml:",attr"`
-	Major           int    `xml:",attr"`
-	Minor           int    `xml:",attr"`
-	ParentModule    string `xml:",attr"`
-	ParentModPortId int    `xml:",attr"`
-	Inhibited       bool   `xml:",attr"`
-	MajorFault      bool   `xml:",attr"`
-	EKey            struct {
-		State string `xml:",attr"`
-	}
+	Name               string `xml:",attr"`
+	CatalogNumber      string `xml:",attr"`
+	Vendor             int    `xml:",attr"`
+	ProductType        int    `xml:",attr"`
+	ProductCode        int    `xml:",attr"`
+	Major              int    `xml:",attr"`
+	Minor              int    `xml:",attr"`
+	ParentModule       string `xml:",attr"` // TODO: must match another module name
+	ParentModPortId    int    `xml:",attr"`
+	Inhibited          bool   `xml:",attr"`
+	MajorFault         bool   `xml:",attr"`
+	EKey               EKeyState_s
 	Ports              []Port `xml:"Ports>Port"`
 	Communications     Communications
 	ExtendedProperties ExtendedProperties
 }
 
+type EKeyState_s struct {
+	State EKeyState `xml:",attr"`
+}
+
 type Port struct {
-	Id       int    `xml:",attr"`
-	Address  int    `xml:",attr,omitempty"`
-	Type     string `xml:",attr"` // TODO: enum
-	Upstream bool   `xml:",attr"`
+	Id       int      `xml:",attr"`
+	Address  string   `xml:",attr"`
+	Type     PortType `xml:",attr"`
+	Upstream bool     `xml:",attr"`
 	Bus      struct {
 		Size int `xml:",attr,omitempty"`
 	}
@@ -128,13 +205,13 @@ type Communications struct {
 }
 
 type ConfigTag struct {
-	ConfigSize     int    `xml:",attr"`
-	ExternalAccess string `xml:",attr"` // TODO: enum
+	ConfigSize     int            `xml:",attr"`
+	ExternalAccess ExternalAccess `xml:",attr"`
 	Data           []Data
 }
 
 type Data struct {
-	Format    string          `xml:",attr"` // TODO: enum
+	Format    DataFormat      `xml:",attr"`
 	L5K       string          `xml:",cdata"`
 	Structure Structure       `xml:",omitempty"`
 	DataValue DataValueMember `xml:",omitempty"`
@@ -142,7 +219,8 @@ type Data struct {
 }
 
 type Structure struct {
-	DataType        string `xml:",attr"`
+	DataType        string            `xml:",attr"` // TODO: enum
+	StructureMember []DataValueMember `xml:"StructureMember>DataValueMember"`
 	DataValueMember []DataValueMember
 	ArrayMember     Array `xml:",omitempty"`
 }
@@ -150,15 +228,15 @@ type Structure struct {
 type DataValueMember struct {
 	Name     string `xml:",attr,omitempty"`
 	DataType string `xml:",attr"` // TODO: enum
-	Radix    string `xml:",attr"` // TODO: enum
+	Radix    Radix  `xml:",attr"`
 	Value    string `xml:",attr"`
 }
 
 type Array struct {
 	Name       string    `xml:",attr,omitempty"`
 	DataType   string    `xml:",attr"` // TODO: enum
-	Dimensions int       `xml:",attr"`
-	Radix      string    `xml:",attr"` // TODO: enum
+	Dimensions ArrayDims `xml:",attr"`
+	Radix      Radix     `xml:",attr"`
 	Elements   []Element `xml:"Element"`
 }
 
@@ -167,30 +245,10 @@ type Element struct {
 	Value string `xml:",attr"`
 }
 
-type Index int
-
-func (idx *Index) fromString(str string) error {
-	_, err := fmt.Sscanf(str, "[%d]", idx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (idx *Index) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-	var str string
-	d.DecodeElement(&str, &start)
-	return idx.fromString(str)
-}
-
-func (idx *Index) UnmarshalXMLAttr(attr xml.Attr) error {
-	return idx.fromString(attr.Value)
-}
-
 type Connection struct {
 	Name        string `xml:",attr"`
 	RPI         int    `xml:",attr"`
-	Type        string `xml:",attr"`
+	Type        IOType `xml:",attr"`
 	EventID     int    `xml:",attr"`
 	SendTrigger bool   `xml:"ProgrammaticallySendEventTrigger,attr"`
 	InputTag    IOTag
@@ -198,8 +256,8 @@ type Connection struct {
 }
 
 type IOTag struct {
-	ExternalAccess string    `xml:",attr"`
-	Comments       []Comment `xml:"Comments>Comment,omitempty"`
+	ExternalAccess ExternalAccess `xml:",attr"`
+	Comments       []Comment      `xml:"Comments>Comment,omitempty"`
 	Data           []Data
 }
 
@@ -235,31 +293,31 @@ type AddOnInstrDef struct {
 }
 
 type Parameter struct {
-	Name           string      `xml:",attr"`
-	TagType        string      `xml:",attr"`
-	DataType       string      `xml:",attr"` // TODO: enum
-	Usage          string      `xml:",attr"`
-	Radix          string      `xml:",attr"` // TODO: enum
-	Required       bool        `xml:",attr"`
-	Visible        bool        `xml:",attr"`
-	ExternalAccess string      `xml:",attr"` // TODO: enum
-	Description    Description `xml:",omitempty"`
-	DefaultData    []Data      `xml:",omitempty"`
+	Name           string         `xml:",attr"`
+	TagType        TagType        `xml:",attr"`
+	DataType       string         `xml:",attr"` // TODO: enum
+	Usage          IOType         `xml:",attr"`
+	Radix          Radix          `xml:",attr"`
+	Required       bool           `xml:",attr"`
+	Visible        bool           `xml:",attr"`
+	ExternalAccess ExternalAccess `xml:",attr"`
+	Description    Description    `xml:",omitempty"`
+	DefaultData    []Data         `xml:",omitempty"`
 }
 
 type LocalTag struct {
-	Name           string `xml:",attr"`
-	DataType       string `xml:",attr"` // TODO: enum
-	Dimensions     int    `xml:",attr"`
-	Radix          string `xml:",attr"` // TODO: enum
-	ExternalAccess string `xml:",attr"` // TODO: enum
+	Name           string         `xml:",attr"`
+	DataType       string         `xml:",attr"` // TODO: enum
+	Dimensions     int            `xml:",attr"`
+	Radix          Radix          `xml:",attr"`
+	ExternalAccess ExternalAccess `xml:",attr"`
 	Description    Description
 	DefaultData    []Data `xml:",omitempty"`
 }
 
 type Routine struct {
-	Name        string `xml:",attr"`
-	Type        string `xml:",attr"`
+	Name        string      `xml:",attr"`
+	Type        RoutineType `xml:",attr"`
 	Description Description
 	RLLContent  struct {
 		Rungs []Rung `xml:"Rung"`
@@ -267,22 +325,22 @@ type Routine struct {
 }
 
 type Rung struct {
-	Number  int    `xml:",attr"`
-	Type    string `xml:",attr"`
+	Number  int      `xml:",attr"`
+	Type    RungType `xml:",attr"`
 	Comment Description
 	Text    Description
 }
 
 type Tag struct {
-	Name           string `xml:",attr"`
-	TagType        string `xml:",attr"`
-	DataType       string `xml:",attr"` // TODO: enum
-	Dimensions     int    `xml:",attr,omitempty"`
-	Radix          string `xml:",attr,omitempty"` // TODO: enum
-	Constant       bool   `xml:",attr"`
-	ExternalAccess string `xml:",attr"` // TODO: enum
+	Name           string         `xml:",attr"`
+	TagType        TagType        `xml:",attr"`
+	DataType       string         `xml:",attr"` // TODO: enum
+	Dimensions     TagDims        `xml:",attr,omitempty"`
+	Radix          Radix          `xml:",attr,omitempty"`
+	Constant       bool           `xml:",attr"`
+	ExternalAccess ExternalAccess `xml:",attr"`
 	Description    Description
-	Data           Data
+	Data           []Data
 }
 
 type Program struct {
@@ -296,12 +354,12 @@ type Program struct {
 }
 
 type Task struct {
-	Name                 string `xml:",attr"`
-	Type                 string `xml:",attr"` // TODO: enum
-	Priority             int    `xml:",attr"`
-	Watchdog             int    `xml:",attr"`
-	DisableUpdateOutputs bool   `xml:",attr"`
-	InhibitTask          bool   `xml:",attr"`
+	Name                 string   `xml:",attr"`
+	Type                 TaskType `xml:",attr"`
+	Priority             int      `xml:",attr"`
+	Watchdog             int      `xml:",attr"`
+	DisableUpdateOutputs bool     `xml:",attr"`
+	InhibitTask          bool     `xml:",attr"`
 	ScheduledPrograms    []struct {
 		Name string `xml:",attr"`
 	} `xml:"ScheduledPrograms>ScheduledProgram"`
@@ -453,4 +511,52 @@ func (ss *stringSlice) UnmarshalXMLAttr(attr xml.Attr) error {
 }
 func (ss stringSlice) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
 	return xml.Attr{Name: name, Value: ss.toString()}, nil
+}
+
+type TagDims []int
+type ArrayDims TagDims
+
+func (dims *TagDims) fromString(str string, sep string) error {
+	strs := strings.Split(str, sep)
+	ints := make([]int, len(strs))
+	for i, str := range strs {
+		val, err := strconv.ParseInt(str, 10, 32)
+		if err != nil {
+			return err
+		}
+		ints[i] = int(val)
+	}
+	*dims = ints
+	return nil
+}
+func (dims TagDims) toString(sep string) string {
+	strs := make([]string, len(dims))
+	for i, val := range dims {
+		strs[i] = strconv.Itoa(val)
+	}
+	return strings.Join(strs, sep)
+}
+func (dims *TagDims) UnmarshalXMLAttr(attr xml.Attr) error {
+	return dims.fromString(attr.Value, " ")
+}
+func (dims TagDims) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	return xml.Attr{Name: name, Value: dims.toString(" ")}, nil
+}
+func (dims *ArrayDims) UnmarshalXMLAttr(attr xml.Attr) error {
+	return (*TagDims)(dims).fromString(attr.Value, ",")
+}
+func (dims ArrayDims) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	return xml.Attr{Name: name, Value: TagDims(dims).toString(",")}, nil
+}
+
+type Index TagDims
+
+func (dims *Index) UnmarshalXMLAttr(attr xml.Attr) error {
+	if attr.Value[0] != '[' || attr.Value[len(attr.Value)-1] != ']' {
+		return fmt.Errorf("index attribute '%s' should be enclosed by brackets", attr.Value)
+	}
+	return (*TagDims)(dims).fromString(attr.Value[1:len(attr.Value)-1], ",")
+}
+func (dims Index) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	return xml.Attr{Name: name, Value: "[" + TagDims(dims).toString(" ") + "]"}, nil
 }
