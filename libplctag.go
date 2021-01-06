@@ -3,8 +3,8 @@
 package plc
 
 /*
-#cgo LDFLAGS: ${SRCDIR}/libplctag.a
-#include "./libplctag.h"
+#cgo LDFLAGS: -lplctag
+#include <libplctag.h>
 */
 import "C"
 import "fmt"

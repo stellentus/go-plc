@@ -5,11 +5,10 @@ A wrapper for PLC communication in golang. Examples are provided in the [example
 ## Instructions
 
 Try running `example/toggle-bool/main.go`:
-* Compile or download `libplctag.a` for your platform. Place it at the root of this project.
+* Install the [`libplctag`](https://github.com/libplctag/libplctag) dynamic library wherever your OS expects it. (Just follow the `libplctag` instructions to `make install`.)
 * `go run example/toggle-bool/main.go` (or use `go build`)
 
 ## Running with the Stub
 
-* Download and build the [stub version](https://github.com/dijkstracula/plcstub/) of `libplctag`
-* Rename it to `libplctag_stub.a` and place it at the root of this project.
+* Install the [stub version](https://github.com/dijkstracula/plcstub/) of the `libplctag` dynamic library.
 * Build or run the code using the `stub` tag. e.g. `go run -tags stub example/toggle-bool/main.go`
