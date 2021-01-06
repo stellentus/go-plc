@@ -4,7 +4,7 @@ package plc
 
 /*
 #cgo LDFLAGS: -lplctag
-#include "./libplctag.h"
+#include <libplctag.h>
 */
 import "C"
 import "fmt"
