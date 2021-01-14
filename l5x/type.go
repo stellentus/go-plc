@@ -141,17 +141,21 @@ func (tl *TypeList) AddControlLogixTypes() error {
 }
 
 func (mb Member) AsNamedType(knownTypes TypeList) (NamedType, error) {
+	return knownTypes.newNamedType(mb.Name, mb.DataType, mb.Dimension)
+}
+
+func (tl TypeList) newNamedType(name, dataType string, dim int) (NamedType, error) {
 	var nt NamedType
-	for _, ty := range knownTypes {
-		if ty.PlcName() == mb.DataType {
+	for _, ty := range tl {
+		if ty.PlcName() == dataType {
 			nt = NamedType{
-				GoName: mb.Name,
+				GoName: name,
 				Type:   ty,
 			}
-			if !isPublicGoIdentifier(mb.Name) {
+			if !isPublicGoIdentifier(name) {
 				valid := makeValidIdentifier(nt.GoName)
 				if valid == "" {
-					return NamedType{}, fmt.Errorf("couldn't create valid identifier for '%s'", mb.Name)
+					return NamedType{}, fmt.Errorf("couldn't create valid identifier for '%s'", name)
 				}
 				nt.PlcName = nt.GoName
 				nt.GoName = valid
@@ -163,10 +167,10 @@ func (mb Member) AsNamedType(knownTypes TypeList) (NamedType, error) {
 		return NamedType{}, ErrUnknownType
 	}
 
-	if mb.Dimension > 1 {
+	if dim > 1 {
 		nt.Type = arrayType{
 			elementInfo: nt.Type,
-			count:       mb.Dimension,
+			count:       dim,
 		}
 	}
 
