@@ -476,31 +476,6 @@ var exampleController = Controller{
 	}},
 	Tags: []Tag{
 		Tag{
-			Name:     "ALARM_P",
-			DataType: "alarm_info",
-			Data: []Data{
-				Data{
-					Format: DataFormatL5K,
-					L5K:    "\n[[0,0,0],0]\n",
-				},
-				Data{
-					L5K: "\n\n",
-					Structure: Structure{
-						DataType: "alarm_info",
-						StructureMember: []DataValueMember{
-							{Name: "PRE", DataType: "DINT", Value: "0"},
-							{Name: "ACC", DataType: "DINT", Value: "0"},
-							{Name: "EN", DataType: "BOOL", Value: "1"},
-							{Name: "TT", DataType: "BOOL", Value: "0"},
-						},
-						DataValueMember: []DataValueMember{
-							{Name: "ALM_ACTIVE", DataType: "BOOL", Value: "0"},
-						},
-					},
-				},
-			},
-		},
-		Tag{
 			Name:        "INFO_ABOUT",
 			DataType:    "INT",
 			Dimensions:  []int{2},

@@ -330,22 +330,6 @@ BHAIG29GI]]>
 </AddOnInstructionDefinition>
 </AddOnInstructionDefinitions>
 <Tags>
-<Tag Name="ALARM_P" TagType="Base" DataType="alarm_info" Constant="false" ExternalAccess="Read/Write">
-<Data Format="L5K">
-<![CDATA[[[0,0,0],0]]]>
-</Data>
-<Data Format="Decorated">
-<Structure DataType="alarm_info">
-<StructureMember Name="ALM_TMR" DataType="TIMER">
-<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="0"/>
-<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
-<DataValueMember Name="EN" DataType="BOOL" Value="1"/>
-<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
-</StructureMember>
-<DataValueMember Name="ALM_ACTIVE" DataType="BOOL" Value="0"/>
-</Structure>
-</Data>
-</Tag>
 <Tag Name="INFO_ABOUT" TagType="Base" DataType="INT" Dimensions="2" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
 <Description>
 <![CDATA[Info data]]>
