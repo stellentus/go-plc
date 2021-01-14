@@ -344,7 +344,7 @@ BHAIG29GI]]>
 </Array>
 </Data>
 </Tag>
-<Tag Name="BIGGD" TagType="Base" DataType="big_data_type" Constant="false" ExternalAccess="Read/Write">
+<Tag Name="bIGGD" TagType="Base" DataType="big_data_type" Constant="false" ExternalAccess="Read/Write">
 <Description>
 <![CDATA[Big Data Lots]]>
 </Description>

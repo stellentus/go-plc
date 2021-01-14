@@ -500,7 +500,7 @@ var exampleController = Controller{
 			},
 		},
 		Tag{
-			Name:        "BIGGD",
+			Name:        "bIGGD",
 			DataType:    "big_data_type",
 			Description: Description{Cdata: "\nBig Data Lots\n"},
 			Data: []Data{
