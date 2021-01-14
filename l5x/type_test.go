@@ -174,6 +174,27 @@ func TestMemberAsNamedTypeError(t *testing.T) {
 	}
 }
 
+func TestTypeListWithPlcName(t *testing.T) {
+	tests := []struct {
+		PlcName string
+		Type
+	}{
+		{"LINT", typeLINT},
+		{"USINT", typeUSINT},
+		{"UINT", typeUINT},
+	}
+
+	for _, test := range tests {
+		t.Run(test.PlcName, func(t *testing.T) {
+			typ, err := NewTypeList().WithPlcName(test.PlcName)
+			require.NoError(t, err)
+			assert.Equal(t, test.Type.PlcName(), typ.PlcName())
+			assert.Equal(t, test.Type.GoName(), typ.GoName())
+			assert.Equal(t, test.Type.GoTypeString(), typ.GoTypeString())
+		})
+	}
+}
+
 func newTestDataType() DataType {
 	return DataType{
 		Name:    "ExampleDataType",

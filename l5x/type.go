@@ -80,6 +80,15 @@ func NewTypeList() TypeList {
 	}
 }
 
+func (tl TypeList) WithPlcName(name string) (Type, error) {
+	for _, ty := range tl {
+		if ty.PlcName() == name {
+			return ty, nil
+		}
+	}
+	return nil, errors.New("DataType '" + name + "' couldn't be found")
+}
+
 func (tl TypeList) WriteDefinitions(wr io.Writer) error {
 	for _, ty := range tl {
 		str := TypeDefinition(ty)
