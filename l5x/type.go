@@ -141,10 +141,10 @@ func (tl *TypeList) AddControlLogixTypes() error {
 }
 
 func (mb Member) AsNamedType(knownTypes TypeList) (NamedType, error) {
-	return knownTypes.newNamedType(mb.Name, mb.DataType, mb.Dimension)
+	return knownTypes.newNamedType(mb.Name, mb.DataType, []int{mb.Dimension})
 }
 
-func (tl TypeList) newNamedType(name, dataType string, dim int) (NamedType, error) {
+func (tl TypeList) newNamedType(name, dataType string, dims []int) (NamedType, error) {
 	var nt NamedType
 	for _, ty := range tl {
 		if ty.PlcName() == dataType {
@@ -167,10 +167,17 @@ func (tl TypeList) newNamedType(name, dataType string, dim int) (NamedType, erro
 		return NamedType{}, ErrUnknownType
 	}
 
-	if dim > 1 {
+	if len(dims) == 1 && dims[0] <= 1 { // not an array
+		return nt, nil
+	}
+
+	for idx := len(dims) - 1; idx >= 0; idx-- {
+		if dims[idx] <= 1 {
+			return NamedType{}, fmt.Errorf("couldn't create NamedType with dimensions %v", dims)
+		}
 		nt.Type = arrayType{
 			elementInfo: nt.Type,
-			count:       dim,
+			count:       dims[idx],
 		}
 	}
 
