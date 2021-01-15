@@ -296,12 +296,10 @@ func (ati arrayType) GoTypeString() string {
 }
 
 type structType struct {
-	name    string
+	safeGoName
 	members []NamedType
 }
 
-func (sti structType) PlcName() string { return sti.name }
-func (sti structType) GoName() string  { return sti.name }
 func (sti structType) GoTypeString() string {
 	strs := make([]string, len(sti.members))
 	for i, member := range sti.members {
@@ -317,28 +315,51 @@ func newStructType(name string, members []NamedType) (structType, error) {
 	if members == nil {
 		members = []NamedType{}
 	}
+	sgn, err := newSafeGoName(name)
+	if err != nil {
+		return structType{}, err
+	}
 	return structType{
-		name:    name,
-		members: members,
+		safeGoName: sgn,
+		members:    members,
 	}, nil
 }
 
 type stringType struct {
-	name  string
+	safeGoName
 	atype arrayType
 }
 
-func (sty stringType) PlcName() string      { return sty.name }
-func (sty stringType) GoName() string       { return sty.name }
 func (sty stringType) GoTypeString() string { return sty.atype.GoTypeString() }
 func newStringType(name string, elemInfo Type, count int) (stringType, error) {
+	sgn, err := newSafeGoName(name)
+	if err != nil {
+		return stringType{}, err
+	}
 	return stringType{
-		name: name,
+		safeGoName: sgn,
 		atype: arrayType{
 			elementInfo: elemInfo,
 			count:       count,
 		},
 	}, nil
+}
+
+type safeGoName struct {
+	goN, plcN string
+}
+
+func (sgn safeGoName) PlcName() string { return sgn.plcN }
+func (sgn safeGoName) GoName() string  { return sgn.goN }
+func newSafeGoName(name string) (safeGoName, error) {
+	sgn := safeGoName{goN: name, plcN: name}
+	if !isPublicGoIdentifier(name) {
+		sgn.goN = makeValidIdentifier(sgn.goN)
+		if sgn.goN == "" {
+			return safeGoName{}, fmt.Errorf("couldn't create safe go name for '%s'", name)
+		}
+	}
+	return sgn, nil
 }
 
 // isValidGoIdentifier determines if str is a valid go identifier. According to the spec:

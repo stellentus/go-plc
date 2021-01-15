@@ -10,7 +10,11 @@ import (
 )
 
 func newTestStructType(name string, nts []NamedType) structType {
-	return structType{name: name, members: nts}
+	str, err := newStructType(name, nts)
+	if err != nil {
+		panic("Test contains invalid name '" + name + "'")
+	}
+	return str
 }
 
 func newTestMember(varName, ty string) Member {
@@ -105,7 +109,7 @@ func ExampleTypeList_WriteDefinitions() {
 	// 	BHAIG29GI TIMER
 	// 	COUNTDOWN_TO_DESSERT TIMER
 	// 	STEPS_REQUIRED int16
-	// 	SoMuchData big_data_type `plc:"soMuchData"`
+	// 	SoMuchData Big_data_type `plc:"soMuchData"`
 	// }
 }
 

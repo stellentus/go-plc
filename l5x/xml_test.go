@@ -797,7 +797,7 @@ func (tt testType) GoTypeString() string { return "" }
 
 var expectedTagList = []NamedType{
 	{"", "INFO_ABOUT", testType{"", "[2]int16"}},
-	{"bIGGD", "BIGGD", testType{"big_data_type", "big_data_type"}},
+	{"bIGGD", "BIGGD", testType{"big_data_type", "Big_data_type"}},
 }
 
 func TestControllerNamedTypes(t *testing.T) {
@@ -809,7 +809,7 @@ func TestControllerNamedTypes(t *testing.T) {
 }
 
 var expectedDancerTagList = []NamedType{
-	{"", "DOW", testType{"dow", "dow"}},
+	{"", "DOW", testType{"dow", "Dow"}},
 	{"multiArray", "MultiArray", testType{"", "[2][4]int16"}},
 }
 
