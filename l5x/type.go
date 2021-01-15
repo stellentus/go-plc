@@ -143,6 +143,9 @@ func (tl *TypeList) AddControlLogixTypes() error {
 	}
 	*tl = append(*tl, counter)
 
+	// The MESSAGE type has some data, but this will add it as `struct{}` since we don't use it
+	*tl = append(*tl, structType{safeGoName: safeGoName{"MESSAGE", "MESSAGE"}})
+
 	return nil
 }
 
