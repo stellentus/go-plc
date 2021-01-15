@@ -27,13 +27,6 @@ func main() {
 	tl, err := content.Controller.TypeList()
 	panicIfError(err, "Coundn't register ControlLogixTypes")
 
-	fout := io.WriteCloser(os.Stdout)
-	if *out != "" {
-		fout, err = os.Create(*out)
-		panicIfError(err, "Could not open output file '"+*out+"'")
-	}
-	defer fout.Close()
-
 	var src strings.Builder
 
 	// Print header line if requested
@@ -50,10 +43,17 @@ func main() {
 	err = content.Controller.WriteTagsStruct(&src)
 	panicIfError(err, "Failed to write tags")
 
-	out, err := format.Source([]byte(src.String()))
+	str, err := format.Source([]byte(src.String()))
 	panicIfError(err, "Failed to run go format")
 
-	_, err = fout.Write(out)
+	fout := io.WriteCloser(os.Stdout)
+	if *out != "" {
+		fout, err = os.Create(*out)
+		panicIfError(err, "Could not open output file '"+*out+"'")
+	}
+	defer fout.Close()
+
+	_, err = fout.Write(str)
 	panicIfError(err, "Failed to write output file")
 }
 
