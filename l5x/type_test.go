@@ -98,6 +98,7 @@ func ExampleTypeList_WriteDefinitions() {
 	// }
 	//
 	// type Datas_for_eating struct {
+	// 	TIMER
 	// 	XprivateX_cleaning_c0 int8
 	// 	FOOD_TIMER TIMER
 	// 	MEAL_PREP_TIMER TIMER

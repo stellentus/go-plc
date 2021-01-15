@@ -39,6 +39,12 @@ var exampleDataTypes = []DataType{
 		Name: "datas_for_eating",
 		Members: []Member{
 			Member{
+				Name:        "TIMER",
+				DataType:    "TIMER",
+				Radix:       RadixNullType,
+				Description: Description{Cdata: "\nTimer with name TIMER to show embedding\n"},
+			},
+			Member{
 				Name:     "XprivateX_cleaning_c0",
 				DataType: "SINT",
 				Hidden:   true,
@@ -766,6 +772,7 @@ var expectedTypeList = TypeList{
 	}),
 	exampleBigDataType,
 	newTestStructType("datas_for_eating", []NamedType{
+		NamedType{GoName: "TIMER", Type: exampleTimerType},
 		NamedType{GoName: "XprivateX_cleaning_c0", Type: typeSINT},
 		NamedType{GoName: "FOOD_TIMER", Type: exampleTimerType},
 		NamedType{GoName: "MEAL_PREP_TIMER", Type: exampleTimerType},

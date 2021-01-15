@@ -16,6 +16,11 @@
 </DataType>
 <DataType Name="datas_for_eating" Family="NoFamily" Class="User">
 <Members>
+<Member Name="TIMER" DataType="TIMER" Dimension="0" Radix="NullType" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Timer with name TIMER to show embedding]]>
+</Description>
+</Member>
 <Member Name="XprivateX_cleaning_c0" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
 <Member Name="DEMAND" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="XprivateX_cleaning_c0" BitNumber="0" ExternalAccess="Read/Write">
 <Description>
