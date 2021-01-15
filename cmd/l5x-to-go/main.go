@@ -44,8 +44,11 @@ func main() {
 		src.WriteString("package " + *pkg + "\n\n")
 	}
 
-	err = tl.WriteDefinitions(&src) // write into a string buffer instead. Then call
+	err = tl.WriteDefinitions(&src)
 	panicIfError(err, "Failed to write definitions")
+
+	err = content.Controller.WriteTagsStruct(&src)
+	panicIfError(err, "Failed to write tags")
 
 	out, err := format.Source([]byte(src.String()))
 	panicIfError(err, "Failed to run go format")
