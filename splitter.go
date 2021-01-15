@@ -43,23 +43,7 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 			}
 			fieldName = name + "." + fieldName // add prefix
 			field := str.Field(i)
-			if !field.CanAddr() {
-				err = fmt.Errorf("Cannot address %s", fieldName)
-				break
-			}
-
-			fieldPointer := field.Addr().Interface()
-			if field.Kind() == reflect.Ptr {
-				// Since field actually is a pointer, we want its value instead.
-				if field.IsNil() {
-					// It's currently a nil pointer, so we need to allocate and set the value
-					newVal := reflect.New(field.Type().Elem())
-					field.Set(newVal)
-				}
-				fieldPointer = field.Interface()
-			}
-
-			err = r.ReadTag(fieldName, fieldPointer)
+			err = r.readValue(fieldName, field)
 			if err != nil {
 				break
 			}
@@ -67,24 +51,7 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 	case reflect.Array, reflect.Slice:
 		arr := v.Elem()
 		for idx := 0; idx < arr.Len(); idx++ {
-			itemName := TagWithIndex(name, idx)
-			item := arr.Index(idx)
-			if !item.CanAddr() {
-				err = fmt.Errorf("Cannot address %s", itemName)
-				break
-			}
-			itemPointer := item.Addr().Interface()
-			if item.Kind() == reflect.Ptr {
-				// Since item actually is a pointer, we want its value instead.
-				if item.IsNil() {
-					// It's currently a nil pointer, so we need to allocate and set the value
-					newVal := reflect.New(item.Type().Elem())
-					item.Set(newVal)
-				}
-				itemPointer = item.Interface()
-			}
-
-			err = r.ReadTag(itemName, itemPointer)
+			err = r.readValue(TagWithIndex(name, idx), arr.Index(idx))
 			if err != nil {
 				break
 			}
@@ -95,6 +62,25 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 	}
 
 	return err
+}
+
+func (r SplitReader) readValue(name string, val reflect.Value) error {
+	if !val.CanAddr() {
+		return fmt.Errorf("Cannot address %s", name)
+	}
+
+	valPointer := val.Addr().Interface()
+	if val.Kind() == reflect.Ptr {
+		// Since val actually is a pointer, we want its value instead.
+		if val.IsNil() {
+			// It's currently a nil pointer, so we need to allocate and set the value
+			newVal := reflect.New(val.Type().Elem())
+			val.Set(newVal)
+		}
+		valPointer = val.Interface()
+	}
+
+	return r.ReadTag(name, valPointer)
 }
 
 // SplitWriter splits writes of structs and arrays into separate writes of their components.
