@@ -258,7 +258,7 @@ func TestDataTypeAsNamedType(t *testing.T) {
 	)
 }
 
-func TestDataTypeAsNamedTypeEmbedded(t *testing.T) {
+func TestDataTypeAsNamedTypePredeclared(t *testing.T) {
 	knownTypes := NewTypeList()
 	err := knownTypes.AddControlLogixTypes()
 	require.NoError(t, err, "There should be no issue adding ControlLogix types to a NewTypeList")
@@ -283,14 +283,14 @@ func TestDataTypeAsNamedTypeEmbedded(t *testing.T) {
 	}
 
 	runTest(
-		"EmbeddedType",
+		"IncludeRegisteredType",
 		"struct {\n\tVarName int16\n\tOtherVar RegisteredType `plc:\"otherVar\"`\n}",
 		func(dt *DataType) {
 			dt.Members = append(dt.Members, newTestMember("otherVar", "RegisteredType"))
 		},
 	)
 	runTest(
-		"EmbeddedType",
+		"TIMER",
 		"struct {\n\tTimerVar TIMER `plc:\"timerVar\"`\n}",
 		func(dt *DataType) {
 			dt.Members = []Member{newTestMember("timerVar", "TIMER")}
