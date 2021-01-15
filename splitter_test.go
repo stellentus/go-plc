@@ -405,3 +405,39 @@ func TestSplitReadArrayInStruct(t *testing.T) {
 		})
 	}
 }
+
+func TestSplitWriteArray(t *testing.T) {
+	sw, fakeRW := newSplitWriterForTesting()
+
+	err := sw.WriteTag(testTagName, expectedArray)
+	require.NoError(t, err)
+
+	assert.Equal(t, expectedArray[0], fakeRW[testTagName+"[0]"])
+	assert.Equal(t, expectedArray[1], fakeRW[testTagName+"[1]"])
+}
+
+func TestSplitWriteSlice(t *testing.T) {
+	sw, fakeRW := newSplitWriterForTesting()
+
+	err := sw.WriteTag(testTagName, expectedArray[:])
+	require.NoError(t, err)
+
+	assert.Equal(t, expectedArray[0], fakeRW[testTagName+"[0]"])
+	assert.Equal(t, expectedArray[1], fakeRW[testTagName+"[1]"])
+}
+
+func TestSplitWriteArrayOfStruct(t *testing.T) {
+	expected := [2]testStructType{
+		testStructType{7, 3.14},
+		testStructType{83, .11},
+	}
+	sw, fakeRW := newSplitWriterForTesting()
+
+	err := sw.WriteTag(testTagName, expected)
+	require.NoError(t, err)
+
+	assert.Equal(t, expected[0].I, fakeRW[testTagName+"[0].I"])
+	assert.Equal(t, expected[0].MY_FLOAT, fakeRW[testTagName+"[0].MY_FLOAT"])
+	assert.Equal(t, expected[1].I, fakeRW[testTagName+"[1].I"])
+	assert.Equal(t, expected[1].MY_FLOAT, fakeRW[testTagName+"[1].MY_FLOAT"])
+}
