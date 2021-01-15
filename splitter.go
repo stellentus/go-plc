@@ -137,6 +137,16 @@ func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 				break
 			}
 		}
+	case reflect.Array, reflect.Slice:
+		arr := v
+		for idx := 0; idx < arr.Len(); idx++ {
+			itemName := TagWithIndex(name, idx)
+			itemPointer := arr.Index(idx).Interface()
+			err = sw.WriteTag(itemName, itemPointer)
+			if err != nil {
+				break
+			}
+		}
 	default:
 		// Just try with the underlying type
 		err = sw.Writer.WriteTag(name, v.Interface())
