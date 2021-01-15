@@ -145,6 +145,57 @@ func (tags TagList) NamedTypes(tl TypeList) ([]NamedType, error) {
 	return nts, nil
 }
 
+func (prog Program) typesAsStruct(tl TypeList) (structType, error) {
+	nts, err := prog.Tags.NamedTypes(tl)
+	if err != nil {
+		return structType{}, err
+	}
+	return newStructType(prog.Name, nts)
+}
+
+func (ctrl Controller) programStructs(tl TypeList) ([]structType, error) {
+	strs := []structType{}
+
+	for _, prog := range ctrl.Programs {
+		str, err := prog.typesAsStruct(tl)
+		if err != nil {
+			return nil, err
+		}
+		strs = append(strs, str)
+	}
+
+	return strs, nil
+}
+
+func (ctrl Controller) WriteTagsStruct(wr io.Writer) error {
+	tl, err := ctrl.TypeList()
+	if err != nil {
+		return err
+	}
+
+	nts, err := ctrl.Tags.NamedTypes(tl)
+	if err != nil {
+		return err
+	}
+
+	pstrs, err := ctrl.programStructs(tl)
+	for i, pstr := range pstrs {
+		nt, err := newNamedType(ctrl.Programs[i].Name, pstr)
+		if err != nil {
+			return err
+		}
+		nts = append(nts, nt)
+		_, err = wr.Write([]byte(TypeDefinition(pstr) + "\n\n"))
+	}
+
+	strct, err := newStructType(ctrl.Name, nts)
+	if err != nil {
+		return err
+	}
+	_, err = wr.Write([]byte(TypeDefinition(strct) + "\n"))
+	return err
+}
+
 type RedundancyInfo struct {
 	Enabled                   bool `xml:",attr"`
 	KeepTestEditsOnSwitchOver bool `xml:",attr"`

@@ -2,6 +2,7 @@ package l5x
 
 import (
 	"encoding/xml"
+	"os"
 	"testing"
 	"time"
 
@@ -829,4 +830,19 @@ func testNamedTypes(t *testing.T, expected, actual []NamedType) {
 		assert.Equal(t, expected[i].Type.PlcName(), tag.Type.PlcName())
 		assert.Equal(t, expected[i].Type.GoName(), tag.Type.GoName())
 	}
+}
+
+func ExampleController_WriteTagsStruct() {
+	exampleController.WriteTagsStruct(os.Stdout)
+	// Output:
+	// type Dancer struct {
+	// 	DOW Dow
+	// 	MultiArray [2][4]int16 `plc:"multiArray"`
+	// }
+	//
+	// type EXAMPLE_FACTORY struct {
+	// 	INFO_ABOUT [2]int16
+	// 	BIGGD Big_data_type `plc:"bIGGD"`
+	// 	Dancer `plc:"dancer"`
+	// }
 }
