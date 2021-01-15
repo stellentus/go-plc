@@ -28,8 +28,14 @@ type NamedType struct {
 
 type TypeList []Type
 
+// NamedTypeDeclaration is used to declare a named type inside a struct.
+// It automatically embeds if the variable name matches the type name.
 func NamedTypeDeclaration(nt NamedType) string {
-	return nt.GoName + " " + nt.Type.GoName()
+	typeName := nt.Type.GoName()
+	if nt.GoName == typeName {
+		return nt.GoName
+	}
+	return nt.GoName + " " + typeName
 }
 
 func TypeDefinition(ty Type) string {

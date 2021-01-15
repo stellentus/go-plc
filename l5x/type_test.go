@@ -296,6 +296,13 @@ func TestDataTypeAsNamedTypePredeclared(t *testing.T) {
 			dt.Members = []Member{newTestMember("timerVar", "TIMER")}
 		},
 	)
+	runTest(
+		"EmbeddedTIMER",
+		"struct {\n\tTIMER\n}",
+		func(dt *DataType) {
+			dt.Members = []Member{newTestMember("TIMER", "TIMER")}
+		},
+	)
 }
 
 func TestDataTypeAsNamedTypeError(t *testing.T) {
