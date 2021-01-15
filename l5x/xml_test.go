@@ -733,30 +733,23 @@ func TestXmlMarshall(t *testing.T) {
 	require.Fail(t, "Marshal tests aren't implemented yet")
 }
 
-var exampleTimerType = structType{
-	name: "TIMER",
-	members: []NamedType{
-		NamedType{GoName: "PRE", Type: typeDINT},
-		NamedType{GoName: "ACC", Type: typeDINT},
-		NamedType{GoName: "EN", Type: typeBOOL},
-		NamedType{GoName: "TT", Type: typeBOOL},
-		NamedType{GoName: "DN", Type: typeBOOL},
-	},
-}
-
-var exampleBigDataType = structType{
-	name: "big_data_type",
-	members: []NamedType{
-		NamedType{GoName: "XprivateX_cleaning_c0", Type: typeSINT},
-		NamedType{GoName: "CLEAN_MODE", Type: typeINT},
-		NamedType{GoName: "XprivateX_cleaning_c7", Type: typeSINT},
-	},
-}
+var exampleTimerType = newTestStructType("TIMER", []NamedType{
+	NamedType{GoName: "PRE", Type: typeDINT},
+	NamedType{GoName: "ACC", Type: typeDINT},
+	NamedType{GoName: "EN", Type: typeBOOL},
+	NamedType{GoName: "TT", Type: typeBOOL},
+	NamedType{GoName: "DN", Type: typeBOOL},
+})
+var exampleBigDataType = newTestStructType("big_data_type", []NamedType{
+	NamedType{GoName: "XprivateX_cleaning_c0", Type: typeSINT},
+	NamedType{GoName: "CLEAN_MODE", Type: typeINT},
+	NamedType{GoName: "XprivateX_cleaning_c7", Type: typeSINT},
+})
 
 var expectedTypeList = TypeList{
 	typeBOOL, typeSINT, typeINT, typeDINT, typeLINT, typeUSINT, typeUINT, typeUDINT, typeULINT, typeREAL, typeLREAL, typeSTRING, typeBYTE, typeWORD, typeDWORD, typeLWORD,
 	exampleTimerType,
-	structType{name: "COUNTER", members: []NamedType{
+	newTestStructType("COUNTER", []NamedType{
 		NamedType{GoName: "PRE", Type: typeDINT},
 		NamedType{GoName: "ACC", Type: typeDINT},
 		NamedType{GoName: "CU", Type: typeBOOL},
@@ -764,15 +757,15 @@ var expectedTypeList = TypeList{
 		NamedType{GoName: "DN", Type: typeBOOL},
 		NamedType{GoName: "OV", Type: typeBOOL},
 		NamedType{GoName: "UN", Type: typeBOOL},
-	}},
-	structType{name: "dow", members: []NamedType{
+	}),
+	newTestStructType("dow", []NamedType{
 		NamedType{GoName: "DayOW", Type: typeINT},
 		NamedType{GoName: "Month", Type: typeDINT},
 		NamedType{GoName: "MonthCode", Type: arrayType{elementInfo: typeDINT, count: 13}},
 		NamedType{GoName: "DayOW1", Type: typeREAL},
-	}},
+	}),
 	exampleBigDataType,
-	structType{name: "datas_for_eating", members: []NamedType{
+	newTestStructType("datas_for_eating", []NamedType{
 		NamedType{GoName: "XprivateX_cleaning_c0", Type: typeSINT},
 		NamedType{GoName: "FOOD_TIMER", Type: exampleTimerType},
 		NamedType{GoName: "MEAL_PREP_TIMER", Type: exampleTimerType},
@@ -780,7 +773,7 @@ var expectedTypeList = TypeList{
 		NamedType{GoName: "COUNTDOWN_TO_DESSERT", Type: exampleTimerType},
 		NamedType{GoName: "STEPS_REQUIRED", Type: typeINT},
 		NamedType{PlcName: "soMuchData", GoName: "SoMuchData", Type: exampleBigDataType},
-	}},
+	}),
 }
 
 func TestControllerTypeList(t *testing.T) {

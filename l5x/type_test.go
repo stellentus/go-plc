@@ -9,6 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func newTestStructType(name string, nts []NamedType) structType {
+	return structType{name: name, members: nts}
+}
+
 func newTestMember(varName, ty string) Member {
 	return Member{
 		Name:     varName,
@@ -23,7 +27,7 @@ func ExampleNamedTypeDeclaration() {
 	}))
 	fmt.Println(NamedTypeDeclaration(NamedType{
 		GoName: "MY_STRUCT",
-		Type:   structType{name: "StructType"}, // The nil members don't matter
+		Type:   newTestStructType("StructType", nil), // The nil members don't matter
 	}))
 	// Output:
 	// MY_VAR bool
@@ -33,19 +37,13 @@ func ExampleNamedTypeDeclaration() {
 func ExampleTypeDefinition() {
 	types := []Type{}
 	types = append(types, typeBOOL) // prints nothing as it's built-in
-	types = append(types, structType{
-		name: "DemoStruct",
-		members: []NamedType{
-			{GoName: "VAR", Type: typeBOOL},
-		},
-	})
-	types = append(types, structType{
-		name: "FancyThing",
-		members: []NamedType{
-			{GoName: "COUNT", Type: typeINT},
-			{GoName: "dsInstance", Type: types[1]},
-		},
-	})
+	types = append(types, newTestStructType("DemoStruct", []NamedType{
+		{GoName: "VAR", Type: typeBOOL},
+	}))
+	types = append(types, newTestStructType("FancyThing", []NamedType{
+		{GoName: "COUNT", Type: typeINT},
+		{GoName: "dsInstance", Type: types[1]},
+	}))
 
 	for _, ty := range types {
 		fmt.Println(TypeDefinition(ty))

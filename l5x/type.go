@@ -211,9 +211,9 @@ func (dt DataType) AsType(knownTypes TypeList) (Type, error) {
 }
 
 func parseStruct(name string, membs []Member, knownTypes TypeList) (Type, error) {
-	sti := structType{
-		name:    name,
-		members: []NamedType{},
+	sti, err := newStructType(name, nil)
+	if err != nil {
+		return nil, err
 	}
 	for _, memb := range membs {
 		if memb.DataType == "BIT" {
@@ -267,13 +267,7 @@ func parseString(name string, memb []Member) (Type, error) {
 		return nil, fmt.Errorf("StringFamily '%s' DATA.Radix is incorrect: %v", name, memb[1].Radix)
 	}
 
-	return stringType{
-		name: name,
-		atype: arrayType{
-			elementInfo: basicType{"SINT", "int8"},
-			count:       memb[1].Dimension,
-		},
-	}, nil
+	return newStringType(name, basicType{"SINT", "int8"}, memb[1].Dimension)
 }
 
 type basicType struct {
@@ -313,6 +307,15 @@ func (sti structType) GoTypeString() string {
 	}
 	return fmt.Sprintf("struct {%s\n}", strings.Join(strs, ""))
 }
+func newStructType(name string, members []NamedType) (structType, error) {
+	if members == nil {
+		members = []NamedType{}
+	}
+	return structType{
+		name:    name,
+		members: members,
+	}, nil
+}
 
 type stringType struct {
 	name  string
@@ -322,6 +325,15 @@ type stringType struct {
 func (sty stringType) PlcName() string      { return sty.name }
 func (sty stringType) GoName() string       { return sty.name }
 func (sty stringType) GoTypeString() string { return sty.atype.GoTypeString() }
+func newStringType(name string, elemInfo Type, count int) (stringType, error) {
+	return stringType{
+		name: name,
+		atype: arrayType{
+			elementInfo: elemInfo,
+			count:       count,
+		},
+	}, nil
+}
 
 // isValidGoIdentifier determines if str is a valid go identifier. According to the spec:
 //     identifier = letter { letter | unicode_digit } .
