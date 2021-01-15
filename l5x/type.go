@@ -144,21 +144,30 @@ func (mb Member) AsNamedType(knownTypes TypeList) (NamedType, error) {
 	return knownTypes.newNamedType(mb.Name, mb.DataType, []int{mb.Dimension})
 }
 
+func newNamedType(name string, ty Type) (NamedType, error) {
+	nt := NamedType{
+		GoName: name,
+		Type:   ty,
+	}
+	if !isPublicGoIdentifier(name) {
+		valid := makeValidIdentifier(nt.GoName)
+		if valid == "" {
+			return NamedType{}, fmt.Errorf("couldn't create valid identifier for '%s'", name)
+		}
+		nt.PlcName = nt.GoName
+		nt.GoName = valid
+	}
+	return nt, nil
+}
+
 func (tl TypeList) newNamedType(name, dataType string, dims []int) (NamedType, error) {
 	var nt NamedType
 	for _, ty := range tl {
 		if ty.PlcName() == dataType {
-			nt = NamedType{
-				GoName: name,
-				Type:   ty,
-			}
-			if !isPublicGoIdentifier(name) {
-				valid := makeValidIdentifier(nt.GoName)
-				if valid == "" {
-					return NamedType{}, fmt.Errorf("couldn't create valid identifier for '%s'", name)
-				}
-				nt.PlcName = nt.GoName
-				nt.GoName = valid
+			var err error
+			nt, err = newNamedType(name, ty)
+			if err != nil {
+				return NamedType{}, err
 			}
 			break
 		}
