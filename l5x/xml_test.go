@@ -567,7 +567,7 @@ var exampleController = Controller{
 		},
 	},
 	Programs: []Program{Program{
-		Name:            "DANCER",
+		Name:            "dancer",
 		MainRoutineName: "MainRoutine",
 		Tags: []Tag{
 			Tag{
@@ -676,7 +676,7 @@ var exampleController = Controller{
 			Name string `xml:",attr"`
 		}{struct {
 			Name string `xml:",attr"`
-		}{Name: "DANCER"}},
+		}{Name: "dancer"}},
 	}},
 	Trends: []Trend{Trend{
 		Name:             "tacos",

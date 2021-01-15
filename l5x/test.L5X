@@ -367,7 +367,7 @@ BHAIG29GI]]>
 </Tag>
 </Tags>
 <Programs>
-<Program Name="DANCER" TestEdits="false" MainRoutineName="MainRoutine" Disabled="false" UseAsFolder="false">
+<Program Name="dancer" TestEdits="false" MainRoutineName="MainRoutine" Disabled="false" UseAsFolder="false">
 <Tags>
 <Tag Name="DOW" TagType="Base" DataType="dow" Constant="false" ExternalAccess="Read/Write">
 <Description>
@@ -476,7 +476,7 @@ Rung 4 - It has run
 <Tasks>
 <Task Name="MainTask" Type="CONTINUOUS" Priority="10" Watchdog="500" DisableUpdateOutputs="false" InhibitTask="false">
 <ScheduledPrograms>
-<ScheduledProgram Name="DANCER"/>
+<ScheduledProgram Name="dancer"/>
 </ScheduledPrograms>
 </Task>
 </Tasks>
