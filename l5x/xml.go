@@ -79,7 +79,7 @@ type Controller struct {
 	DataTypes                []DataType      `xml:"DataTypes>DataType"`
 	Modules                  []Module        `xml:"Modules>Module"`
 	AddOnInstrDefs           []AddOnInstrDef `xml:"AddOnInstructionDefinitions>AddOnInstructionDefinition"`
-	Tags                     []Tag           `xml:"Tags>Tag"`
+	Tags                     TagList         `xml:"Tags>Tag"`
 	Programs                 []Program       `xml:"Programs>Program"`
 	Tasks                    []Task          `xml:"Tasks>Task"`
 	CST                      CST
@@ -331,6 +331,8 @@ type Rung struct {
 	Text    Description
 }
 
+type TagList []Tag
+
 type Tag struct {
 	Name           string         `xml:",attr"`
 	TagType        TagType        `xml:",attr"`
@@ -349,7 +351,7 @@ type Program struct {
 	MainRoutineName string    `xml:",attr"`
 	Disabled        bool      `xml:",attr"`
 	UseAsFolder     bool      `xml:",attr"`
-	Tags            []Tag     `xml:"Tags>Tag"`
+	Tags            TagList   `xml:"Tags>Tag"`
 	Routines        []Routine `xml:"Routines>Routine"`
 }
 
