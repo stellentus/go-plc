@@ -6,7 +6,10 @@ import (
 	"strings"
 )
 
-// SplitReader splits reads of structs and arrays into separate reads of their components.
+// SplitReader splits reads of structs, arrays, and slices into separate reads of their components.
+// It is important to note that ReadTag will attempt to read or write a slice or array up to its length.
+// This might cause a PLC error if the operation goes out of bounds.
+// It also means nothing will be read if a nil or empty slice is provided; this code cannot infer the length.
 type SplitReader struct {
 	Reader
 }
@@ -57,6 +60,31 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 			}
 
 			err = r.ReadTag(fieldName, fieldPointer)
+			if err != nil {
+				break
+			}
+		}
+	case reflect.Array, reflect.Slice:
+		arr := v.Elem()
+		for idx := 0; idx < arr.Len(); idx++ {
+			itemName := TagWithIndex(name, idx)
+			item := arr.Index(idx)
+			if !item.CanAddr() {
+				err = fmt.Errorf("Cannot address %s", itemName)
+				break
+			}
+			itemPointer := item.Addr().Interface()
+			if item.Kind() == reflect.Ptr {
+				// Since item actually is a pointer, we want its value instead.
+				if item.IsNil() {
+					// It's currently a nil pointer, so we need to allocate and set the value
+					newVal := reflect.New(item.Type().Elem())
+					item.Set(newVal)
+				}
+				itemPointer = item.Interface()
+			}
+
+			err = r.ReadTag(itemName, itemPointer)
 			if err != nil {
 				break
 			}
