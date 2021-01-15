@@ -218,9 +218,9 @@ func TestDataTypeAsNamedType(t *testing.T) {
 			dtMod(&dt) // Allows caller to modify dt make it more complicated
 			nt, err := dt.AsType(NewTypeList())
 			assert.NoError(t, err)
-			assert.Equal(t, name, nt.PlcName())
-			assert.Equal(t, name, nt.GoName())
-			assert.Equal(t, goString, nt.GoTypeString())
+			assert.Equal(t, name, nt.PlcName(), "PlcName should match")
+			assert.Equal(t, name, nt.GoName(), "GoName should match")
+			assert.Equal(t, goString, nt.GoTypeString(), "GoTypeString should match")
 		})
 	}
 
