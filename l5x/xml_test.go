@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -786,4 +787,46 @@ func TestControllerTypeList(t *testing.T) {
 	tl, err := exampleController.TypeList()
 	require.NoError(t, err)
 	require.Equal(t, expectedTypeList, tl)
+}
+
+type testType struct{ plcName, goName string }
+
+func (tt testType) PlcName() string      { return tt.plcName }
+func (tt testType) GoName() string       { return tt.goName }
+func (tt testType) GoTypeString() string { return "" }
+
+var expectedTagList = []NamedType{
+	{"", "INFO_ABOUT", testType{"", "[2]int16"}},
+	{"bIGGD", "BIGGD", testType{"big_data_type", "big_data_type"}},
+}
+
+func TestControllerNamedTypes(t *testing.T) {
+	tl, err := exampleController.TypeList()
+	require.NoError(t, err)
+	tags, err := exampleController.Tags.NamedTypes(tl)
+	require.NoError(t, err)
+	testNamedTypes(t, expectedTagList, tags)
+}
+
+var expectedDancerTagList = []NamedType{
+	{"", "DOW", testType{"dow", "dow"}},
+	{"multiArray", "MultiArray", testType{"", "[2][4]int16"}},
+}
+
+func TestProgramNamedTypes(t *testing.T) {
+	tl, err := exampleController.TypeList()
+	require.NoError(t, err)
+	tags, err := exampleController.Programs[0].Tags.NamedTypes(tl)
+	require.NoError(t, err)
+	testNamedTypes(t, expectedDancerTagList, tags)
+}
+
+func testNamedTypes(t *testing.T, expected, actual []NamedType) {
+	require.Equal(t, len(expected), len(actual), "Length of controller's TagList should match expected")
+	for i, tag := range actual {
+		assert.Equal(t, expected[i].PlcName, tag.PlcName)
+		assert.Equal(t, expected[i].GoName, tag.GoName)
+		assert.Equal(t, expected[i].Type.PlcName(), tag.Type.PlcName())
+		assert.Equal(t, expected[i].Type.GoName(), tag.Type.GoName())
+	}
 }

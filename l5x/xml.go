@@ -132,6 +132,19 @@ func (ctrl Controller) TypeList() (TypeList, error) {
 	return tl, nil
 }
 
+func (tags TagList) NamedTypes(tl TypeList) ([]NamedType, error) {
+	nts := []NamedType{}
+	for _, tag := range tags {
+		nt, err := tl.newNamedType(tag.Name, tag.DataType, tag.Dimensions)
+		if err != nil {
+			return nil, fmt.Errorf("Tag '%s' couldn't be created because %w", tag.Name, err)
+		}
+		nts = append(nts, nt)
+	}
+
+	return nts, nil
+}
+
 type RedundancyInfo struct {
 	Enabled                   bool `xml:",attr"`
 	KeepTestEditsOnSwitchOver bool `xml:",attr"`
