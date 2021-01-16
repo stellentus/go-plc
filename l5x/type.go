@@ -488,7 +488,7 @@ func parseString(name string, memb []Member) (Type, error) {
 		return nil, fmt.Errorf("StringFamily '%s' DATA.Radix is incorrect: %v", name, memb[1].Radix)
 	}
 
-	return newStringType(name, basicType{"SINT", "int8"}, memb[1].Dimension)
+	return newStringType(name, memb[1].Dimension)
 }
 
 type basicType struct {
@@ -542,21 +542,20 @@ func newStructType(name string, members []NamedType) (structType, error) {
 
 type stringType struct {
 	safeGoName
-	atype arrayType
+	count int
 }
 
-func (sty stringType) GoTypeString() string { return sty.atype.GoTypeString() }
-func newStringType(name string, elemInfo Type, count int) (stringType, error) {
+func (sty stringType) GoTypeString() string {
+	return fmt.Sprintf("struct {Len int16; Data [%d]int8}", sty.count)
+}
+func newStringType(name string, count int) (stringType, error) {
 	sgn, err := newSafeGoName(name)
 	if err != nil {
 		return stringType{}, err
 	}
 	return stringType{
 		safeGoName: sgn,
-		atype: arrayType{
-			elementInfo: elemInfo,
-			count:       count,
-		},
+		count:      count,
 	}, nil
 }
 

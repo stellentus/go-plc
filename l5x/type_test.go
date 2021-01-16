@@ -428,7 +428,7 @@ func TestDataTypeAsNamedType(t *testing.T) {
 	)
 	runTest(
 		"String",
-		"[15]int8",
+		"struct {Len int16; Data [15]int8}",
 		dtToStringDT,
 	)
 	runTest(
