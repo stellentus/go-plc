@@ -6,6 +6,8 @@ import (
 	"io"
 	"strings"
 	"unicode"
+
+	"github.com/stellentus/go-plc"
 )
 
 type Type interface {
@@ -530,7 +532,7 @@ func (sti structType) GoTypeString() string {
 	for i, member := range sti.members {
 		tagSuffix := ""
 		if member.PlcName != "" {
-			tagSuffix = " `plc:\"" + member.PlcName + "\"`"
+			tagSuffix = fmt.Sprintf(" `%s:\"%s\"`", plc.TagPrefix, member.PlcName)
 		}
 		strs[i] = fmt.Sprintf("\n\t%s%s", NamedTypeDeclaration(member), tagSuffix)
 	}

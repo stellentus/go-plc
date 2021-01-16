@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+// TagPrefix is the prefix used for struct tags.
+// Note the use of the word 'tag' in the prefix itself refers to PLC tags, not go tags.
+const TagPrefix = "plctag"
+
 // SplitReader splits reads of structs, arrays, and slices into separate reads of their components.
 // It is important to note that ReadTag will attempt to read or write a slice or array up to its length.
 // This might cause a PLC error if the operation goes out of bounds.
@@ -147,7 +151,7 @@ func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 // allowOmitEmpty is true.
 func getNameOfField(str reflect.Value, i int, allowOmitEmpty bool) (string, bool) {
 	field := str.Type().Field(i)
-	plctag := field.Tag.Get("plctag")
+	plctag := field.Tag.Get(TagPrefix)
 	if plctag == "" {
 		return field.Name, true
 	}

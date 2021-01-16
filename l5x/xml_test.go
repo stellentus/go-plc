@@ -1050,12 +1050,12 @@ func ExampleController_WriteTagsStruct() {
 	// type Dancer struct {
 	// 	DOW Dow
 	// 	EX_AOI EVENT_TOT
-	// 	MultiArray [2][4]int16 `plc:"multiArray"`
+	// 	MultiArray [2][4]int16 `plctag:"multiArray"`
 	// }
 	//
 	// type EXAMPLE_FACTORY struct {
 	// 	INFO_ABOUT [2]int16
-	// 	BIGGD Big_data_type `plc:"bIGGD"`
-	// 	Dancer `plc:"Program:dancer"`
+	// 	BIGGD Big_data_type `plctag:"bIGGD"`
+	// 	Dancer `plctag:"Program:dancer"`
 	// }
 }

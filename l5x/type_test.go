@@ -284,7 +284,7 @@ func ExampleTypeList_WriteDefinitions() {
 	// 	BHAIG29GI TIMER
 	// 	COUNTDOWN_TO_DESSERT TIMER
 	// 	STEPS_REQUIRED int16
-	// 	SoMuchData Big_data_type `plc:"soMuchData"`
+	// 	SoMuchData Big_data_type `plctag:"soMuchData"`
 	// }
 	//
 	// type EVENT_TOT struct {
@@ -417,7 +417,7 @@ func TestDataTypeAsNamedType(t *testing.T) {
 	)
 	runTest(
 		"SimpleStruct",
-		"struct {\n\tVarName int16\n\tMY_VAR float32\n\tOtherVar int8 `plc:\"otherVar\"`\n}",
+		"struct {\n\tVarName int16\n\tMY_VAR float32\n\tOtherVar int8 `plctag:\"otherVar\"`\n}",
 		func(dt *DataType) {
 			dt.Members = append(dt.Members, newTestMember("MY_VAR", "REAL"))
 			dt.Members = append(dt.Members, newTestMember("otherVar", "SINT"))
@@ -437,7 +437,7 @@ func TestDataTypeAsNamedType(t *testing.T) {
 	)
 	runTest(
 		"SimpleStruct",
-		"struct {\n\tVarName int16\n\tBad_name__ float32 `plc:\"bad name 💔\"`\n}",
+		"struct {\n\tVarName int16\n\tBad_name__ float32 `plctag:\"bad name 💔\"`\n}",
 		func(dt *DataType) {
 			dt.Members = append(dt.Members, newTestMember("bad name 💔", "REAL"))
 		},
@@ -470,14 +470,14 @@ func TestDataTypeAsNamedTypePredeclared(t *testing.T) {
 
 	runTest(
 		"IncludeRegisteredType",
-		"struct {\n\tVarName int16\n\tOtherVar RegisteredType `plc:\"otherVar\"`\n}",
+		"struct {\n\tVarName int16\n\tOtherVar RegisteredType `plctag:\"otherVar\"`\n}",
 		func(dt *DataType) {
 			dt.Members = append(dt.Members, newTestMember("otherVar", "RegisteredType"))
 		},
 	)
 	runTest(
 		"TIMER",
-		"struct {\n\tTimerVar TIMER `plc:\"timerVar\"`\n}",
+		"struct {\n\tTimerVar TIMER `plctag:\"timerVar\"`\n}",
 		func(dt *DataType) {
 			dt.Members = []Member{newTestMember("timerVar", "TIMER")}
 		},
