@@ -620,6 +620,28 @@ var exampleController = Controller{
 				},
 			},
 			Tag{
+				Name:        "EX_AOI",
+				DataType:    "EVENT_TOT",
+				Description: Description{Cdata: "\nAdd-on instruction\n"},
+				Data: []Data{
+					Data{
+						Format: DataFormatL5K,
+						L5K:    "\n[3,15]\n",
+					},
+					Data{
+						L5K: "\n\n",
+						Structure: Structure{
+							DataType: "AOI",
+							DataValueMember: []DataValueMember{
+								DataValueMember{Name: "EnableIn", DataType: "BOOL", Value: "1"},
+								DataValueMember{Name: "EnableOut", DataType: "BOOL", Value: "1"},
+								DataValueMember{Name: "AlarmSP", DataType: "INT", Radix: RadixDecimal, Value: "15"},
+							},
+						},
+					},
+				},
+			},
+			Tag{
 				Name:        "multiArray",
 				DataType:    "INT",
 				Dimensions:  []int{2, 4},
@@ -783,6 +805,11 @@ var expectedTypeList = TypeList{
 		NamedType{GoName: "STEPS_REQUIRED", Type: typeINT},
 		NamedType{PlcName: "soMuchData", GoName: "SoMuchData", Type: exampleBigDataType},
 	}),
+	newTestStructType("EVENT_TOT", []NamedType{
+		NamedType{GoName: "EnableIn", Type: typeBOOL},
+		NamedType{GoName: "EnableOut", Type: typeBOOL},
+		NamedType{GoName: "AlarmSP", Type: typeINT},
+	}),
 }
 
 func TestControllerTypeList(t *testing.T) {
@@ -812,6 +839,7 @@ func TestControllerNamedTypes(t *testing.T) {
 
 var expectedDancerTagList = []NamedType{
 	{"", "DOW", testType{"dow", "Dow"}},
+	{"", "EX_AOI", testType{"EVENT_TOT", "EVENT_TOT"}},
 	{"multiArray", "MultiArray", testType{"", "[2][4]int16"}},
 }
 
@@ -839,6 +867,7 @@ func ExampleController_WriteTagsStruct() {
 	// Output:
 	// type Dancer struct {
 	// 	DOW Dow
+	// 	EX_AOI EVENT_TOT
 	// 	MultiArray [2][4]int16 `plc:"multiArray"`
 	// }
 	//

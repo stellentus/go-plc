@@ -114,6 +114,12 @@ func ExampleTypeList_WriteDefinitions() {
 	// 	STEPS_REQUIRED int16
 	// 	SoMuchData Big_data_type `plc:"soMuchData"`
 	// }
+	//
+	// type EVENT_TOT struct {
+	// 	EnableIn bool
+	// 	EnableOut bool
+	// 	AlarmSP int16
+	// }
 }
 
 func TestMemberAsNamedTypeBasic(t *testing.T) {

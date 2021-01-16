@@ -404,6 +404,21 @@ BHAIG29GI]]>
 </Structure>
 </Data>
 </Tag>
+<Tag Name="EX_AOI" TagType="Base" DataType="EVENT_TOT" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Add-on instruction]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[3,15]]]>
+</Data>
+<Data Format="Decorated">
+<Structure DataType="AOI">
+<DataValueMember Name="EnableIn" DataType="BOOL" Value="1"/>
+<DataValueMember Name="EnableOut" DataType="BOOL" Value="1"/>
+<DataValueMember Name="AlarmSP" DataType="INT" Value="15"/>
+</Structure>
+</Data>
+</Tag>
 <Tag Name="multiArray" TagType="Base" DataType="INT" Dimensions="2 4" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
 <Description>
 <![CDATA[Demo of multi-dimensional array]]>

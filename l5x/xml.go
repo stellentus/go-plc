@@ -129,6 +129,26 @@ func (ctrl Controller) TypeList() (TypeList, error) {
 		return TypeList{}, err
 	}
 
+	// Add-on instruction definitions work similarly to DataTypes, so we'll treat them the same
+	aoTypes, err := ctrl.addOnsAsTypes()
+	if err != nil {
+		return nil, err
+	}
+	tl = append(tl, aoTypes...)
+
+	return tl, nil
+}
+
+func (ctrl Controller) addOnsAsTypes() (TypeList, error) {
+	tl := TypeList{}
+	defaultTypes := NewTypeList() // I think add-on instructions can't use custom types?
+	for _, ao := range ctrl.AddOnInstrDefs {
+		typ, err := ao.AsType(defaultTypes)
+		if err != nil {
+			return nil, err
+		}
+		tl = append(tl, typ)
+	}
 	return tl, nil
 }
 

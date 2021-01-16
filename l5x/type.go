@@ -153,6 +153,10 @@ func (mb Member) AsNamedType(knownTypes TypeList) (NamedType, error) {
 	return knownTypes.newNamedType(mb.Name, mb.DataType, []int{mb.Dimension})
 }
 
+func (par Parameter) AsNamedType(knownTypes TypeList) (NamedType, error) {
+	return knownTypes.newNamedType(par.Name, par.DataType, nil)
+}
+
 func newNamedType(name string, ty Type) (NamedType, error) {
 	nt := NamedType{
 		GoName: name,
@@ -193,7 +197,7 @@ func (tl TypeList) newNamedType(name, dataType string, dims []int) (NamedType, e
 		return NamedType{}, ErrUnknownType
 	}
 
-	if len(dims) == 1 && dims[0] <= 1 { // not an array
+	if len(dims) == 0 || len(dims) == 1 && dims[0] <= 1 { // not an array
 		return nt, nil
 	}
 
@@ -225,6 +229,31 @@ func (dt DataType) AsType(knownTypes TypeList) (Type, error) {
 	default:
 		return nil, fmt.Errorf("Unknown data family type")
 	}
+}
+
+func (aoi AddOnInstrDef) AsType(knownTypes TypeList) (Type, error) {
+	sti, err := newStructType(aoi.Name, nil)
+	if err != nil {
+		return nil, err
+	}
+	for _, param := range aoi.Parameters {
+		if param.DataType == "BIT" {
+			// Not yet implemented, so ignore it
+			continue
+		}
+		nm, err := param.AsNamedType(knownTypes)
+		if err != nil {
+			if errors.Is(err, ErrUnknownType) {
+				err = errUnknownTypeSpecific{aoi.Name, param.DataType}
+			}
+			return nil, err
+		}
+		sti.members = append(sti.members, nm)
+	}
+	if len(sti.members) == 0 {
+		return nil, fmt.Errorf("Add-on Instruction '%s' produced no parameters (%d)", aoi.Name, len(aoi.Parameters))
+	}
+	return sti, nil
 }
 
 func parseStruct(name string, membs []Member, knownTypes TypeList) (Type, error) {
