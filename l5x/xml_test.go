@@ -765,6 +765,7 @@ var expectedTypeList = TypeList{
 		NamedType{GoName: "OV", Type: typeBOOL},
 		NamedType{GoName: "UN", Type: typeBOOL},
 	}),
+	structType{safeGoName: safeGoName{"MESSAGE", "MESSAGE"}},
 	newTestStructType("dow", []NamedType{
 		NamedType{GoName: "DayOW", Type: typeINT},
 		NamedType{GoName: "Month", Type: typeDINT},

@@ -88,6 +88,9 @@ func ExampleTypeList_WriteDefinitions() {
 	// 	UN bool
 	// }
 	//
+	// type MESSAGE struct {
+	// }
+	//
 	// type Dow struct {
 	// 	DayOW int16
 	// 	Month int32
