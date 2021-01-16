@@ -834,7 +834,8 @@ func testNamedTypes(t *testing.T, expected, actual []NamedType) {
 }
 
 func ExampleController_WriteTagsStruct() {
-	exampleController.WriteTagsStruct(os.Stdout)
+	tl, _ := exampleController.TypeList()
+	exampleController.WriteTagsStruct(tl, os.Stdout)
 	// Output:
 	// type Dancer struct {
 	// 	DOW Dow

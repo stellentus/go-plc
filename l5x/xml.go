@@ -167,12 +167,7 @@ func (ctrl Controller) programStructs(tl TypeList) ([]structType, error) {
 	return strs, nil
 }
 
-func (ctrl Controller) WriteTagsStruct(wr io.Writer) error {
-	tl, err := ctrl.TypeList()
-	if err != nil {
-		return err
-	}
-
+func (ctrl Controller) WriteTagsStruct(tl TypeList, wr io.Writer) error {
 	nts, err := ctrl.Tags.NamedTypes(tl)
 	if err != nil {
 		return err

@@ -40,7 +40,7 @@ func main() {
 	err = tl.WriteDefinitions(&src)
 	panicIfError(err, "Failed to write definitions")
 
-	err = content.Controller.WriteTagsStruct(&src)
+	err = content.Controller.WriteTagsStruct(tl, &src)
 	panicIfError(err, "Failed to write tags")
 
 	str, err := format.Source([]byte(src.String()))
