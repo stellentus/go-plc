@@ -179,6 +179,9 @@ func (ctrl Controller) WriteTagsStruct(wr io.Writer) error {
 	}
 
 	pstrs, err := ctrl.programStructs(tl)
+	if err != nil {
+		return err
+	}
 	for i, pstr := range pstrs {
 		nt, err := newNamedType(ctrl.Programs[i].Name, pstr)
 		if err != nil {
