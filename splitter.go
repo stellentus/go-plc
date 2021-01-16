@@ -41,7 +41,9 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 			if !ok {
 				continue // Can't touch that
 			}
-			fieldName = name + "." + fieldName // add prefix
+			if name != "" {
+				fieldName = name + "." + fieldName // add prefix
+			}
 			field := str.Field(i)
 			err = r.readValue(fieldName, field)
 			if err != nil {
@@ -115,7 +117,9 @@ func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 			if !ok {
 				continue // Can't touch that
 			}
-			fieldName = name + "." + fieldName // add prefix
+			if name != "" {
+				fieldName = name + "." + fieldName // add prefix
+			}
 			fieldPointer := str.Field(i).Interface()
 
 			err = sw.WriteTag(fieldName, fieldPointer)
