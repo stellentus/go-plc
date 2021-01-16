@@ -37,6 +37,12 @@ var parserTests = []struct {
 	{"ARRAY[0,1,2]", []string{"ARRAY", "0", "1", "2"}, ""},
 	{"ARRAY[ 0 ,  1  , 2 ]", []string{"ARRAY", "0", "1", "2"}, ""},
 	{"Field.Array[42].Member[16]", []string{"Field", "Array", "42", "Member", "16"}, ""},
+
+	// Special case: "Program:" is a valid prefix to begin a tag.  Merge the top-level tag and "Program" into one "tag".
+	{"Program:Field.Array[42].Member[16]", []string{"Program:Field", "Array", "42", "Member", "16"}, ""},
+	{"Program::Field.Array[42].Member[16]", nil, "non-alphabetic character ':'"},
+	{"Field.Program:Array[42].Member[16]", nil, "expected '.' or '['; got ':'"},
+	{"Program:", nil, "Empty tagname"},
 }
 
 func compareStrSlices(s1, s2 []string) bool {
