@@ -95,6 +95,17 @@ var exampleDataTypes = []DataType{
 		},
 	},
 	DataType{
+		Name: "PackedBits",
+		Members: []Member{
+			Member{
+				Name:      "STEP",
+				DataType:  "BOOL",
+				Dimension: 64,
+				Radix:     RadixBinary,
+			},
+		},
+	},
+	DataType{
 		Name: "big_data_type",
 		Members: []Member{
 			Member{
@@ -961,6 +972,9 @@ var expectedTypeList = TypeList{
 		NamedType{GoName: "Month", Type: typeDINT},
 		NamedType{GoName: "MonthCode", Type: arrayType{elementInfo: typeDINT, count: 13}},
 		NamedType{GoName: "DayOW1", Type: typeREAL},
+	}),
+	newTestStructType("PackedBits", []NamedType{
+		NamedType{GoName: "STEP", Type: arrayType{elementInfo: typeUDINT, count: 2}},
 	}),
 	exampleBigDataType,
 	newTestStructType("datas_for_eating", []NamedType{

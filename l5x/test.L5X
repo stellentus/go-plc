@@ -61,6 +61,14 @@ BHAIG29GI]]>
 </Member>
 </Members>
 </DataType>
+<DataType Name="PackedBits" Family="NoFamily" Class="User">
+<Description>
+<![CDATA[Lots of bits all together]]>
+</Description>
+<Members>
+<Member Name="STEP" DataType="BOOL" Dimension="64" Radix="Binary" Hidden="false" ExternalAccess="Read/Write"/>
+</Members>
+</DataType>
 <DataType Name="big_data_type" Family="NoFamily" Class="User">
 <Members>
 <Member Name="XprivateX_cleaning_c0" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>

@@ -266,6 +266,10 @@ func ExampleTypeList_WriteDefinitions() {
 	// 	DayOW1 float32
 	// }
 	//
+	// type PackedBits struct {
+	// 	STEP [2]uint32
+	// }
+	//
 	// type Big_data_type struct {
 	// 	XprivateX_cleaning_c0 int8
 	// 	CLEAN_MODE int16

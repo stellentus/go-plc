@@ -325,6 +325,16 @@ func (tl *TypeList) AddControlLogixTypes() error {
 }
 
 func (mb Member) AsNamedType(knownTypes TypeList) (NamedType, error) {
+	if mb.DataType == "BOOL" && mb.Dimension > 1 {
+		// When the BOOL type is stored in arrays, it appears to use 32-bit storage.
+		// Maybe byte-sized access would also work. 🤷
+		if mb.Dimension%32 != 0 {
+			// I've only seen examples with multiples of 32.
+			return NamedType{}, fmt.Errorf("%w is a BOOL array, but not a multiple of 32 (%d)", ErrUnknownType, mb.Dimension)
+		}
+		return knownTypes.newNamedType(mb.Name, "UDINT", []int{mb.Dimension / 32})
+	}
+
 	return knownTypes.newNamedType(mb.Name, mb.DataType, []int{mb.Dimension})
 }
 
