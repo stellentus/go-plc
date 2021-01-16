@@ -169,6 +169,14 @@ func newNamedType(name string, ty Type) (NamedType, error) {
 	return nt, nil
 }
 
+// SetAsProgram changes the PlcName to indicate this is a program tag.
+func (nt *NamedType) SetAsProgram() {
+	if nt.PlcName == "" {
+		nt.PlcName = nt.GoName
+	}
+	nt.PlcName = "Program:" + nt.PlcName
+}
+
 func (tl TypeList) newNamedType(name, dataType string, dims []int) (NamedType, error) {
 	var nt NamedType
 	for _, ty := range tl {

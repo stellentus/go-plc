@@ -844,6 +844,6 @@ func ExampleController_WriteTagsStruct() {
 	// type EXAMPLE_FACTORY struct {
 	// 	INFO_ABOUT [2]int16
 	// 	BIGGD Big_data_type `plc:"bIGGD"`
-	// 	Dancer `plc:"dancer"`
+	// 	Dancer `plc:"Program:dancer"`
 	// }
 }

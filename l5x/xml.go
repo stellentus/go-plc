@@ -184,6 +184,7 @@ func (ctrl Controller) WriteTagsStruct(wr io.Writer) error {
 		if err != nil {
 			return err
 		}
+		nt.SetAsProgram()
 		nts = append(nts, nt)
 		_, err = wr.Write([]byte(TypeDefinition(pstr) + "\n\n"))
 	}
