@@ -77,7 +77,7 @@ func ParseQualifiedTagName(qtn string) ([]string, error) {
 	var ret []string
 	i := 0
 
-	alpha := "abcdefhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	alpha := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	num := "0123456789"
 	alphanum := alpha + num + "_"
 
@@ -204,6 +204,14 @@ func ParseQualifiedTagName(qtn string) ([]string, error) {
 		return nil
 	}
 
+	/* If the tag begins with "Program:", drop that prefix; we will append it
+	 * to the starting symbolic segment before returning.  */
+	var hadProgramPrefix bool
+	if strings.HasPrefix(qtn, "Program:") {
+		hadProgramPrefix = true
+		qtn = strings.TrimPrefix(qtn, "Program:")
+	}
+
 	/* Check position-independent invariants: the tagname must be nonempty and
 	 * must only contain alphanumeric characters.
 	 */
@@ -224,6 +232,10 @@ func ParseQualifiedTagName(qtn string) ([]string, error) {
 		if err := parseTagSegment(); err != nil {
 			return nil, err
 		}
+	}
+
+	if hadProgramPrefix {
+		ret[0] = "Program:" + ret[0]
 	}
 
 	return ret, nil
