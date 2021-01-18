@@ -27,7 +27,6 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 		return newErrNonPointerRead(name, v.Kind())
 	}
 
-	err := error(nil)
 	switch v.Elem().Kind() {
 	case reflect.Struct:
 		str := v.Elem()
@@ -45,25 +44,23 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 				fieldName = name + "." + fieldName // add prefix
 			}
 			field := str.Field(i)
-			err = r.readValue(fieldName, field)
-			if err != nil {
-				break
+			if err := r.readValue(fieldName, field); err != nil {
+				return err
 			}
 		}
 	case reflect.Array, reflect.Slice:
 		arr := v.Elem()
 		for idx := 0; idx < arr.Len(); idx++ {
-			err = r.readValue(TagWithIndex(name, idx), arr.Index(idx))
-			if err != nil {
+			if err := r.readValue(TagWithIndex(name, idx), arr.Index(idx)); err != nil {
 				break
 			}
 		}
 	default:
 		// Just try with the underlying type
-		err = r.Reader.ReadTag(name, value)
+		return r.Reader.ReadTag(name, value)
 	}
 
-	return err
+	return nil
 }
 
 func (r SplitReader) readValue(name string, val reflect.Value) error {
@@ -103,7 +100,6 @@ func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 		v = v.Elem() // Naturally use what the pointer is pointing to (but only do so once)
 	}
 
-	err := error(nil)
 	switch v.Kind() {
 	case reflect.Struct:
 		str := v
@@ -122,9 +118,8 @@ func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 			}
 			fieldPointer := str.Field(i).Interface()
 
-			err = sw.WriteTag(fieldName, fieldPointer)
-			if err != nil {
-				break
+			if err := sw.WriteTag(fieldName, fieldPointer); err != nil {
+				return err
 			}
 		}
 	case reflect.Array, reflect.Slice:
@@ -132,17 +127,16 @@ func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 		for idx := 0; idx < arr.Len(); idx++ {
 			itemName := TagWithIndex(name, idx)
 			itemPointer := arr.Index(idx).Interface()
-			err = sw.WriteTag(itemName, itemPointer)
-			if err != nil {
-				break
+			if err := sw.WriteTag(itemName, itemPointer); err != nil {
+				return err
 			}
 		}
 	default:
 		// Just try with the underlying type
-		err = sw.Writer.WriteTag(name, v.Interface())
+		return sw.Writer.WriteTag(name, v.Interface())
 	}
 
-	return err
+	return nil
 }
 
 // getNameOfField gets the name of field i in the provided struct str.
