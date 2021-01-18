@@ -6,7 +6,10 @@ import (
 	"strings"
 )
 
-// SplitReader splits reads of structs and arrays into separate reads of their components.
+// SplitReader splits reads of structs, arrays, and slices into separate reads of their components.
+// It is important to note that ReadTag will attempt to read or write a slice or array up to its length.
+// This might cause a PLC error if the operation goes out of bounds.
+// It also means nothing will be read if a nil or empty slice is provided; this code cannot infer the length.
 type SplitReader struct {
 	Reader
 }
@@ -24,7 +27,6 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 		return newErrNonPointerRead(name, v.Kind())
 	}
 
-	err := error(nil)
 	switch v.Elem().Kind() {
 	case reflect.Struct:
 		str := v.Elem()
@@ -38,35 +40,46 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 			if !ok {
 				continue // Can't touch that
 			}
-			fieldName = name + "." + fieldName // add prefix
+			if name != "" {
+				fieldName = name + "." + fieldName // add prefix
+			}
 			field := str.Field(i)
-			if !field.CanAddr() {
-				err = fmt.Errorf("Cannot address %s", fieldName)
-				break
+			if err := r.readValue(fieldName, field); err != nil {
+				return err
 			}
-
-			fieldPointer := field.Addr().Interface()
-			if field.Kind() == reflect.Ptr {
-				// Since field actually is a pointer, we want its value instead.
-				if field.IsNil() {
-					// It's currently a nil pointer, so we need to allocate and set the value
-					newVal := reflect.New(field.Type().Elem())
-					field.Set(newVal)
-				}
-				fieldPointer = field.Interface()
-			}
-
-			err = r.ReadTag(fieldName, fieldPointer)
-			if err != nil {
+		}
+	case reflect.Array, reflect.Slice:
+		arr := v.Elem()
+		for idx := 0; idx < arr.Len(); idx++ {
+			if err := r.readValue(TagWithIndex(name, idx), arr.Index(idx)); err != nil {
 				break
 			}
 		}
 	default:
 		// Just try with the underlying type
-		err = r.Reader.ReadTag(name, value)
+		return r.Reader.ReadTag(name, value)
 	}
 
-	return err
+	return nil
+}
+
+func (r SplitReader) readValue(name string, val reflect.Value) error {
+	if !val.CanAddr() {
+		return fmt.Errorf("Cannot address %s", name)
+	}
+
+	valPointer := val.Addr().Interface()
+	if val.Kind() == reflect.Ptr {
+		// Since val actually is a pointer, we want its value instead.
+		if val.IsNil() {
+			// It's currently a nil pointer, so we need to allocate and set the value
+			newVal := reflect.New(val.Type().Elem())
+			val.Set(newVal)
+		}
+		valPointer = val.Interface()
+	}
+
+	return r.ReadTag(name, valPointer)
 }
 
 // SplitWriter splits writes of structs and arrays into separate writes of their components.
@@ -87,7 +100,6 @@ func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 		v = v.Elem() // Naturally use what the pointer is pointing to (but only do so once)
 	}
 
-	err := error(nil)
 	switch v.Kind() {
 	case reflect.Struct:
 		str := v
@@ -101,20 +113,30 @@ func (sw SplitWriter) WriteTag(name string, value interface{}) error {
 			if !ok {
 				continue // Can't touch that
 			}
-			fieldName = name + "." + fieldName // add prefix
+			if name != "" {
+				fieldName = name + "." + fieldName // add prefix
+			}
 			fieldPointer := str.Field(i).Interface()
 
-			err = sw.WriteTag(fieldName, fieldPointer)
-			if err != nil {
-				break
+			if err := sw.WriteTag(fieldName, fieldPointer); err != nil {
+				return err
+			}
+		}
+	case reflect.Array, reflect.Slice:
+		arr := v
+		for idx := 0; idx < arr.Len(); idx++ {
+			itemName := TagWithIndex(name, idx)
+			itemPointer := arr.Index(idx).Interface()
+			if err := sw.WriteTag(itemName, itemPointer); err != nil {
+				return err
 			}
 		}
 	default:
 		// Just try with the underlying type
-		err = sw.Writer.WriteTag(name, v.Interface())
+		return sw.Writer.WriteTag(name, v.Interface())
 	}
 
-	return err
+	return nil
 }
 
 // getNameOfField gets the name of field i in the provided struct str.

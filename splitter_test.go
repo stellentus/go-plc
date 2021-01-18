@@ -117,6 +117,12 @@ type structIgnoringTagDashComma struct {
 type structWithPointer struct {
 	POINT *uint64 `plctag:",omitempty"`
 }
+type structWithArray struct {
+	Vals [2]int
+}
+type structWithSlice struct {
+	Vals []int
+}
 
 func TestSplitReadStruct(t *testing.T) {
 	expected := testStructType{7, 3.14}
@@ -314,4 +320,124 @@ func TestSplitWriteStructTagWithNilPointer(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, 0, len(fakeRW), "Omitempty pointer should not be written")
+}
+
+var expectedArray = [2]int{5, 83}
+
+func TestSplitReadSlice(t *testing.T) {
+	tests := []struct {
+		expected interface{}
+		actual   []int
+		message  string
+	}{
+		{expectedArray[:], make([]int, 2), "FullSlice"},
+		{expectedArray[0:1], make([]int, 1), "PartialSlice"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.message, func(tt *testing.T) {
+			sr, fakeRW := newSplitReaderForTesting()
+			fakeRW[testTagName+"[0]"] = expectedArray[0]
+			fakeRW[testTagName+"[1]"] = expectedArray[1]
+
+			err := sr.ReadTag(testTagName, &test.actual)
+			require.NoError(t, err)
+			require.Equal(t, test.expected, test.actual)
+		})
+	}
+}
+
+func TestSplitReadArray(t *testing.T) {
+	sr, fakeRW := newSplitReaderForTesting()
+	fakeRW[testTagName+"[0]"] = expectedArray[0]
+	fakeRW[testTagName+"[1]"] = expectedArray[1]
+
+	actual := [2]int{}
+	err := sr.ReadTag(testTagName, &actual)
+	require.NoError(t, err)
+	require.Equal(t, expectedArray, actual)
+}
+
+func TestSplitReadArrayOfStruct(t *testing.T) {
+	expected := [2]testStructType{
+		testStructType{7, 3.14},
+		testStructType{83, .11},
+	}
+
+	sr, fakeRW := newSplitReaderForTesting()
+	fakeRW[testTagName+"[0].I"] = expected[0].I
+	fakeRW[testTagName+"[0].MY_FLOAT"] = expected[0].MY_FLOAT
+	fakeRW[testTagName+"[1].I"] = expected[1].I
+	fakeRW[testTagName+"[1].MY_FLOAT"] = expected[1].MY_FLOAT
+
+	actual := [2]testStructType{}
+	err := sr.ReadTag(testTagName, &actual)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual)
+}
+
+// indirect assumes val is a pointer to something, and it returns "something".
+func indirect(val interface{}) interface{} {
+	return reflect.ValueOf(val).Elem().Interface()
+}
+
+func TestSplitReadArrayInStruct(t *testing.T) {
+	tests := []struct {
+		expected interface{}
+		actual   interface{}
+		message  string
+	}{
+		{structWithArray{Vals: expectedArray}, &structWithArray{}, "ArrayInStruct"},
+		{structWithSlice{Vals: expectedArray[:]}, &structWithSlice{Vals: make([]int, 2)}, "SliceInStruct"},
+		{structWithSlice{Vals: nil}, &structWithSlice{Vals: nil}, "NilSliceInStruct"},
+		{structWithSlice{Vals: []int{}}, &structWithSlice{Vals: []int{}}, "EmptySliceInStruct"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.message, func(tt *testing.T) {
+			sr, fakeRW := newSplitReaderForTesting()
+			fakeRW[testTagName+".Vals[0]"] = expectedArray[0]
+			fakeRW[testTagName+".Vals[1]"] = expectedArray[1]
+
+			err := sr.ReadTag(testTagName, test.actual)
+			require.NoError(t, err)
+			require.Equal(t, test.expected, indirect(test.actual))
+		})
+	}
+}
+
+func TestSplitWriteArray(t *testing.T) {
+	sw, fakeRW := newSplitWriterForTesting()
+
+	err := sw.WriteTag(testTagName, expectedArray)
+	require.NoError(t, err)
+
+	assert.Equal(t, expectedArray[0], fakeRW[testTagName+"[0]"])
+	assert.Equal(t, expectedArray[1], fakeRW[testTagName+"[1]"])
+}
+
+func TestSplitWriteSlice(t *testing.T) {
+	sw, fakeRW := newSplitWriterForTesting()
+
+	err := sw.WriteTag(testTagName, expectedArray[:])
+	require.NoError(t, err)
+
+	assert.Equal(t, expectedArray[0], fakeRW[testTagName+"[0]"])
+	assert.Equal(t, expectedArray[1], fakeRW[testTagName+"[1]"])
+}
+
+func TestSplitWriteArrayOfStruct(t *testing.T) {
+	expected := [2]testStructType{
+		testStructType{7, 3.14},
+		testStructType{83, .11},
+	}
+	sw, fakeRW := newSplitWriterForTesting()
+
+	err := sw.WriteTag(testTagName, expected)
+	require.NoError(t, err)
+
+	assert.Equal(t, expected[0].I, fakeRW[testTagName+"[0].I"])
+	assert.Equal(t, expected[0].MY_FLOAT, fakeRW[testTagName+"[0].MY_FLOAT"])
+	assert.Equal(t, expected[1].I, fakeRW[testTagName+"[1].I"])
+	assert.Equal(t, expected[1].MY_FLOAT, fakeRW[testTagName+"[1].MY_FLOAT"])
 }
