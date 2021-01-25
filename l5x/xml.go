@@ -79,7 +79,7 @@ type Controller struct {
 	DataTypes                []DataType      `xml:"DataTypes>DataType"`
 	Modules                  []Module        `xml:"Modules>Module"`
 	AddOnInstrDefs           []AddOnInstrDef `xml:"AddOnInstructionDefinitions>AddOnInstructionDefinition"`
-	Tags                     []Tag           `xml:"Tags>Tag"`
+	Tags                     TagList         `xml:"Tags>Tag"`
 	Programs                 []Program       `xml:"Programs>Program"`
 	Tasks                    []Task          `xml:"Tasks>Task"`
 	CST                      CST
@@ -129,7 +129,90 @@ func (ctrl Controller) TypeList() (TypeList, error) {
 		return TypeList{}, err
 	}
 
+	// Add-on instruction definitions work similarly to DataTypes, so we'll treat them the same
+	aoTypes, err := ctrl.addOnsAsTypes()
+	if err != nil {
+		return nil, err
+	}
+	tl = append(tl, aoTypes...)
+
 	return tl, nil
+}
+
+func (ctrl Controller) addOnsAsTypes() (TypeList, error) {
+	tl := TypeList{}
+	defaultTypes := NewTypeList() // I think add-on instructions can't use custom types?
+	for _, ao := range ctrl.AddOnInstrDefs {
+		typ, err := ao.AsType(defaultTypes)
+		if err != nil {
+			return nil, err
+		}
+		tl = append(tl, typ)
+	}
+	return tl, nil
+}
+
+func (tags TagList) NamedTypes(tl TypeList) ([]NamedType, error) {
+	nts := []NamedType{}
+	for _, tag := range tags {
+		nt, err := tl.newNamedType(tag.Name, tag.DataType, tag.Dimensions)
+		if err != nil {
+			return nil, fmt.Errorf("Tag '%s' couldn't be created because %w", tag.Name, err)
+		}
+		nts = append(nts, nt)
+	}
+
+	return nts, nil
+}
+
+func (prog Program) typesAsStruct(tl TypeList) (structType, error) {
+	nts, err := prog.Tags.NamedTypes(tl)
+	if err != nil {
+		return structType{}, err
+	}
+	return newStructType(prog.Name, nts)
+}
+
+func (ctrl Controller) programStructs(tl TypeList) ([]structType, error) {
+	strs := []structType{}
+
+	for _, prog := range ctrl.Programs {
+		str, err := prog.typesAsStruct(tl)
+		if err != nil {
+			return nil, err
+		}
+		strs = append(strs, str)
+	}
+
+	return strs, nil
+}
+
+func (ctrl Controller) WriteTagsStruct(tl TypeList, wr io.Writer) error {
+	nts, err := ctrl.Tags.NamedTypes(tl)
+	if err != nil {
+		return err
+	}
+
+	pstrs, err := ctrl.programStructs(tl)
+	if err != nil {
+		return err
+	}
+	for i, pstr := range pstrs {
+		nt, err := newNamedType(ctrl.Programs[i].Name, pstr)
+		if err != nil {
+			return err
+		}
+		nt.SetAsProgram()
+		nts = append(nts, nt)
+		_, err = wr.Write([]byte(TypeDefinition(pstr) + "\n\n"))
+	}
+
+	strct, err := newStructType(ctrl.Name, nts)
+	if err != nil {
+		return err
+	}
+	_, err = wr.Write([]byte(TypeDefinition(strct) + "\n"))
+	return err
 }
 
 type RedundancyInfo struct {
@@ -331,6 +414,8 @@ type Rung struct {
 	Text    Description
 }
 
+type TagList []Tag
+
 type Tag struct {
 	Name           string         `xml:",attr"`
 	TagType        TagType        `xml:",attr"`
@@ -349,7 +434,7 @@ type Program struct {
 	MainRoutineName string    `xml:",attr"`
 	Disabled        bool      `xml:",attr"`
 	UseAsFolder     bool      `xml:",attr"`
-	Tags            []Tag     `xml:"Tags>Tag"`
+	Tags            TagList   `xml:"Tags>Tag"`
 	Routines        []Routine `xml:"Routines>Routine"`
 }
 

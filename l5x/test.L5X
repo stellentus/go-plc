@@ -16,6 +16,11 @@
 </DataType>
 <DataType Name="datas_for_eating" Family="NoFamily" Class="User">
 <Members>
+<Member Name="TIMER" DataType="TIMER" Dimension="0" Radix="NullType" Hidden="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Timer with name TIMER to show embedding]]>
+</Description>
+</Member>
 <Member Name="XprivateX_cleaning_c0" DataType="SINT" Dimension="0" Radix="Decimal" Hidden="true" ExternalAccess="Read/Write"/>
 <Member Name="DEMAND" DataType="BIT" Dimension="0" Radix="Decimal" Hidden="false" Target="XprivateX_cleaning_c0" BitNumber="0" ExternalAccess="Read/Write">
 <Description>
@@ -54,6 +59,14 @@ BHAIG29GI]]>
 <![CDATA[Example of embedded struct]]>
 </Description>
 </Member>
+</Members>
+</DataType>
+<DataType Name="PackedBits" Family="NoFamily" Class="User">
+<Description>
+<![CDATA[Lots of bits all together]]>
+</Description>
+<Members>
+<Member Name="STEP" DataType="BOOL" Dimension="64" Radix="Binary" Hidden="false" ExternalAccess="Read/Write"/>
 </Members>
 </DataType>
 <DataType Name="big_data_type" Family="NoFamily" Class="User">
@@ -330,22 +343,6 @@ BHAIG29GI]]>
 </AddOnInstructionDefinition>
 </AddOnInstructionDefinitions>
 <Tags>
-<Tag Name="ALARM_P" TagType="Base" DataType="alarm_info" Constant="false" ExternalAccess="Read/Write">
-<Data Format="L5K">
-<![CDATA[[[0,0,0],0]]]>
-</Data>
-<Data Format="Decorated">
-<Structure DataType="alarm_info">
-<StructureMember Name="ALM_TMR" DataType="TIMER">
-<DataValueMember Name="PRE" DataType="DINT" Radix="Decimal" Value="0"/>
-<DataValueMember Name="ACC" DataType="DINT" Radix="Decimal" Value="0"/>
-<DataValueMember Name="EN" DataType="BOOL" Value="1"/>
-<DataValueMember Name="TT" DataType="BOOL" Value="0"/>
-</StructureMember>
-<DataValueMember Name="ALM_ACTIVE" DataType="BOOL" Value="0"/>
-</Structure>
-</Data>
-</Tag>
 <Tag Name="INFO_ABOUT" TagType="Base" DataType="INT" Dimensions="2" Radix="Decimal" Constant="false" ExternalAccess="Read/Write">
 <Description>
 <![CDATA[Info data]]>
@@ -360,7 +357,7 @@ BHAIG29GI]]>
 </Array>
 </Data>
 </Tag>
-<Tag Name="BIGGD" TagType="Base" DataType="big_data_type" Constant="false" ExternalAccess="Read/Write">
+<Tag Name="bIGGD" TagType="Base" DataType="big_data_type" Constant="false" ExternalAccess="Read/Write">
 <Description>
 <![CDATA[Big Data Lots]]>
 </Description>
@@ -383,7 +380,7 @@ BHAIG29GI]]>
 </Tag>
 </Tags>
 <Programs>
-<Program Name="DANCER" TestEdits="false" MainRoutineName="MainRoutine" Disabled="false" UseAsFolder="false">
+<Program Name="dancer" TestEdits="false" MainRoutineName="MainRoutine" Disabled="false" UseAsFolder="false">
 <Tags>
 <Tag Name="DOW" TagType="Base" DataType="dow" Constant="false" ExternalAccess="Read/Write">
 <Description>
@@ -412,6 +409,21 @@ BHAIG29GI]]>
 <Element Index="[12]" Value="4"/>
 </ArrayMember>
 <DataValueMember Name="DayOW1" DataType="REAL" Radix="Float" Value="6.2"/>
+</Structure>
+</Data>
+</Tag>
+<Tag Name="EX_AOI" TagType="Base" DataType="EVENT_TOT" Constant="false" ExternalAccess="Read/Write">
+<Description>
+<![CDATA[Add-on instruction]]>
+</Description>
+<Data Format="L5K">
+<![CDATA[[3,15]]]>
+</Data>
+<Data Format="Decorated">
+<Structure DataType="AOI">
+<DataValueMember Name="EnableIn" DataType="BOOL" Value="1"/>
+<DataValueMember Name="EnableOut" DataType="BOOL" Value="1"/>
+<DataValueMember Name="AlarmSP" DataType="INT" Value="15"/>
 </Structure>
 </Data>
 </Tag>
@@ -492,7 +504,7 @@ Rung 4 - It has run
 <Tasks>
 <Task Name="MainTask" Type="CONTINUOUS" Priority="10" Watchdog="500" DisableUpdateOutputs="false" InhibitTask="false">
 <ScheduledPrograms>
-<ScheduledProgram Name="DANCER"/>
+<ScheduledProgram Name="dancer"/>
 </ScheduledPrograms>
 </Task>
 </Tasks>

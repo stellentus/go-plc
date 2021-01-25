@@ -2,9 +2,11 @@ package l5x
 
 import (
 	"encoding/xml"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,6 +39,12 @@ var exampleDataTypes = []DataType{
 	DataType{
 		Name: "datas_for_eating",
 		Members: []Member{
+			Member{
+				Name:        "TIMER",
+				DataType:    "TIMER",
+				Radix:       RadixNullType,
+				Description: Description{Cdata: "\nTimer with name TIMER to show embedding\n"},
+			},
 			Member{
 				Name:     "XprivateX_cleaning_c0",
 				DataType: "SINT",
@@ -83,6 +91,17 @@ var exampleDataTypes = []DataType{
 				DataType:    "big_data_type",
 				Radix:       RadixNullType,
 				Description: Description{Cdata: "\nExample of embedded struct\n"},
+			},
+		},
+	},
+	DataType{
+		Name: "PackedBits",
+		Members: []Member{
+			Member{
+				Name:      "STEP",
+				DataType:  "BOOL",
+				Dimension: 64,
+				Radix:     RadixBinary,
 			},
 		},
 	},
@@ -476,31 +495,6 @@ var exampleController = Controller{
 	}},
 	Tags: []Tag{
 		Tag{
-			Name:     "ALARM_P",
-			DataType: "alarm_info",
-			Data: []Data{
-				Data{
-					Format: DataFormatL5K,
-					L5K:    "\n[[0,0,0],0]\n",
-				},
-				Data{
-					L5K: "\n\n",
-					Structure: Structure{
-						DataType: "alarm_info",
-						StructureMember: []DataValueMember{
-							{Name: "PRE", DataType: "DINT", Value: "0"},
-							{Name: "ACC", DataType: "DINT", Value: "0"},
-							{Name: "EN", DataType: "BOOL", Value: "1"},
-							{Name: "TT", DataType: "BOOL", Value: "0"},
-						},
-						DataValueMember: []DataValueMember{
-							{Name: "ALM_ACTIVE", DataType: "BOOL", Value: "0"},
-						},
-					},
-				},
-			},
-		},
-		Tag{
 			Name:        "INFO_ABOUT",
 			DataType:    "INT",
 			Dimensions:  []int{2},
@@ -525,7 +519,7 @@ var exampleController = Controller{
 			},
 		},
 		Tag{
-			Name:        "BIGGD",
+			Name:        "bIGGD",
 			DataType:    "big_data_type",
 			Description: Description{Cdata: "\nBig Data Lots\n"},
 			Data: []Data{
@@ -591,7 +585,7 @@ var exampleController = Controller{
 		},
 	},
 	Programs: []Program{Program{
-		Name:            "DANCER",
+		Name:            "dancer",
 		MainRoutineName: "MainRoutine",
 		Tags: []Tag{
 			Tag{
@@ -631,6 +625,28 @@ var exampleController = Controller{
 									Element{Index: []int{11}, Value: "3"},
 									Element{Index: []int{12}, Value: "4"},
 								},
+							},
+						},
+					},
+				},
+			},
+			Tag{
+				Name:        "EX_AOI",
+				DataType:    "EVENT_TOT",
+				Description: Description{Cdata: "\nAdd-on instruction\n"},
+				Data: []Data{
+					Data{
+						Format: DataFormatL5K,
+						L5K:    "\n[3,15]\n",
+					},
+					Data{
+						L5K: "\n\n",
+						Structure: Structure{
+							DataType: "AOI",
+							DataValueMember: []DataValueMember{
+								DataValueMember{Name: "EnableIn", DataType: "BOOL", Value: "1"},
+								DataValueMember{Name: "EnableOut", DataType: "BOOL", Value: "1"},
+								DataValueMember{Name: "AlarmSP", DataType: "INT", Radix: RadixDecimal, Value: "15"},
 							},
 						},
 					},
@@ -700,7 +716,7 @@ var exampleController = Controller{
 			Name string `xml:",attr"`
 		}{struct {
 			Name string `xml:",attr"`
-		}{Name: "DANCER"}},
+		}{Name: "dancer"}},
 	}},
 	Trends: []Trend{Trend{
 		Name:             "tacos",
@@ -757,30 +773,190 @@ func TestXmlMarshall(t *testing.T) {
 	require.Fail(t, "Marshal tests aren't implemented yet")
 }
 
-var exampleTimerType = structType{
-	name: "TIMER",
-	members: []NamedType{
-		NamedType{GoName: "PRE", Type: typeDINT},
-		NamedType{GoName: "ACC", Type: typeDINT},
-		NamedType{GoName: "EN", Type: typeBOOL},
-		NamedType{GoName: "TT", Type: typeBOOL},
-		NamedType{GoName: "DN", Type: typeBOOL},
-	},
-}
-
-var exampleBigDataType = structType{
-	name: "big_data_type",
-	members: []NamedType{
-		NamedType{GoName: "XprivateX_cleaning_c0", Type: typeSINT},
-		NamedType{GoName: "CLEAN_MODE", Type: typeINT},
-		NamedType{GoName: "XprivateX_cleaning_c7", Type: typeSINT},
-	},
-}
+var exampleTimerType = newTestStructType("TIMER", []NamedType{
+	NamedType{GoName: "PRE", Type: typeDINT},
+	NamedType{GoName: "ACC", Type: typeDINT},
+	NamedType{GoName: "EN", Type: typeBOOL},
+	NamedType{GoName: "TT", Type: typeBOOL},
+	NamedType{GoName: "DN", Type: typeBOOL},
+})
+var examplePidEnhancedType = newTestStructType("PID_ENHANCED", []NamedType{
+	NamedType{GoName: "EnableIn", Type: typeBOOL},
+	NamedType{GoName: "PV", Type: typeREAL},
+	NamedType{GoName: "PVFault", Type: typeBOOL},
+	NamedType{GoName: "PVEUMax", Type: typeREAL},
+	NamedType{GoName: "PVEUMin", Type: typeREAL},
+	NamedType{GoName: "SPProg", Type: typeREAL},
+	NamedType{GoName: "SPOper", Type: typeREAL},
+	NamedType{GoName: "SPCascade", Type: typeREAL},
+	NamedType{GoName: "SPHLimit", Type: typeREAL},
+	NamedType{GoName: "SPLLimit", Type: typeREAL},
+	NamedType{GoName: "UseRatio", Type: typeBOOL},
+	NamedType{GoName: "RatioProg", Type: typeREAL},
+	NamedType{GoName: "RatioOper", Type: typeREAL},
+	NamedType{GoName: "RatioHLimit", Type: typeREAL},
+	NamedType{GoName: "RatioLLimit", Type: typeREAL},
+	NamedType{GoName: "CVFault", Type: typeBOOL},
+	NamedType{GoName: "CVInitReq", Type: typeBOOL},
+	NamedType{GoName: "CVInitValue", Type: typeREAL},
+	NamedType{GoName: "CVProg", Type: typeREAL},
+	NamedType{GoName: "CVOper", Type: typeREAL},
+	NamedType{GoName: "CVOverride", Type: typeREAL},
+	NamedType{GoName: "CVPrevious", Type: typeREAL},
+	NamedType{GoName: "CVSetPrevious", Type: typeBOOL},
+	NamedType{GoName: "CVManLimiting", Type: typeBOOL},
+	NamedType{GoName: "CVEUMax", Type: typeREAL},
+	NamedType{GoName: "CVEUMin", Type: typeREAL},
+	NamedType{GoName: "CVHLimit", Type: typeREAL},
+	NamedType{GoName: "CVLLimit", Type: typeREAL},
+	NamedType{GoName: "CVROCLimit", Type: typeREAL},
+	NamedType{GoName: "FF", Type: typeREAL},
+	NamedType{GoName: "FFPrevious", Type: typeREAL},
+	NamedType{GoName: "FFSetPrevious", Type: typeBOOL},
+	NamedType{GoName: "HandFB", Type: typeREAL},
+	NamedType{GoName: "HandFBFault", Type: typeBOOL},
+	NamedType{GoName: "WindupHIn", Type: typeBOOL},
+	NamedType{GoName: "WindupLIn", Type: typeBOOL},
+	NamedType{GoName: "ControlAction", Type: typeBOOL},
+	NamedType{GoName: "DependIndepend", Type: typeBOOL},
+	NamedType{GoName: "PGain", Type: typeREAL},
+	NamedType{GoName: "IGain", Type: typeREAL},
+	NamedType{GoName: "DGain", Type: typeREAL},
+	NamedType{GoName: "PVEProportional", Type: typeBOOL},
+	NamedType{GoName: "PVEDerivative", Type: typeBOOL},
+	NamedType{GoName: "DSmoothing", Type: typeBOOL},
+	NamedType{GoName: "PVTracking", Type: typeBOOL},
+	NamedType{GoName: "ZCDeadband", Type: typeREAL},
+	NamedType{GoName: "ZCOff", Type: typeBOOL},
+	NamedType{GoName: "PVHHLimit", Type: typeREAL},
+	NamedType{GoName: "PVHLimit", Type: typeREAL},
+	NamedType{GoName: "PVLLimit", Type: typeREAL},
+	NamedType{GoName: "PVLLLimit", Type: typeREAL},
+	NamedType{GoName: "PVDeadband", Type: typeREAL},
+	NamedType{GoName: "PVROCPosLimit", Type: typeREAL},
+	NamedType{GoName: "PVROCNegLimit", Type: typeREAL},
+	NamedType{GoName: "PVROCPeriod", Type: typeREAL},
+	NamedType{GoName: "DevHHLimit", Type: typeREAL},
+	NamedType{GoName: "DevHLimit", Type: typeREAL},
+	NamedType{GoName: "DevLLimit", Type: typeREAL},
+	NamedType{GoName: "DevLLLimit", Type: typeREAL},
+	NamedType{GoName: "DevDeadband", Type: typeREAL},
+	NamedType{GoName: "AllowCasRat", Type: typeBOOL},
+	NamedType{GoName: "ManualAfterInit", Type: typeBOOL},
+	NamedType{GoName: "ProgProgReq", Type: typeBOOL},
+	NamedType{GoName: "ProgOperReq", Type: typeBOOL},
+	NamedType{GoName: "ProgCasRatReq", Type: typeBOOL},
+	NamedType{GoName: "ProgAutoReq", Type: typeBOOL},
+	NamedType{GoName: "ProgManualReq", Type: typeBOOL},
+	NamedType{GoName: "ProgOverrideReq", Type: typeBOOL},
+	NamedType{GoName: "ProgHandReq", Type: typeBOOL},
+	NamedType{GoName: "OperProgReq", Type: typeBOOL},
+	NamedType{GoName: "OperOperReq", Type: typeBOOL},
+	NamedType{GoName: "OperCasRatReq", Type: typeBOOL},
+	NamedType{GoName: "OperAutoReq", Type: typeBOOL},
+	NamedType{GoName: "OperManualReq", Type: typeBOOL},
+	NamedType{GoName: "ProgValueReset", Type: typeBOOL},
+	NamedType{GoName: "TimingMode", Type: typeDINT},
+	NamedType{GoName: "OversampleDT", Type: typeREAL},
+	NamedType{GoName: "RTSTime", Type: typeDINT},
+	NamedType{GoName: "RTSTimeStamp", Type: typeDINT},
+	NamedType{GoName: "AtuneAcquire", Type: typeBOOL},
+	NamedType{GoName: "AtuneStart", Type: typeBOOL},
+	NamedType{GoName: "AtuneUseGains", Type: typeBOOL},
+	NamedType{GoName: "AtuneAbort", Type: typeBOOL},
+	NamedType{GoName: "AtuneUnacquire", Type: typeBOOL},
+	NamedType{GoName: "EnableOut", Type: typeBOOL},
+	NamedType{GoName: "CVEU", Type: typeREAL},
+	NamedType{GoName: "CV", Type: typeREAL},
+	NamedType{GoName: "CVInitializing", Type: typeBOOL},
+	NamedType{GoName: "CVHAlarm", Type: typeBOOL},
+	NamedType{GoName: "CVLAlarm", Type: typeBOOL},
+	NamedType{GoName: "CVROCAlarm", Type: typeBOOL},
+	NamedType{GoName: "SP", Type: typeREAL},
+	NamedType{GoName: "SPPercent", Type: typeREAL},
+	NamedType{GoName: "SPHAlarm", Type: typeBOOL},
+	NamedType{GoName: "SPLAlarm", Type: typeBOOL},
+	NamedType{GoName: "PVPercent", Type: typeREAL},
+	NamedType{GoName: "E", Type: typeREAL},
+	NamedType{GoName: "EPercent", Type: typeREAL},
+	NamedType{GoName: "InitPrimary", Type: typeBOOL},
+	NamedType{GoName: "WindupHOut", Type: typeBOOL},
+	NamedType{GoName: "WindupLOut", Type: typeBOOL},
+	NamedType{GoName: "Ratio", Type: typeREAL},
+	NamedType{GoName: "RatioHAlarm", Type: typeBOOL},
+	NamedType{GoName: "RatioLAlarm", Type: typeBOOL},
+	NamedType{GoName: "ZCDeadbandOn", Type: typeBOOL},
+	NamedType{GoName: "PVHHAlarm", Type: typeBOOL},
+	NamedType{GoName: "PVHAlarm", Type: typeBOOL},
+	NamedType{GoName: "PVLAlarm", Type: typeBOOL},
+	NamedType{GoName: "PVLLAlarm", Type: typeBOOL},
+	NamedType{GoName: "PVROCPosAlarm", Type: typeBOOL},
+	NamedType{GoName: "PVROCNegAlarm", Type: typeBOOL},
+	NamedType{GoName: "DevHHAlarm", Type: typeBOOL},
+	NamedType{GoName: "DevHAlarm", Type: typeBOOL},
+	NamedType{GoName: "DevLAlarm", Type: typeBOOL},
+	NamedType{GoName: "DevLLAlarm", Type: typeBOOL},
+	NamedType{GoName: "ProgOper", Type: typeBOOL},
+	NamedType{GoName: "CasRat", Type: typeBOOL},
+	NamedType{GoName: "Auto", Type: typeBOOL},
+	NamedType{GoName: "Manual", Type: typeBOOL},
+	NamedType{GoName: "Override", Type: typeBOOL},
+	NamedType{GoName: "Hand", Type: typeBOOL},
+	NamedType{GoName: "DeltaT", Type: typeREAL},
+	NamedType{GoName: "AtuneReady", Type: typeBOOL},
+	NamedType{GoName: "AtuneOn", Type: typeBOOL},
+	NamedType{GoName: "AtuneDone", Type: typeBOOL},
+	NamedType{GoName: "AtuneAborted", Type: typeBOOL},
+	NamedType{GoName: "AtuneBusy", Type: typeBOOL},
+	NamedType{GoName: "Status1", Type: typeDINT},
+	NamedType{GoName: "Status2", Type: typeDINT},
+	NamedType{GoName: "InstructFault", Type: typeBOOL},
+	NamedType{GoName: "PVFaulted", Type: typeBOOL},
+	NamedType{GoName: "CVFaulted", Type: typeBOOL},
+	NamedType{GoName: "HandFBFaulted", Type: typeBOOL},
+	NamedType{GoName: "PVSpanInv", Type: typeBOOL},
+	NamedType{GoName: "SPProgInv", Type: typeBOOL},
+	NamedType{GoName: "SPOperInv", Type: typeBOOL},
+	NamedType{GoName: "SPCascadeInv", Type: typeBOOL},
+	NamedType{GoName: "SPLimitsInv", Type: typeBOOL},
+	NamedType{GoName: "RatioProgInv", Type: typeBOOL},
+	NamedType{GoName: "RatioOperInv", Type: typeBOOL},
+	NamedType{GoName: "RatioLimitsInv", Type: typeBOOL},
+	NamedType{GoName: "CVProgInv", Type: typeBOOL},
+	NamedType{GoName: "CVOperInv", Type: typeBOOL},
+	NamedType{GoName: "CVOverrideInv", Type: typeBOOL},
+	NamedType{GoName: "CVPreviousInv", Type: typeBOOL},
+	NamedType{GoName: "CVEUSpanInv", Type: typeBOOL},
+	NamedType{GoName: "CVLimitsInv", Type: typeBOOL},
+	NamedType{GoName: "CVROCLimitInv", Type: typeBOOL},
+	NamedType{GoName: "FFInv", Type: typeBOOL},
+	NamedType{GoName: "FFPreviousInv", Type: typeBOOL},
+	NamedType{GoName: "HandFBInv", Type: typeBOOL},
+	NamedType{GoName: "PGainInv", Type: typeBOOL},
+	NamedType{GoName: "IGainInv", Type: typeBOOL},
+	NamedType{GoName: "DGainInv", Type: typeBOOL},
+	NamedType{GoName: "ZCDeadbandInv", Type: typeBOOL},
+	NamedType{GoName: "PVDeadbandInv", Type: typeBOOL},
+	NamedType{GoName: "PVROCLimitsInv", Type: typeBOOL},
+	NamedType{GoName: "DevHLLimitsInv", Type: typeBOOL},
+	NamedType{GoName: "DevDeadbandInv", Type: typeBOOL},
+	NamedType{GoName: "AtuneDataInv", Type: typeBOOL},
+	NamedType{GoName: "TimingModeInv", Type: typeBOOL},
+	NamedType{GoName: "RTSMissed", Type: typeBOOL},
+	NamedType{GoName: "RTSTimeInv", Type: typeBOOL},
+	NamedType{GoName: "RTSTimeStampInv", Type: typeBOOL},
+	NamedType{GoName: "DeltaTInv", Type: typeBOOL},
+})
+var exampleBigDataType = newTestStructType("big_data_type", []NamedType{
+	NamedType{GoName: "XprivateX_cleaning_c0", Type: typeSINT},
+	NamedType{GoName: "CLEAN_MODE", Type: typeINT},
+	NamedType{GoName: "XprivateX_cleaning_c7", Type: typeSINT},
+})
 
 var expectedTypeList = TypeList{
 	typeBOOL, typeSINT, typeINT, typeDINT, typeLINT, typeUSINT, typeUINT, typeUDINT, typeULINT, typeREAL, typeLREAL, typeSTRING, typeBYTE, typeWORD, typeDWORD, typeLWORD,
 	exampleTimerType,
-	structType{name: "COUNTER", members: []NamedType{
+	newTestStructType("COUNTER", []NamedType{
 		NamedType{GoName: "PRE", Type: typeDINT},
 		NamedType{GoName: "ACC", Type: typeDINT},
 		NamedType{GoName: "CU", Type: typeBOOL},
@@ -788,15 +964,21 @@ var expectedTypeList = TypeList{
 		NamedType{GoName: "DN", Type: typeBOOL},
 		NamedType{GoName: "OV", Type: typeBOOL},
 		NamedType{GoName: "UN", Type: typeBOOL},
-	}},
-	structType{name: "dow", members: []NamedType{
+	}),
+	examplePidEnhancedType,
+	structType{safeGoName: safeGoName{"MESSAGE", "MESSAGE"}},
+	newTestStructType("dow", []NamedType{
 		NamedType{GoName: "DayOW", Type: typeINT},
 		NamedType{GoName: "Month", Type: typeDINT},
 		NamedType{GoName: "MonthCode", Type: arrayType{elementInfo: typeDINT, count: 13}},
 		NamedType{GoName: "DayOW1", Type: typeREAL},
-	}},
+	}),
+	newTestStructType("PackedBits", []NamedType{
+		NamedType{GoName: "STEP", Type: arrayType{elementInfo: typeUDINT, count: 2}},
+	}),
 	exampleBigDataType,
-	structType{name: "datas_for_eating", members: []NamedType{
+	newTestStructType("datas_for_eating", []NamedType{
+		NamedType{GoName: "TIMER", Type: exampleTimerType},
 		NamedType{GoName: "XprivateX_cleaning_c0", Type: typeSINT},
 		NamedType{GoName: "FOOD_TIMER", Type: exampleTimerType},
 		NamedType{GoName: "MEAL_PREP_TIMER", Type: exampleTimerType},
@@ -804,11 +986,76 @@ var expectedTypeList = TypeList{
 		NamedType{GoName: "COUNTDOWN_TO_DESSERT", Type: exampleTimerType},
 		NamedType{GoName: "STEPS_REQUIRED", Type: typeINT},
 		NamedType{PlcName: "soMuchData", GoName: "SoMuchData", Type: exampleBigDataType},
-	}},
+	}),
+	newTestStructType("EVENT_TOT", []NamedType{
+		NamedType{GoName: "EnableIn", Type: typeBOOL},
+		NamedType{GoName: "EnableOut", Type: typeBOOL},
+		NamedType{GoName: "AlarmSP", Type: typeINT},
+	}),
 }
 
 func TestControllerTypeList(t *testing.T) {
 	tl, err := exampleController.TypeList()
 	require.NoError(t, err)
 	require.Equal(t, expectedTypeList, tl)
+}
+
+type testType struct{ plcName, goName string }
+
+func (tt testType) PlcName() string      { return tt.plcName }
+func (tt testType) GoName() string       { return tt.goName }
+func (tt testType) GoTypeString() string { return "" }
+
+var expectedTagList = []NamedType{
+	{"", "INFO_ABOUT", testType{"", "[2]int16"}},
+	{"bIGGD", "BIGGD", testType{"big_data_type", "Big_data_type"}},
+}
+
+func TestControllerNamedTypes(t *testing.T) {
+	tl, err := exampleController.TypeList()
+	require.NoError(t, err)
+	tags, err := exampleController.Tags.NamedTypes(tl)
+	require.NoError(t, err)
+	testNamedTypes(t, expectedTagList, tags)
+}
+
+var expectedDancerTagList = []NamedType{
+	{"", "DOW", testType{"dow", "Dow"}},
+	{"", "EX_AOI", testType{"EVENT_TOT", "EVENT_TOT"}},
+	{"multiArray", "MultiArray", testType{"", "[2][4]int16"}},
+}
+
+func TestProgramNamedTypes(t *testing.T) {
+	tl, err := exampleController.TypeList()
+	require.NoError(t, err)
+	tags, err := exampleController.Programs[0].Tags.NamedTypes(tl)
+	require.NoError(t, err)
+	testNamedTypes(t, expectedDancerTagList, tags)
+}
+
+func testNamedTypes(t *testing.T, expected, actual []NamedType) {
+	require.Equal(t, len(expected), len(actual), "Length of controller's TagList should match expected")
+	for i, tag := range actual {
+		assert.Equal(t, expected[i].PlcName, tag.PlcName)
+		assert.Equal(t, expected[i].GoName, tag.GoName)
+		assert.Equal(t, expected[i].Type.PlcName(), tag.Type.PlcName())
+		assert.Equal(t, expected[i].Type.GoName(), tag.Type.GoName())
+	}
+}
+
+func ExampleController_WriteTagsStruct() {
+	tl, _ := exampleController.TypeList()
+	exampleController.WriteTagsStruct(tl, os.Stdout)
+	// Output:
+	// type Dancer struct {
+	// 	DOW Dow
+	// 	EX_AOI EVENT_TOT
+	// 	MultiArray [2][4]int16 `plc:"multiArray"`
+	// }
+	//
+	// type EXAMPLE_FACTORY struct {
+	// 	INFO_ABOUT [2]int16
+	// 	BIGGD Big_data_type `plc:"bIGGD"`
+	// 	Dancer `plc:"Program:dancer"`
+	// }
 }

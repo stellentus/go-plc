@@ -27,13 +27,6 @@ func main() {
 	tl, err := content.Controller.TypeList()
 	panicIfError(err, "Coundn't register ControlLogixTypes")
 
-	fout := io.WriteCloser(os.Stdout)
-	if *out != "" {
-		fout, err = os.Create(*out)
-		panicIfError(err, "Could not open output file '"+*out+"'")
-	}
-	defer fout.Close()
-
 	var src strings.Builder
 
 	// Print header line if requested
@@ -44,13 +37,23 @@ func main() {
 		src.WriteString("package " + *pkg + "\n\n")
 	}
 
-	err = tl.WriteDefinitions(&src) // write into a string buffer instead. Then call
+	err = tl.WriteDefinitions(&src)
 	panicIfError(err, "Failed to write definitions")
 
-	out, err := format.Source([]byte(src.String()))
+	err = content.Controller.WriteTagsStruct(tl, &src)
+	panicIfError(err, "Failed to write tags")
+
+	str, err := format.Source([]byte(src.String()))
 	panicIfError(err, "Failed to run go format")
 
-	_, err = fout.Write(out)
+	fout := io.WriteCloser(os.Stdout)
+	if *out != "" {
+		fout, err = os.Create(*out)
+		panicIfError(err, "Could not open output file '"+*out+"'")
+	}
+	defer fout.Close()
+
+	_, err = fout.Write(str)
 	panicIfError(err, "Failed to write output file")
 }
 

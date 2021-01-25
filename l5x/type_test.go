@@ -9,6 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func newTestStructType(name string, nts []NamedType) structType {
+	str, err := newStructType(name, nts)
+	if err != nil {
+		panic("Test contains invalid name '" + name + "'")
+	}
+	return str
+}
+
 func newTestMember(varName, ty string) Member {
 	return Member{
 		Name:     varName,
@@ -23,7 +31,7 @@ func ExampleNamedTypeDeclaration() {
 	}))
 	fmt.Println(NamedTypeDeclaration(NamedType{
 		GoName: "MY_STRUCT",
-		Type:   structType{name: "StructType"}, // The nil members don't matter
+		Type:   newTestStructType("StructType", nil), // The nil members don't matter
 	}))
 	// Output:
 	// MY_VAR bool
@@ -33,19 +41,13 @@ func ExampleNamedTypeDeclaration() {
 func ExampleTypeDefinition() {
 	types := []Type{}
 	types = append(types, typeBOOL) // prints nothing as it's built-in
-	types = append(types, structType{
-		name: "DemoStruct",
-		members: []NamedType{
-			{GoName: "VAR", Type: typeBOOL},
-		},
-	})
-	types = append(types, structType{
-		name: "FancyThing",
-		members: []NamedType{
-			{GoName: "COUNT", Type: typeINT},
-			{GoName: "dsInstance", Type: types[1]},
-		},
-	})
+	types = append(types, newTestStructType("DemoStruct", []NamedType{
+		{GoName: "VAR", Type: typeBOOL},
+	}))
+	types = append(types, newTestStructType("FancyThing", []NamedType{
+		{GoName: "COUNT", Type: typeINT},
+		{GoName: "dsInstance", Type: types[1]},
+	}))
 
 	for _, ty := range types {
 		fmt.Println(TypeDefinition(ty))
@@ -86,11 +88,186 @@ func ExampleTypeList_WriteDefinitions() {
 	// 	UN bool
 	// }
 	//
+	// type PID_ENHANCED struct {
+	// 	EnableIn bool
+	// 	PV float32
+	// 	PVFault bool
+	// 	PVEUMax float32
+	// 	PVEUMin float32
+	// 	SPProg float32
+	// 	SPOper float32
+	// 	SPCascade float32
+	// 	SPHLimit float32
+	// 	SPLLimit float32
+	// 	UseRatio bool
+	// 	RatioProg float32
+	// 	RatioOper float32
+	// 	RatioHLimit float32
+	// 	RatioLLimit float32
+	// 	CVFault bool
+	// 	CVInitReq bool
+	// 	CVInitValue float32
+	// 	CVProg float32
+	// 	CVOper float32
+	// 	CVOverride float32
+	// 	CVPrevious float32
+	// 	CVSetPrevious bool
+	// 	CVManLimiting bool
+	// 	CVEUMax float32
+	// 	CVEUMin float32
+	// 	CVHLimit float32
+	// 	CVLLimit float32
+	// 	CVROCLimit float32
+	// 	FF float32
+	// 	FFPrevious float32
+	// 	FFSetPrevious bool
+	// 	HandFB float32
+	// 	HandFBFault bool
+	// 	WindupHIn bool
+	// 	WindupLIn bool
+	// 	ControlAction bool
+	// 	DependIndepend bool
+	// 	PGain float32
+	// 	IGain float32
+	// 	DGain float32
+	// 	PVEProportional bool
+	// 	PVEDerivative bool
+	// 	DSmoothing bool
+	// 	PVTracking bool
+	// 	ZCDeadband float32
+	// 	ZCOff bool
+	// 	PVHHLimit float32
+	// 	PVHLimit float32
+	// 	PVLLimit float32
+	// 	PVLLLimit float32
+	// 	PVDeadband float32
+	// 	PVROCPosLimit float32
+	// 	PVROCNegLimit float32
+	// 	PVROCPeriod float32
+	// 	DevHHLimit float32
+	// 	DevHLimit float32
+	// 	DevLLimit float32
+	// 	DevLLLimit float32
+	// 	DevDeadband float32
+	// 	AllowCasRat bool
+	// 	ManualAfterInit bool
+	// 	ProgProgReq bool
+	// 	ProgOperReq bool
+	// 	ProgCasRatReq bool
+	// 	ProgAutoReq bool
+	// 	ProgManualReq bool
+	// 	ProgOverrideReq bool
+	// 	ProgHandReq bool
+	// 	OperProgReq bool
+	// 	OperOperReq bool
+	// 	OperCasRatReq bool
+	// 	OperAutoReq bool
+	// 	OperManualReq bool
+	// 	ProgValueReset bool
+	// 	TimingMode int32
+	// 	OversampleDT float32
+	// 	RTSTime int32
+	// 	RTSTimeStamp int32
+	// 	AtuneAcquire bool
+	// 	AtuneStart bool
+	// 	AtuneUseGains bool
+	// 	AtuneAbort bool
+	// 	AtuneUnacquire bool
+	// 	EnableOut bool
+	// 	CVEU float32
+	// 	CV float32
+	// 	CVInitializing bool
+	// 	CVHAlarm bool
+	// 	CVLAlarm bool
+	// 	CVROCAlarm bool
+	// 	SP float32
+	// 	SPPercent float32
+	// 	SPHAlarm bool
+	// 	SPLAlarm bool
+	// 	PVPercent float32
+	// 	E float32
+	// 	EPercent float32
+	// 	InitPrimary bool
+	// 	WindupHOut bool
+	// 	WindupLOut bool
+	// 	Ratio float32
+	// 	RatioHAlarm bool
+	// 	RatioLAlarm bool
+	// 	ZCDeadbandOn bool
+	// 	PVHHAlarm bool
+	// 	PVHAlarm bool
+	// 	PVLAlarm bool
+	// 	PVLLAlarm bool
+	// 	PVROCPosAlarm bool
+	// 	PVROCNegAlarm bool
+	// 	DevHHAlarm bool
+	// 	DevHAlarm bool
+	// 	DevLAlarm bool
+	// 	DevLLAlarm bool
+	// 	ProgOper bool
+	// 	CasRat bool
+	// 	Auto bool
+	// 	Manual bool
+	// 	Override bool
+	// 	Hand bool
+	// 	DeltaT float32
+	// 	AtuneReady bool
+	// 	AtuneOn bool
+	// 	AtuneDone bool
+	// 	AtuneAborted bool
+	// 	AtuneBusy bool
+	// 	Status1 int32
+	// 	Status2 int32
+	// 	InstructFault bool
+	// 	PVFaulted bool
+	// 	CVFaulted bool
+	// 	HandFBFaulted bool
+	// 	PVSpanInv bool
+	// 	SPProgInv bool
+	// 	SPOperInv bool
+	// 	SPCascadeInv bool
+	// 	SPLimitsInv bool
+	// 	RatioProgInv bool
+	// 	RatioOperInv bool
+	// 	RatioLimitsInv bool
+	// 	CVProgInv bool
+	// 	CVOperInv bool
+	// 	CVOverrideInv bool
+	// 	CVPreviousInv bool
+	// 	CVEUSpanInv bool
+	// 	CVLimitsInv bool
+	// 	CVROCLimitInv bool
+	// 	FFInv bool
+	// 	FFPreviousInv bool
+	// 	HandFBInv bool
+	// 	PGainInv bool
+	// 	IGainInv bool
+	// 	DGainInv bool
+	// 	ZCDeadbandInv bool
+	// 	PVDeadbandInv bool
+	// 	PVROCLimitsInv bool
+	// 	DevHLLimitsInv bool
+	// 	DevDeadbandInv bool
+	// 	AtuneDataInv bool
+	// 	TimingModeInv bool
+	// 	RTSMissed bool
+	// 	RTSTimeInv bool
+	// 	RTSTimeStampInv bool
+	// 	DeltaTInv bool
+	// }
+	//
+	// type MESSAGE struct {
+	// }
+	//
 	// type Dow struct {
 	// 	DayOW int16
 	// 	Month int32
 	// 	MonthCode [13]int32
 	// 	DayOW1 float32
+	// }
+	//
+	// type PackedBits struct {
+	// 	STEP [2]uint32
 	// }
 	//
 	// type Big_data_type struct {
@@ -100,13 +277,20 @@ func ExampleTypeList_WriteDefinitions() {
 	// }
 	//
 	// type Datas_for_eating struct {
+	// 	TIMER
 	// 	XprivateX_cleaning_c0 int8
 	// 	FOOD_TIMER TIMER
 	// 	MEAL_PREP_TIMER TIMER
 	// 	BHAIG29GI TIMER
 	// 	COUNTDOWN_TO_DESSERT TIMER
 	// 	STEPS_REQUIRED int16
-	// 	SoMuchData big_data_type `plc:"soMuchData"`
+	// 	SoMuchData Big_data_type `plc:"soMuchData"`
+	// }
+	//
+	// type EVENT_TOT struct {
+	// 	EnableIn bool
+	// 	EnableOut bool
+	// 	AlarmSP int16
 	// }
 }
 
@@ -174,6 +358,27 @@ func TestMemberAsNamedTypeError(t *testing.T) {
 	}
 }
 
+func TestTypeListWithPlcName(t *testing.T) {
+	tests := []struct {
+		PlcName string
+		Type
+	}{
+		{"LINT", typeLINT},
+		{"USINT", typeUSINT},
+		{"UINT", typeUINT},
+	}
+
+	for _, test := range tests {
+		t.Run(test.PlcName, func(t *testing.T) {
+			typ, err := NewTypeList().WithPlcName(test.PlcName)
+			require.NoError(t, err)
+			assert.Equal(t, test.Type.PlcName(), typ.PlcName())
+			assert.Equal(t, test.Type.GoName(), typ.GoName())
+			assert.Equal(t, test.Type.GoTypeString(), typ.GoTypeString())
+		})
+	}
+}
+
 func newTestDataType() DataType {
 	return DataType{
 		Name:    "ExampleDataType",
@@ -199,9 +404,9 @@ func TestDataTypeAsNamedType(t *testing.T) {
 			dtMod(&dt) // Allows caller to modify dt make it more complicated
 			nt, err := dt.AsType(NewTypeList())
 			assert.NoError(t, err)
-			assert.Equal(t, name, nt.PlcName())
-			assert.Equal(t, name, nt.GoName())
-			assert.Equal(t, goString, nt.GoTypeString())
+			assert.Equal(t, name, nt.PlcName(), "PlcName should match")
+			assert.Equal(t, name, nt.GoName(), "GoName should match")
+			assert.Equal(t, goString, nt.GoTypeString(), "GoTypeString should match")
 		})
 	}
 
@@ -227,7 +432,7 @@ func TestDataTypeAsNamedType(t *testing.T) {
 	)
 	runTest(
 		"String",
-		"[15]int8",
+		"struct {Len int16; Data [15]int8}",
 		dtToStringDT,
 	)
 	runTest(
@@ -239,7 +444,7 @@ func TestDataTypeAsNamedType(t *testing.T) {
 	)
 }
 
-func TestDataTypeAsNamedTypeEmbedded(t *testing.T) {
+func TestDataTypeAsNamedTypePredeclared(t *testing.T) {
 	knownTypes := NewTypeList()
 	err := knownTypes.AddControlLogixTypes()
 	require.NoError(t, err, "There should be no issue adding ControlLogix types to a NewTypeList")
@@ -264,17 +469,24 @@ func TestDataTypeAsNamedTypeEmbedded(t *testing.T) {
 	}
 
 	runTest(
-		"EmbeddedType",
+		"IncludeRegisteredType",
 		"struct {\n\tVarName int16\n\tOtherVar RegisteredType `plc:\"otherVar\"`\n}",
 		func(dt *DataType) {
 			dt.Members = append(dt.Members, newTestMember("otherVar", "RegisteredType"))
 		},
 	)
 	runTest(
-		"EmbeddedType",
+		"TIMER",
 		"struct {\n\tTimerVar TIMER `plc:\"timerVar\"`\n}",
 		func(dt *DataType) {
 			dt.Members = []Member{newTestMember("timerVar", "TIMER")}
+		},
+	)
+	runTest(
+		"EmbeddedTIMER",
+		"struct {\n\tTIMER\n}",
+		func(dt *DataType) {
+			dt.Members = []Member{newTestMember("TIMER", "TIMER")}
 		},
 	)
 }
