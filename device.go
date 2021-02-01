@@ -18,7 +18,7 @@ var _ = ReadWriter(&Device{}) // Compiler makes sure this type is a ReadWriter
 // NewDevice creates a new Device at the provided address with options.
 // It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
 // portion of the tag tree is locked.
-func NewDevice(addr string, opts ...deviceOption) (*Device, error) {
+func NewDevice(addr string, opts ...Option) (*Device, error) {
 	if addr == "" {
 		return nil, fmt.Errorf("%w: no address for connection", ErrBadRequest)
 	}
@@ -34,7 +34,7 @@ func NewDevice(addr string, opts ...deviceOption) (*Device, error) {
 	}
 
 	for _, opt := range opts {
-		opt(dev)
+		opt.apply(dev)
 	}
 
 	conConf := "gateway=" + addr
@@ -46,13 +46,20 @@ func NewDevice(addr string, opts ...deviceOption) (*Device, error) {
 	return dev, nil
 }
 
-type deviceOption func(*Device)
+type Option interface {
+	apply(*Device)
+}
+
+// optionFunc wraps a func so it satisfies the Option interface.
+type optionFunc func(*Device)
+
+func (f optionFunc) apply(dev *Device) { f(dev) }
 
 // Timeout sets the PLC connection timeout. Default is 5s.
-func Timeout(to time.Duration) deviceOption {
-	return func(dev *Device) {
+func Timeout(to time.Duration) Option {
+	return optionFunc(func(dev *Device) {
 		dev.timeout = to
-	}
+	})
 }
 
 // LibplctagOption adds a libplctag option to the connection string (see libplctag for options).
@@ -60,10 +67,10 @@ func Timeout(to time.Duration) deviceOption {
 // 	- protocol (default: "ab_eip")
 // 	- path (default: "1,0")
 // 	- cpu (default: "controllogix")
-func LibplctagOption(name, val string) deviceOption {
-	return func(dev *Device) {
+func LibplctagOption(name, val string) Option {
+	return optionFunc(func(dev *Device) {
 		dev.conf[name] = val
-	}
+	})
 }
 
 // Close should be called on the Device to clean up its resources.
