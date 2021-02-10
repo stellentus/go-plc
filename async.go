@@ -1,7 +1,7 @@
 package plc
 
 import (
-	"golang.org/x/sync/errgroup"
+	"sync"
 )
 
 type asyncer interface {
@@ -21,14 +21,15 @@ var noJob = job{}
 
 type async struct {
 	action
-	*errgroup.Group
-	jobs chan job
+	jobs    chan job
+	wg      sync.WaitGroup
+	errOnce sync.Once
+	err     error
 }
 
-func newAsync(act action) async {
-	as := async{
+func newAsync(act action) *async {
+	as := &async{
 		action: act,
-		Group:  &errgroup.Group{},
 		jobs:   make(chan job, 1),
 	}
 
@@ -50,53 +51,64 @@ func newAsync(act action) async {
 	return as
 }
 
-func (as async) launchRoutine(newJob job) {
-	as.Group.Go(func() error {
+func (as *async) launchRoutine(newJob job) {
+	as.wg.Add(1)
+	go func() {
+		defer as.wg.Done()
+
 		if newJob != noJob {
 			// First handle the provided job.
 			if err := as.takeAction(newJob); err != nil {
-				return err
+				return
 			}
 		}
 
 		// Now keep listening for new jobs
 		for j := range as.jobs {
 			if err := as.takeAction(j); err != nil {
-				return err
+				return
 			}
 		}
-
-		return nil
-	})
+	}()
 }
 
-func (as async) takeAction(j job) error {
+func (as *async) takeAction(j job) error {
 	if err := as.action(j.name, j.value); err != nil {
-		for _ = range as.jobs {
-			// Drain jobs as quickly as possible since there was an error
-		}
+		as.setErr(err)
 		return err
 	}
 	return nil
 }
 
-func (as async) Wait() error {
+func (as *async) Wait() error {
 	close(as.jobs)
-	err := as.Group.Wait()
-	return err
+	as.wg.Wait()
+	return as.err
 }
 
-func (as async) Add(name string, value interface{}) {
+func (as *async) Add(name string, value interface{}) {
 	as.jobs <- job{name, value}
 }
 
-func (as async) AddError(err error) {
-	as.Go(func() error {
-		for _ = range as.jobs {
-			// Drain jobs as quickly as possible since there was an error
-		}
-		return err
+func (as *async) AddError(err error) {
+	if err == nil {
+		return
+	}
+
+	as.wg.Add(1)
+	go func() {
+		defer as.wg.Done()
+		as.setErr(err)
+	}()
+}
+
+func (as *async) setErr(err error) {
+	as.errOnce.Do(func() {
+		as.err = err
 	})
+	for _ = range as.jobs {
+		// Drain jobs as quickly as possible since there was an error
+	}
 }
 
 type notAsync struct {
