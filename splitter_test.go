@@ -2,11 +2,72 @@ package plc
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestSplitReaderParallel(t *testing.T) {
+	const expected = uint8(7)
+	fakeRW := FakeReadWriter(map[string]interface{}{})
+	fakeRW[testTagName] = expected
+
+	// Now read the variable and make sure it is the same
+	var actual uint8
+	err := NewSplitReaderParallel(fakeRW).ReadTag(testTagName, &actual)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual)
+}
+
+func TestSplitReaderParallelMulti(t *testing.T) {
+	const expected = uint8(7)
+	fakeRW := FakeReadWriter(map[string]interface{}{})
+	sr := NewSplitReaderParallel(fakeRW)
+
+	for _, tc := range manyTypesToTest {
+		fakeRW[testTagName+reflect.TypeOf(tc).String()] = tc
+	}
+
+	for _, tc := range manyTypesToTest {
+		// Create an actual variable of the type we want to test
+		actual := reflect.New(reflect.TypeOf(tc)).Interface()
+		require.Equal(t, reflect.TypeOf(actual), reflect.PtrTo(reflect.TypeOf(tc)), "Created type must match desired type") // If this fails, it's a bug in test code, not the underlying code.
+
+		// Now read the variable and make sure it is the same
+		err := sr.ReadTag(testTagName+reflect.TypeOf(tc).String(), actual)
+		require.NoError(t, err)
+		require.Equal(t, tc, reflect.ValueOf(actual).Elem().Interface())
+	}
+}
+
+func TestSplitReaderParallelMany(t *testing.T) {
+	fakeRW := FakeReadWriter(map[string]interface{}{})
+	sr := NewSplitReaderParallel(fakeRW)
+
+	const testLength = 512
+	expected := make([]int, testLength)
+	for i := 0; i < testLength; i++ {
+		fakeRW[testTagName+"["+strconv.Itoa(i)+"]"] = i
+		expected[i] = i
+	}
+
+	actual := make([]int, testLength)
+	err := sr.ReadTag(testTagName, &actual)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual)
+}
+
+func TestSplitReaderParallelError(t *testing.T) {
+	fakeRW := FakeReadWriter(map[string]interface{}{})
+	fakeRW[testTagName] = int(7)
+
+	// Read fails because the data type is different. Note int!=int32 or any other size.
+	var actual uint8
+	err := NewSplitReaderParallel(fakeRW).ReadTag(testTagName, &actual)
+	require.Error(t, err)
+}
 
 func newSplitReaderForTesting() (SplitReader, FakeReadWriter) {
 	fakeRW := FakeReadWriter(map[string]interface{}{})
