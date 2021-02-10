@@ -9,22 +9,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAsyncSplitReader(t *testing.T) {
+func TestSplitReaderParallel(t *testing.T) {
 	const expected = uint8(7)
 	fakeRW := FakeReadWriter(map[string]interface{}{})
 	fakeRW[testTagName] = expected
 
 	// Now read the variable and make sure it is the same
 	var actual uint8
-	err := NewSplitReader(fakeRW, true).ReadTag(testTagName, &actual)
+	err := NewSplitReaderParallel(fakeRW).ReadTag(testTagName, &actual)
 	require.NoError(t, err)
 	require.Equal(t, expected, actual)
 }
 
-func TestAsyncSplitReaderMulti(t *testing.T) {
+func TestSplitReaderParallelMulti(t *testing.T) {
 	const expected = uint8(7)
 	fakeRW := FakeReadWriter(map[string]interface{}{})
-	sr := NewSplitReader(fakeRW, true)
+	sr := NewSplitReaderParallel(fakeRW)
 
 	for _, tc := range manyTypesToTest {
 		fakeRW[testTagName+reflect.TypeOf(tc).String()] = tc
@@ -42,9 +42,9 @@ func TestAsyncSplitReaderMulti(t *testing.T) {
 	}
 }
 
-func TestAsyncSplitReaderMany(t *testing.T) {
+func TestSplitReaderParallelMany(t *testing.T) {
 	fakeRW := FakeReadWriter(map[string]interface{}{})
-	sr := NewSplitReader(fakeRW, true)
+	sr := NewSplitReaderParallel(fakeRW)
 
 	const testLength = 512
 	expected := make([]int, testLength)
@@ -59,19 +59,19 @@ func TestAsyncSplitReaderMany(t *testing.T) {
 	require.Equal(t, expected, actual)
 }
 
-func TestAsyncSplitReaderError(t *testing.T) {
+func TestSplitReaderParallelError(t *testing.T) {
 	fakeRW := FakeReadWriter(map[string]interface{}{})
 	fakeRW[testTagName] = int(7)
 
 	// Read fails because the data type is different. Note int!=int32 or any other size.
 	var actual uint8
-	err := NewSplitReader(fakeRW, true).ReadTag(testTagName, &actual)
+	err := NewSplitReaderParallel(fakeRW).ReadTag(testTagName, &actual)
 	require.Error(t, err)
 }
 
 func newSplitReaderForTesting() (SplitReader, FakeReadWriter) {
 	fakeRW := FakeReadWriter(map[string]interface{}{})
-	return NewSplitReader(fakeRW, false), fakeRW
+	return NewSplitReader(fakeRW), fakeRW
 }
 
 func newSplitWriterForTesting() (SplitWriter, FakeReadWriter) {

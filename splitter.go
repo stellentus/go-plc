@@ -22,8 +22,13 @@ type SplitReader struct {
 var _ = Reader(SplitReader{}) // Compiler makes sure this type is a Reader
 
 // NewSplitReader returns a SplitReader.
-func NewSplitReader(rd Reader, useAsync bool) SplitReader {
-	return SplitReader{Reader: rd, newAsyncer: getNewAsyncer(useAsync)}
+func NewSplitReader(rd Reader) SplitReader {
+	return SplitReader{Reader: rd, newAsyncer: getNewAsyncer(true)}
+}
+
+// NewSplitReaderParallel returns a SplitReader which makes calls in parallel.
+func NewSplitReaderParallel(rd Reader) SplitReader {
+	return SplitReader{Reader: rd, newAsyncer: getNewAsyncer(false)}
 }
 
 func (rd SplitReader) ReadTag(name string, value interface{}) error {

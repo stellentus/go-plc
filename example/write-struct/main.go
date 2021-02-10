@@ -67,7 +67,7 @@ func main() {
 
 	// Now read everything by wrapping it with a SplitReader
 	var readAll DemoTags
-	err = plc.NewSplitReader(device, false).ReadTag("DUMMY_STRUCT", &readAll)
+	err = plc.NewSplitReader(device).ReadTag("DUMMY_STRUCT", &readAll)
 	panicIfError(err, "Couldn't read entire struct")
 	demoVal.Level = originalLevel // Update to print the expectation
 	fmt.Printf("Read struct as %v (expecting %v)\n", readAll, demoVal)
