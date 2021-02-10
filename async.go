@@ -22,25 +22,28 @@ var noJob = job{}
 type async struct {
 	action
 	*errgroup.Group
-	jobs        chan job
-	numRoutines int
+	jobs chan job
 }
 
 func newAsync(act action) async {
 	as := async{
-		action:      act,
-		Group:       &errgroup.Group{},
-		jobs:        make(chan job, 1),
-		numRoutines: 1,
+		action: act,
+		Group:  &errgroup.Group{},
+		jobs:   make(chan job, 1),
 	}
 
 	as.launchRoutine(noJob)
 
 	go func() {
 		// Listen for new jobs and launch them in new goroutines until the limit has been reached.
+		numRoutines := 1 // One was already started above
+		var maxRoutines = 128
 		for newJob := range as.jobs {
-			as.numRoutines++
+			numRoutines++
 			as.launchRoutine(newJob)
+			if numRoutines >= maxRoutines {
+				return
+			}
 		}
 	}()
 
@@ -65,10 +68,6 @@ func (as async) launchRoutine(newJob job) {
 
 		return nil
 	})
-	var maxRoutines = 128
-	if as.numRoutines >= maxRoutines {
-		return
-	}
 }
 
 func (as async) takeAction(j job) error {
