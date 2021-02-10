@@ -22,6 +22,7 @@ var noJob = job{}
 type async struct {
 	action
 	jobs    chan job
+	cancel  chan struct{}
 	wg      sync.WaitGroup
 	errOnce sync.Once
 	err     error
@@ -31,6 +32,7 @@ func newAsync(act action) *async {
 	as := &async{
 		action: act,
 		jobs:   make(chan job, 1),
+		cancel: make(chan struct{}),
 	}
 
 	as.launchRoutine(noJob)
@@ -82,12 +84,33 @@ func (as *async) takeAction(j job) error {
 
 func (as *async) Wait() error {
 	close(as.jobs)
-	as.wg.Wait()
+
+	done := make(chan struct{})
+	go func() {
+		as.wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-as.cancel: // leaves some routines finishing up in the background
+	case <-done: // completed successfully
+	}
+
 	return as.err
 }
 
-func (as *async) Add(name string, value interface{}) {
-	as.jobs <- job{name, value}
+func (as *async) setErr(err error) {
+	as.errOnce.Do(func() {
+		as.err = err
+		close(as.cancel)
+		for _ = range as.jobs {
+			// Drain jobs as quickly as possible since there was an error
+		}
+	})
+}
+
+func (as *async) Add(friendly string, value interface{}) {
+	as.jobs <- job{friendly, value}
 }
 
 func (as *async) AddError(err error) {
@@ -100,15 +123,6 @@ func (as *async) AddError(err error) {
 		defer as.wg.Done()
 		as.setErr(err)
 	}()
-}
-
-func (as *async) setErr(err error) {
-	as.errOnce.Do(func() {
-		as.err = err
-	})
-	for _ = range as.jobs {
-		// Drain jobs as quickly as possible since there was an error
-	}
 }
 
 type notAsync struct {
