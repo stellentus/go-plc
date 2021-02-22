@@ -1,6 +1,6 @@
 package plc
 
-// A Pooled wraps another plc.ReadWriter with a work pool that runs a set number of concurrent operations.
+// Pooled wraps another plc.ReadWriter with a work pool that runs a set number of concurrent operations.
 type Pooled struct {
 	plc         ReadWriter
 	read, write tasker

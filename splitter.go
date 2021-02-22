@@ -16,19 +16,32 @@ const TagPrefix = "plctag"
 // It also means nothing will be read if a nil or empty slice is provided; this code cannot infer the length.
 type SplitReader struct {
 	Reader
+	newAsyncer
 }
 
 var _ = Reader(SplitReader{}) // Compiler makes sure this type is a Reader
 
 // NewSplitReader returns a SplitReader.
 func NewSplitReader(rd Reader) SplitReader {
-	return SplitReader{rd}
+	return SplitReader{Reader: rd, newAsyncer: getNewAsyncer(true)}
 }
 
-func (r SplitReader) ReadTag(name string, value interface{}) error {
+// NewSplitReaderParallel returns a SplitReader which makes calls in parallel.
+func NewSplitReaderParallel(rd Reader) SplitReader {
+	return SplitReader{Reader: rd, newAsyncer: getNewAsyncer(false)}
+}
+
+func (rd SplitReader) ReadTag(name string, value interface{}) error {
+	as := rd.newAsyncer(rd.Reader.ReadTag)
+	rd.readTagAsync(name, value, as)
+	return as.Wait()
+}
+
+func (rd SplitReader) readTagAsync(name string, value interface{}, as asyncer) {
 	v := reflect.ValueOf(value)
 	if v.Kind() != reflect.Ptr {
-		return newErrNonPointerRead(name, v.Kind())
+		as.AddError(newErrNonPointerRead(name, v.Kind()))
+		return
 	}
 
 	switch v.Elem().Kind() {
@@ -48,28 +61,23 @@ func (r SplitReader) ReadTag(name string, value interface{}) error {
 				fieldName = name + "." + fieldName // add prefix
 			}
 			field := str.Field(i)
-			if err := r.readValue(fieldName, field); err != nil {
-				return err
-			}
+			rd.readValue(fieldName, field, as)
 		}
 	case reflect.Array, reflect.Slice:
 		arr := v.Elem()
 		for idx := 0; idx < arr.Len(); idx++ {
-			if err := r.readValue(TagWithIndex(name, idx), arr.Index(idx)); err != nil {
-				break
-			}
+			rd.readValue(TagWithIndex(name, idx), arr.Index(idx), as)
 		}
 	default:
 		// Just try with the underlying type
-		return r.Reader.ReadTag(name, value)
+		as.Add(name, value)
 	}
-
-	return nil
 }
 
-func (r SplitReader) readValue(name string, val reflect.Value) error {
+func (rd SplitReader) readValue(name string, val reflect.Value, as asyncer) {
 	if !val.CanAddr() {
-		return fmt.Errorf("Cannot address %s", name)
+		as.AddError(fmt.Errorf("Cannot address %s", name))
+		return
 	}
 
 	valPointer := val.Addr().Interface()
@@ -83,7 +91,7 @@ func (r SplitReader) readValue(name string, val reflect.Value) error {
 		valPointer = val.Interface()
 	}
 
-	return r.ReadTag(name, valPointer)
+	rd.readTagAsync(name, valPointer, as)
 }
 
 // SplitWriter splits writes of structs and arrays into separate writes of their components.
