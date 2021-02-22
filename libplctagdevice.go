@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"sync"
 	"time"
 	"unsafe"
 )
@@ -111,7 +112,7 @@ func SetLibplctagDebug(level LibplctagDebugLevel) {
 // It communicates with a PLC over the network by using the libplctag C library.
 type libplctagDevice struct {
 	conConf string
-	ids     map[string]C.int32_t
+	ids     sync.Map
 	timeout C.int
 }
 
@@ -124,20 +125,18 @@ var _ = ReadWriter(&libplctagDevice{}) // Compiler makes sure this type is a Rea
 func newLibplctagDevice(conConf string, timeout time.Duration) *libplctagDevice {
 	return &libplctagDevice{
 		conConf: conConf,
-		ids:     make(map[string]C.int32_t),
 		timeout: C.int(timeout.Milliseconds()),
 	}
 }
 
 // Close should be called on the libplctagDevice to clean up its resources.
 func (dev *libplctagDevice) Close() error {
-	for _, id := range dev.ids {
-		err := newLibplctagError(C.plc_tag_destroy(id))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	var err error
+	dev.ids.Range(func(_, id interface{}) bool {
+		err = newLibplctagError(C.plc_tag_destroy(id.(C.int32_t)))
+		return err == nil // continue if no error
+	})
+	return err
 }
 
 const (
@@ -147,19 +146,19 @@ const (
 )
 
 func (dev *libplctagDevice) getID(tagName string) (C.int32_t, error) {
-	id, ok := dev.ids[tagName]
+	val, ok := dev.ids.Load(tagName)
 	if ok {
-		return id, nil
+		return val.(C.int32_t), nil
 	}
 
 	cattrib_str := C.CString(dev.conConf + "&name=" + tagName) // can also specify elem_size=1&elem_count=1
 	defer C.free(unsafe.Pointer(cattrib_str))
 
-	id = C.plc_tag_create(cattrib_str, dev.timeout)
+	id := C.plc_tag_create(cattrib_str, dev.timeout)
 	if id < 0 {
 		return id, newLibplctagError(id)
 	}
-	dev.ids[tagName] = id
+	dev.ids.Store(tagName, id)
 	return id, nil
 }
 
