@@ -17,35 +17,29 @@ type job struct {
 	value interface{}
 }
 
-var noJob = job{}
-
 type async struct {
 	action
-	jobs        chan job
-	cancel      chan struct{}
-	readyToWait chan struct{}
-	wg          sync.WaitGroup
-	errOnce     sync.Once
-	err         error
+	jobs    chan job
+	cancel  chan struct{}
+	wg      sync.WaitGroup
+	errOnce sync.Once
+	err     error
 }
 
 func newAsync(act action) *async {
 	as := &async{
-		action:      act,
-		jobs:        make(chan job, 1),
-		cancel:      make(chan struct{}),
-		readyToWait: make(chan struct{}),
+		action: act,
+		jobs:   make(chan job, 1),
+		cancel: make(chan struct{}),
 	}
 
-	as.launchRoutine(noJob)
-
+	as.wg.Add(1)
 	go func() {
 		// Listen for new jobs and launch them in new goroutines until the limit has been reached.
-		numRoutines := 1 // One was already started above
+		numRoutines := 0
 		var maxRoutines = 128
 
-		defer close(as.readyToWait)
-
+		defer as.wg.Done()
 		for {
 			select {
 			case <-as.cancel:
@@ -71,11 +65,9 @@ func (as *async) launchRoutine(newJob job) {
 	go func() {
 		defer as.wg.Done()
 
-		if newJob != noJob {
-			// First handle the provided job.
-			if err := as.takeAction(newJob); err != nil {
-				return
-			}
+		// First handle the provided job.
+		if err := as.takeAction(newJob); err != nil {
+			return
 		}
 
 		// Now keep listening for new jobs
@@ -96,8 +88,7 @@ func (as *async) takeAction(j job) error {
 }
 
 func (as *async) Wait() error {
-	close(as.jobs)   // No more should be sent
-	<-as.readyToWait // Ensure the wg.Add won't be called again
+	close(as.jobs) // No more should be sent
 
 	done := make(chan struct{})
 	go func() {
