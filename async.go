@@ -65,16 +65,12 @@ func (as *async) launchRoutine(newJob job) {
 	go func() {
 		defer as.wg.Done()
 
-		// First handle the provided job.
-		if err := as.takeAction(newJob); err != nil {
-			return
-		}
-
-		// Now keep listening for new jobs
-		for j := range as.jobs {
-			if err := as.takeAction(j); err != nil {
+		pendingJobs := true
+		for pendingJobs {
+			if err := as.takeAction(newJob); err != nil {
 				return
 			}
+			newJob, pendingJobs = <-as.jobs
 		}
 	}()
 }
