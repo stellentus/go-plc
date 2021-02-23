@@ -23,12 +23,12 @@ var _ = Reader(SplitReader{}) // Compiler makes sure this type is a Reader
 
 // NewSplitReader returns a SplitReader.
 func NewSplitReader(rd Reader) SplitReader {
-	return SplitReader{Reader: rd, newAsyncer: getNewAsyncer(true)}
+	return SplitReader{Reader: rd, newAsyncer: getNewAsyncer(false)}
 }
 
 // NewSplitReaderParallel returns a SplitReader which makes calls in parallel.
 func NewSplitReaderParallel(rd Reader) SplitReader {
-	return SplitReader{Reader: rd, newAsyncer: getNewAsyncer(false)}
+	return SplitReader{Reader: rd, newAsyncer: getNewAsyncer(true)}
 }
 
 func (rd SplitReader) ReadTag(name string, value interface{}) error {
