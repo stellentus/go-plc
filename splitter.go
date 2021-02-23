@@ -16,19 +16,19 @@ const TagPrefix = "plctag"
 // It also means nothing will be read if a nil or empty slice is provided; this code cannot infer the length.
 type SplitReader struct {
 	Reader
-	newAsyncer
+	newAsyncer func(action) asyncer
 }
 
 var _ = Reader(SplitReader{}) // Compiler makes sure this type is a Reader
 
 // NewSplitReader returns a SplitReader.
 func NewSplitReader(rd Reader) SplitReader {
-	return SplitReader{Reader: rd, newAsyncer: getNewAsyncer(false)}
+	return SplitReader{Reader: rd, newAsyncer: func(act action) asyncer { return newNotAsync(act) }}
 }
 
 // NewSplitReaderParallel returns a SplitReader which makes calls in parallel.
 func NewSplitReaderParallel(rd Reader) SplitReader {
-	return SplitReader{Reader: rd, newAsyncer: getNewAsyncer(true)}
+	return SplitReader{Reader: rd, newAsyncer: func(act action) asyncer { return newAsync(act) }}
 }
 
 func (rd SplitReader) ReadTag(name string, value interface{}) error {

@@ -150,13 +150,3 @@ func (nas *notAsync) AddError(err error) {
 		nas.error = err
 	}
 }
-
-type newAsyncer func(action) asyncer
-
-func getNewAsyncer(useAsync bool) newAsyncer {
-	if useAsync {
-		return func(act action) asyncer { return newAsync(act) }
-	} else {
-		return func(act action) asyncer { return newNotAsync(act) }
-	}
-}
