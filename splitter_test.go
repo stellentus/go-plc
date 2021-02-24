@@ -1,9 +1,11 @@
 package plc
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,6 +21,49 @@ func TestSplitReaderParallel(t *testing.T) {
 	err := NewSplitReaderParallel(fakeRW).ReadTag(testTagName, &actual)
 	require.NoError(t, err)
 	require.Equal(t, expected, actual)
+}
+
+func TestSplitReaderParallelIsParallel(t *testing.T) {
+	numToTest := 8
+
+	done := make(chan struct{})
+	count := make(chan int, numToTest)
+
+	sr := NewSplitReaderParallel(readerFunc(func(name string, value interface{}) error {
+		var idx int
+		_, err := fmt.Sscanf(name, testTagName+"[%d]", &idx)
+		count <- idx // indicate this index executed
+
+		<-done // Block until this channel is closed
+		return err
+	}))
+
+	go func() {
+		data := make([]int, numToTest) // We don't actually modify this data.
+		err := sr.ReadTag(testTagName, &data)
+		assert.NoError(t, err)
+	}()
+
+	receivedIndices := uint32(0) // this limits the max number of parallel tests to 32
+	numReceived := 0
+
+outerLoop:
+	for {
+		select {
+		case <-time.After(50 * time.Millisecond):
+			assert.Fail(t, "Timeout in reading from SplitReaderParallel")
+			break outerLoop
+		case idx := <-count:
+			receivedIndices |= 1 << uint32(idx)
+			numReceived++
+			if numReceived >= numToTest {
+				break outerLoop
+			}
+		}
+	}
+	close(done)
+
+	assert.Equal(t, uint32(1<<numToTest)-1, receivedIndices, "Not all expected SplitReader occurred in parallel")
 }
 
 func TestSplitReaderParallelMulti(t *testing.T) {
