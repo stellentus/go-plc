@@ -3,7 +3,10 @@ package plc
 // test_helpers holds some mock datatypes and other useful contants that multiple test files
 // may find helpful.
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
 // Some shared constants acrossed reader/writer datatype tests.
 
@@ -15,8 +18,35 @@ const serialTestConcurrency = 1
 const lowTestConcurrency = 10
 const mediumTestConcurrency = 20
 const highTestConcurrency = 30
+
 const testWritePrecentage = 1
 const heavyWritePerc = 50
+
+// Stub ReadWriters
+
+// latencyIntroducer simply delays processing a read or write request by some
+// time interval. This is useful for artifically bounding throughput in
+// concurrent tests.
+type latencyIntroducer struct {
+	downstream ReadWriter
+	delay      time.Duration
+}
+
+func newLatencyIntroducer(downstream ReadWriter, delay time.Duration) *latencyIntroducer {
+	return &latencyIntroducer{downstream, delay}
+}
+
+func (li *latencyIntroducer) ReadTag(name string, value interface{}) error {
+	time.Sleep(li.delay)
+	return li.downstream.ReadTag(name, value)
+}
+
+func (li *latencyIntroducer) WriteTag(name string, value interface{}) error {
+	time.Sleep(li.delay)
+	return li.downstream.WriteTag(name, value)
+}
+
+var _ = ReadWriter(&latencyIntroducer{})
 
 // mockReadWriter is a dummy ReadWriter interface that unconditionally succeeds.
 // We protect concurrenct accesses to the `state` map but _not_ the memory that
