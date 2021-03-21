@@ -65,7 +65,7 @@ type runqueue []runnable
 // and for every four executions, a task from priority 3 is boosted to priority 2,
 // and so on.)
 type Prioritizer struct {
-	// Ensures mutual exclusion on Prioritizer fields , since a user
+	// Ensures mutual exclusion on Prioritizer fields, since a user
 	// can call Enqueue() concurrently with runOne() running in the worker
 	// goroutine.
 	mtx sync.Mutex
@@ -78,11 +78,11 @@ type Prioritizer struct {
 	totalBoosts uint64
 
 	// How many priority-0 tasks have been enqueued by the user?  We use this to
-	// estimate "mandatory throughput".
+	// estimate "mandatory throughput".  As a result, it is okay if they are updated
+	// non-atomically with tasks (but still require the lock to be held to avoid
+	// spurious races).
 	prioZeroTasks uint
-
-	// How many tasks have been Enqueued at all?
-	totalTasks uint
+	totalTasks    uint
 
 	// A maximal pause to wait in between servicing requests on the run queue.
 	// Should be a small nonzero value to ensure we aren't completely hammering
