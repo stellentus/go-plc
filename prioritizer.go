@@ -14,11 +14,11 @@ const priorities = 7
 
 var priorityFactors [6]uint64 = [6]uint64{
 	1,                 /* 1 -> 0 */
-	15,                /* 2 -> 1 */
-	60,                /* 3 -> 2 */
-	60 * 60,           /* 4 -> 3 */
-	60 * 60 * 60,      /* 5 -> 4 */
-	60 * 60 * 60 * 24, /* 6 -> 5 */
+	15,                /* 2 -> 0 */
+	60,                /* 3 -> 0 */
+	60 * 60,           /* 4 -> 0 */
+	60 * 60 * 60,      /* 5 -> 0 */
+	60 * 60 * 60 * 24, /* 6 -> 0 */
 }
 
 // runnable encapsulates the state necessary to repeatedly schedule
@@ -39,30 +39,30 @@ type runqueue []runnable
 
 // Prioritizer handles periodic scheduling of tasks according to priority levels:
 //
-// Priority 0: = sample / 1 sec
-// Priority 1: ~ sample / 1 sec
-// Priority 2: ~ sample / 15 sec
-// Priority 3: ~ sample / 60 sec
-// Priority 4: ~ sample / (60 * 60) sec
-// Priority 5: ~ sample / (60 * 60 * 60) sec
-// Priority 6: ~ sample / (60 * 60 * 60 * 24) sec
+// Priority 0: = 1 sample / 1 sec
+// Priority 1: ~ 1 sample / 1 sec
+// Priority 2: ~ 1 sample / 15 sec
+// Priority 3: ~ 1 sample / 60 sec
+// Priority 4: ~ 1 sample / (60 * 60) sec
+// Priority 5: ~ 1 sample / (60 * 60 * 60) sec
+// Priority 6: ~ 1 sample / (60 * 60 * 60 * 24) sec
 //
 // By default, priority-0 tags are inserted into the ready-to-run queue.
-// Lower priority tags are stored in a per-prior
+// Lower priority tags are stored in a per-priority queue.
 //
 // Our tasks will be, but the implementation does not assume to be, functions
 // that poll a Reader for the value of some tag.
 //
 // The Prioritizer will periodically execute tasks on the the ready-to-run
-// queue, and continuously estimate its throughput. Whatever buffer time remains
-// after servicing all the Priority 0 tasks is used to additionally sample
-// lower-priority tasks.
+// queue, and continuously estimate its throughput in tasks/sec. Whatever buffer
+// time remains after servicing all the Priority 0 tasks is used to additionally
+// execute lower-priority tasks in the following manner:
 //
-// The delta between the number of priority zero tasks serviced and the number of
+// The ratio between the number of priority zero tasks serviced and the number of
 // tasks that can be serviced at all is enqueued from the next lower priority
 // level. For layers below that, a proprtional priority boost also takes place
-// (i.e. for every 15 excutions, a task from priority 2 is boosted to priority 1,
-// and for every four executions, a task from priority 3 is boosted to priority 2,
+// (i.e. for every 15 excutions, a task from priority 2 is boosted to priority 0,
+// and for every 60 executions, a task from priority 3 is boosted to priority 0,
 // and so on.)
 type Prioritizer struct {
 	// Ensures mutual exclusion on Prioritizer fields, since a user
@@ -105,7 +105,7 @@ func (p *Prioritizer) boost() {
 
 		r, ok := p.popBack(i + 1)
 		if ok {
-			p.pushFront(r, i)
+			p.pushFront(r, 0)
 		}
 	}
 }
@@ -204,9 +204,7 @@ func (p *Prioritizer) Start() {
 
 			// How much time do we have left in our time quantum?  Sleep that much.
 			remaining := time.Now().Add(p.sleepinterval).Sub(b)
-			if remaining.Microseconds() > 0 {
-				time.Sleep(remaining)
-			}
+			time.Sleep(remaining)
 
 			// Exit if we've been instructed to stop running.
 			p.mtx.Lock()

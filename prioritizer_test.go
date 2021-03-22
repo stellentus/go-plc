@@ -63,7 +63,7 @@ func TestNonZeroPriosPrioritizerEnqueueAfterStart(t *testing.T) {
 	var i0 *uint64 = new(uint64)
 	var i1 *uint64 = new(uint64)
 
-	p := NewPrioritizer(10 * time.Microsecond)
+	p := NewPrioritizer(0 * time.Microsecond)
 
 	// We should see approximately 1/15th as many i1 increments as i0
 	p.Enqueue(func() { atomic.AddUint64(i0, 1) }, 0)
@@ -86,13 +86,22 @@ func TestNonZeroPriosPrioritizerEnqueueAfterStart(t *testing.T) {
 	r := float64(atomic.LoadUint64(i0)) / float64(atomic.LoadUint64(i1))
 	assert.Greater(t, r, 13.9)
 	// Seems to converge to 14.0
+	//	t.Logf("%f\n", r)
 	assert.Less(t, r, 14.1)
 
 	p.Stop()
 }
 
 // In this test, we schedule a bunch of high priority tasks that, in aggregate,
-// exceed the per-second throughput for
+// exceed the per-second requirements for priority-0 tasks.  In this situation,
+// the Prioritizer should never execute a priority boost, effectively starving out
+// the single priority-1 task scheduled.
+//
+// TODO: this test takes a few seconds to run.  Maybe it should be commented
+// out or somehow only run conditionally?
+//
+// XXX: this behaviour is documented but likely a bad idea.  At the very least,
+// we need metrics to track when we are starving low-prio tasks.
 func TestSlowPrio0StarvesLowerPrioTasks(t *testing.T) {
 	var i0 *uint64 = new(uint64)
 	var i1 *uint64 = new(uint64)
