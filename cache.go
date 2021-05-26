@@ -61,6 +61,17 @@ func (r *Cache) ReadCachedTag(name string, value interface{}) error {
 	return nil
 }
 
+func (r *Cache) Keys() []string {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+
+	keys := make([]string, 0, len(r.cache))
+	for key := range r.cache {
+		keys = append(keys, key)
+	}
+	return keys
+}
+
 type CacheReader struct {
 	cache *Cache
 }
