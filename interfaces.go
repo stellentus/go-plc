@@ -1,5 +1,10 @@
 package plc
 
+import (
+	"fmt"
+	"reflect"
+)
+
 type ReadWriter interface {
 	Reader
 	Writer
@@ -25,16 +30,30 @@ type Closer interface {
 	Close() error
 }
 
-// rawDevice is an interface to a PLC device.
-type rawDevice interface {
-	ReadWriter
+// FakeReadWriter is provided as an example ReadWriter implementation and for use in tests.
+type FakeReadWriter map[string]interface{}
 
-	// Close closes the device.
-	// The behavior of Close after the first call is undefined.
-	// Specific implementations may document their own behavior.
-	Close() error
+func (df FakeReadWriter) ReadTag(name string, value interface{}) error {
+	v, ok := df[name]
+	if !ok {
+		return fmt.Errorf("FakeReadWriter does not contain '%s'", name)
+	}
 
-	// GetList gets a list of tag names for the provided program
-	// name (or all tags if no program name is provided).
-	GetList(listName, prefix string) ([]Tag, []string, error)
+	in := reflect.ValueOf(v)
+	out := reflect.Indirect(reflect.ValueOf(value))
+
+	switch {
+	case !out.CanSet():
+		return fmt.Errorf("FakeReadWriter for '%s', cannot set %s", name, out.Type().Name())
+	case out.Kind() != in.Kind():
+		return fmt.Errorf("FakeReadWriter for '%s', cannot set %s to %s (%v)", name, out.Type().Name(), in.Type().Name(), v)
+	}
+
+	out.Set(in)
+	return nil
+}
+
+func (df FakeReadWriter) WriteTag(name string, value interface{}) error {
+	df[name] = value
+	return nil
 }

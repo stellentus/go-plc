@@ -1,4 +1,4 @@
-package plc
+package physical
 
 /*
 #include <stdlib.h>
@@ -6,20 +6,14 @@ package plc
 */
 import "C"
 import (
-	"errors"
 	"fmt"
 	"math"
 	"strings"
 	"sync"
 	"time"
 	"unsafe"
-)
 
-var (
-	ErrBadRequest    = errors.New("Invalid request")
-	ErrPlcInternal   = errors.New("Internal PLC error")
-	ErrPlcConnection = errors.New("PLC connection error")
-	Pending          = errors.New("The PLC has not yet provided a result for the non-blocking request")
+	"github.com/stellentus/go-plc"
 )
 
 // newLibplctagError attempts to classify PLC errors according to whether it's some issue in the user input
@@ -31,7 +25,7 @@ func newLibplctagError(code C.int32_t) error {
 
 	// This isn't really an error, though our code shouldn't ever return it, so perhaps it should be ErrPlcInternal
 	case C.PLCTAG_STATUS_PENDING:
-		return fmt.Errorf("%w", Pending)
+		return fmt.Errorf("%w", plc.Pending)
 
 	// These are all bad requests
 	case C.PLCTAG_ERR_BAD_CONFIG,
@@ -44,7 +38,7 @@ func newLibplctagError(code C.int32_t) error {
 		C.PLCTAG_ERR_OUT_OF_BOUNDS,
 		C.PLCTAG_ERR_UNSUPPORTED:
 		cstr := C.plc_tag_decode_error(C.int(code))
-		return fmt.Errorf("%w: %s", ErrBadRequest, C.GoString(cstr))
+		return fmt.Errorf("%w: %s", plc.ErrBadRequest, C.GoString(cstr))
 
 	// These are all connection issues
 	case C.PLCTAG_ERR_BAD_CONNECTION,
@@ -52,7 +46,7 @@ func newLibplctagError(code C.int32_t) error {
 		C.PLCTAG_ERR_TIMEOUT,
 		C.PLCTAG_ERR_PARTIAL:
 		cstr := C.plc_tag_decode_error(C.int(code))
-		return fmt.Errorf("%w: %s", ErrPlcConnection, C.GoString(cstr))
+		return fmt.Errorf("%w: %s", plc.ErrPlcConnection, C.GoString(cstr))
 
 	// These are all internal errors
 	case C.PLCTAG_ERR_ABORT, // This is likely a bug in this go code
@@ -82,11 +76,11 @@ func newLibplctagError(code C.int32_t) error {
 		C.PLCTAG_ERR_WRITE,
 		C.PLCTAG_ERR_BUSY:
 		cstr := C.plc_tag_decode_error(C.int(code))
-		return fmt.Errorf("%w: %s", ErrPlcInternal, C.GoString(cstr))
+		return fmt.Errorf("%w: %s", plc.ErrPlcInternal, C.GoString(cstr))
 
 	default:
 		cstr := C.plc_tag_decode_error(C.int(code))
-		return fmt.Errorf("%w: Unclassified error (%s)", ErrPlcInternal, C.GoString(cstr))
+		return fmt.Errorf("%w: Unclassified error (%s)", plc.ErrPlcInternal, C.GoString(cstr))
 	}
 }
 
@@ -116,8 +110,8 @@ type libplctagDevice struct {
 	timeout C.int
 }
 
-var _ = rawDevice(&libplctagDevice{})  // Compiler makes sure this type is a rawDevice
-var _ = ReadWriter(&libplctagDevice{}) // Compiler makes sure this type is a ReadWriter
+var _ = rawDevice(&libplctagDevice{})      // Compiler makes sure this type is a rawDevice
+var _ = plc.ReadWriter(&libplctagDevice{}) // Compiler makes sure this type is a ReadWriter
 
 // newLibplctagDevice creates a new libplctagDevice.
 // The conConf string provides IP and other connection configuration (see libplctag for options).
@@ -243,7 +237,7 @@ func (dev *libplctagDevice) ReadTag(name string, value interface{}) error {
 		}
 		*val = float64(result)
 	default:
-		return fmt.Errorf("ReadTag: %w: unknown type %T (%v)", ErrBadRequest, val, val)
+		return fmt.Errorf("ReadTag: %w: unknown type %T (%v)", plc.ErrBadRequest, val, val)
 	}
 
 	return nil
@@ -319,7 +313,7 @@ func (dev *libplctagDevice) WriteTag(name string, value interface{}) error {
 	return nil
 }
 
-func (dev *libplctagDevice) GetList(listName, prefix string) ([]Tag, []string, error) {
+func (dev *libplctagDevice) GetList(listName, prefix string) ([]plc.Tag, []string, error) {
 	if listName == "" {
 		listName += "@tags"
 	} else {
@@ -335,25 +329,25 @@ func (dev *libplctagDevice) GetList(listName, prefix string) ([]Tag, []string, e
 		return nil, nil, fmt.Errorf("GetList: %w", err)
 	}
 
-	tags := []Tag{}
+	tags := []plc.Tag{}
 	programNames := []string{}
 
 	offset := C.int(0)
 	for {
-		tag := Tag{}
+		tag := plc.Tag{}
 		offset += 4
 
-		tag.tagType = uint16(C.plc_tag_get_uint16(id, offset))
+		tag.TagType = uint16(C.plc_tag_get_uint16(id, offset))
 		offset += 2
 
-		tag.elementSize = uint16(C.plc_tag_get_uint16(id, offset))
+		tag.ElementSize = uint16(C.plc_tag_get_uint16(id, offset))
 		offset += 2
 
-		tag.addDimension(int(C.plc_tag_get_uint32(id, offset)))
+		addTagDimension(&tag, int(C.plc_tag_get_uint32(id, offset)))
 		offset += 4
-		tag.addDimension(int(C.plc_tag_get_uint32(id, offset)))
+		addTagDimension(&tag, int(C.plc_tag_get_uint32(id, offset)))
 		offset += 4
-		tag.addDimension(int(C.plc_tag_get_uint32(id, offset)))
+		addTagDimension(&tag, int(C.plc_tag_get_uint32(id, offset)))
 		offset += 4
 
 		nameLength := int(C.plc_tag_get_uint16(id, offset))
@@ -366,19 +360,19 @@ func (dev *libplctagDevice) GetList(listName, prefix string) ([]Tag, []string, e
 		}
 
 		if prefix != "" {
-			tag.name = prefix + "." + string(tagBytes)
+			tag.Name = prefix + "." + string(tagBytes)
 		} else {
-			tag.name = string(tagBytes)
+			tag.Name = string(tagBytes)
 		}
 
-		if strings.HasPrefix(tag.name, "Program:") {
-			programNames = append(programNames, tag.name)
-		} else if (tag.tagType & SystemTagBit) == SystemTagBit {
+		if strings.HasPrefix(tag.Name, "Program:") {
+			programNames = append(programNames, tag.Name)
+		} else if (tag.TagType & SystemTagBit) == SystemTagBit {
 			// Do nothing for system tags
 		} else {
-			numDimensions := int((tag.tagType & TagDimensionMask) >> 13)
-			if numDimensions != len(tag.dimensions) {
-				return nil, nil, fmt.Errorf("GetList: %w: tag '%s' claims to have %d dimensions but has %d", ErrPlcInternal, tag.name, numDimensions, len(tag.dimensions))
+			numDimensions := int((tag.TagType & TagDimensionMask) >> 13)
+			if numDimensions != len(tag.Dimensions) {
+				return nil, nil, fmt.Errorf("GetList: %w: tag '%s' claims to have %d dimensions but has %d", plc.ErrPlcInternal, tag.Name, numDimensions, len(tag.Dimensions))
 			}
 
 			tags = append(tags, tag)
@@ -390,6 +384,13 @@ func (dev *libplctagDevice) GetList(listName, prefix string) ([]Tag, []string, e
 	}
 
 	return tags, programNames, nil
+}
+
+func addTagDimension(tag *plc.Tag, dim int) {
+	if dim <= 0 {
+		return
+	}
+	tag.Dimensions = append(tag.Dimensions, dim)
 }
 
 func getBool(id C.int32_t, offset C.int) (bool, error) {

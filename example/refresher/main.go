@@ -7,6 +7,7 @@ import (
 
 	"github.com/stellentus/go-plc"
 	"github.com/stellentus/go-plc/example"
+	"github.com/stellentus/go-plc/physical"
 )
 
 var (
@@ -25,11 +26,11 @@ func main() {
 		panic("Cannot test refresher with no duration")
 	}
 
-	plc.SetLibplctagDebug(plc.LibplctagDebugLevel(*plcDebug))
+	physical.SetLibplctagDebug(physical.LibplctagDebugLevel(*plcDebug))
 
 	fmt.Printf("Initializing connection to %s\n", *addr)
 
-	device, err := plc.NewDevice(*addr)
+	device, err := physical.NewDevice(*addr)
 	panicIfError(err, "Could not create test PLC!")
 	defer func() {
 		err := device.Close()

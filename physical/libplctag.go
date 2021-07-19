@@ -1,6 +1,6 @@
 // +build !stub
 
-package plc
+package physical
 
 /*
 #cgo LDFLAGS: -lplctag

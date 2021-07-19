@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const testTagName = "TEST_TAG"
+
 func newCacheForTesting() (*Cache, FakeReadWriter) {
 	fakeRW := FakeReadWriter(map[string]interface{}{})
 	return NewCache(fakeRW), fakeRW
