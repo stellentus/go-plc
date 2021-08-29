@@ -27,3 +27,5 @@ func init() {
 			REQ_VER_MAJOR, REQ_VER_MINOR, REQ_VER_PATCH))
 	}
 }
+
+const StubActive = false

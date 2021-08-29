@@ -7,3 +7,5 @@ package plc
 #include <libplctag.h>
 */
 import "C"
+
+const StubActive = true
