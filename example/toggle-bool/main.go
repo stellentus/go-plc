@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/stellentus/go-plc/physical"
+	"github.com/stellentus/go-plc/libplctag"
 )
 
 var (
@@ -16,11 +16,11 @@ var (
 func main() {
 	flag.Parse()
 
-	physical.SetLibplctagDebug(physical.LibplctagDebugLevel(*plcDebug))
+	libplctag.SetDebug(libplctag.DebugLevel(*plcDebug))
 
 	fmt.Println("Attempting test connection to", *addr, "using", *tagName)
 
-	device, err := physical.NewDevice(*addr)
+	device, err := libplctag.NewDevice(*addr)
 	panicIfError(err, "Could not create test PLC!")
 	defer func() {
 		err := device.Close()

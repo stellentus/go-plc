@@ -1,4 +1,4 @@
-package physical
+package libplctag
 
 import (
 	"fmt"
@@ -58,7 +58,7 @@ func NewDevice(addr string, opts ...Option) (*Device, error) {
 		conConf += "&" + name + "=" + val
 	}
 
-	dev.rawDevice = newLibplctagDevice(conConf, dev.timeout)
+	dev.rawDevice = newDevice(conConf, dev.timeout)
 	return dev, nil
 }
 
@@ -78,12 +78,12 @@ func Timeout(to time.Duration) Option {
 	})
 }
 
-// LibplctagOption adds a libplctag option to the connection string (see libplctag for options).
+// ConnectionOption adds a libplctag option to the connection string (see libplctag for options).
 // Here are some important ones:
 // 	- protocol (default: "ab_eip")
 // 	- path (default: "1,0")
 // 	- cpu (default: "controllogix")
-func LibplctagOption(name, val string) Option {
+func ConnectionOption(name, val string) Option {
 	return optionFunc(func(dev *Device) {
 		dev.conf[name] = val
 	})

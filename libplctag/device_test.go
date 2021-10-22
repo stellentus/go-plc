@@ -1,4 +1,4 @@
-package physical
+package libplctag
 
 import (
 	"errors"

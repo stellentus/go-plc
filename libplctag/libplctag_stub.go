@@ -1,6 +1,6 @@
 // +build stub
 
-package physical
+package libplctag
 
 /*
 #cgo LDFLAGS: -lplctagstub
