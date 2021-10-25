@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/stellentus/go-plc"
+	"github.com/stellentus/go-plc/libplctag"
 )
 
 var (
@@ -21,11 +22,11 @@ func main() {
 		panic("Cannot access negative array index: " + strconv.Itoa(*index))
 	}
 
-	plc.SetLibplctagDebug(plc.LibplctagDebugLevel(*plcDebug))
+	libplctag.SetDebug(libplctag.DebugLevel(*plcDebug))
 
 	fmt.Printf("Initializing connection to %s using %s\n", *addr, *tagName)
 
-	device, err := plc.NewDevice(*addr)
+	device, err := libplctag.NewDevice(*addr)
 	panicIfError(err, "Could not create test PLC!")
 	defer func() {
 		err := device.Close()

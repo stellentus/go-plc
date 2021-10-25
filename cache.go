@@ -50,7 +50,7 @@ func (r *Cache) ReadCachedTag(name string, value interface{}) error {
 
 	val := reflect.ValueOf(value)
 	if val.Kind() != reflect.Ptr {
-		return newErrNonPointerRead(name, val.Kind())
+		return ErrNonPointerRead{TagName: name, Kind: val.Kind()}
 	}
 	vToSet := val.Elem()
 	if !vToSet.CanSet() {

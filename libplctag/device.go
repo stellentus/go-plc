@@ -1,10 +1,26 @@
-package plc
+package libplctag
 
 import (
 	"fmt"
 	"reflect"
 	"time"
+
+	"github.com/stellentus/go-plc"
 )
+
+// rawDevice is an interface to a PLC device.
+type rawDevice interface {
+	plc.ReadWriter
+
+	// Close closes the device.
+	// The behavior of Close after the first call is undefined.
+	// Specific implementations may document their own behavior.
+	Close() error
+
+	// GetList gets a list of tag names for the provided program
+	// name (or all tags if no program name is provided).
+	GetList(listName, prefix string) ([]plc.Tag, []string, error)
+}
 
 // Device manages a connection to actual PLC hardware.
 type Device struct {
@@ -13,14 +29,14 @@ type Device struct {
 	conf    map[string]string
 }
 
-var _ = ReadWriter(&Device{}) // Compiler makes sure this type is a ReadWriter
+var _ = plc.ReadWriter(&Device{}) // Compiler makes sure this type is a ReadWriter
 
 // NewDevice creates a new Device at the provided address with options.
 // It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
 // portion of the tag tree is locked.
 func NewDevice(addr string, opts ...Option) (*Device, error) {
 	if addr == "" {
-		return nil, fmt.Errorf("%w: no address for connection", ErrBadRequest)
+		return nil, fmt.Errorf("%w: no address for connection", plc.ErrBadRequest)
 	}
 
 	// Initialize with default connection options
@@ -42,7 +58,7 @@ func NewDevice(addr string, opts ...Option) (*Device, error) {
 		conConf += "&" + name + "=" + val
 	}
 
-	dev.rawDevice = newLibplctagDevice(conConf, dev.timeout)
+	dev.rawDevice = newDevice(conConf, dev.timeout)
 	return dev, nil
 }
 
@@ -62,12 +78,12 @@ func Timeout(to time.Duration) Option {
 	})
 }
 
-// LibplctagOption adds a libplctag option to the connection string (see libplctag for options).
+// ConnectionOption adds a libplctag option to the connection string (see libplctag for options).
 // Here are some important ones:
 // 	- protocol (default: "ab_eip")
 // 	- path (default: "1,0")
 // 	- cpu (default: "controllogix")
-func LibplctagOption(name, val string) Option {
+func ConnectionOption(name, val string) Option {
 	return optionFunc(func(dev *Device) {
 		dev.conf[name] = val
 	})
@@ -82,20 +98,13 @@ func (dev *Device) Close() error {
 	return nil
 }
 
-// TagWithIndex provides the fully qualified tag for the given index of an array.
-func TagWithIndex(name string, index int) string {
-	// Array tags can be read by adding the index to the string, e.g. "EXAMPLE[0]"
-	// Perhaps this should have error checking on index<0.
-	return fmt.Sprintf("%s[%d]", name, index)
-}
-
 // ReadTag reads the requested tag into the provided value.
 // It is not thread safe. In a multi-threaded context, callers should ensure the appropriate
 // portion of the tag tree is locked.
 func (dev *Device) ReadTag(name string, value interface{}) error {
 	v := reflect.ValueOf(value)
 	if v.Kind() != reflect.Ptr {
-		return newErrNonPointerRead(name, v.Kind())
+		return plc.ErrNonPointerRead{TagName: name, Kind: v.Kind()}
 	}
 
 	switch v.Elem().Kind() {
@@ -103,7 +112,7 @@ func (dev *Device) ReadTag(name string, value interface{}) error {
 		bytes := make([]byte, stringMaxLength)
 		for str_index := 0; str_index < stringMaxLength; str_index++ {
 			var val byte
-			tagWithIndex := TagWithIndex(name, str_index)
+			tagWithIndex := plc.TagWithIndex(name, str_index)
 			err := dev.rawDevice.ReadTag(tagWithIndex, &val)
 			if err != nil {
 				return fmt.Errorf("ReadTag '%s' as string: %w", tagWithIndex, err)
@@ -139,7 +148,7 @@ func (dev *Device) WriteTag(name string, value interface{}) error {
 }
 
 // GetAllTags gets a list of all tags available on the Device.
-func (dev *Device) GetAllTags() ([]Tag, error) {
+func (dev *Device) GetAllTags() ([]plc.Tag, error) {
 	tags, programs, err := dev.rawDevice.GetList("", "")
 	if err != nil {
 		return nil, fmt.Errorf("GetAllTags: %w", err)
@@ -151,7 +160,7 @@ func (dev *Device) GetAllTags() ([]Tag, error) {
 			return nil, fmt.Errorf("GetAllTags for program '%s': %w", progName, err)
 		}
 		for _, progTag := range progTags {
-			progTag.name = progName + "." + progTag.name
+			progTag.Name = progName + "." + progTag.Name
 			tags = append(tags, progTag)
 		}
 	}
@@ -168,18 +177,3 @@ func (dev *Device) GetAllPrograms() ([]string, error) {
 
 	return programs, nil
 }
-
-type ErrNonPointerRead struct {
-	TagName string
-	reflect.Kind
-}
-
-func newErrNonPointerRead(tn string, k reflect.Kind) ErrNonPointerRead {
-	return ErrNonPointerRead{TagName: tn, Kind: k}
-}
-
-func (err ErrNonPointerRead) Error() string {
-	return fmt.Sprintf("ReadTag expects a pointer type but got %v for tag '%s'", err.Kind, err.TagName)
-}
-
-func (err ErrNonPointerRead) Unwrap() error { return ErrBadRequest } // Even though we don't say "bad request", that's still this error's type

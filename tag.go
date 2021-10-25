@@ -8,33 +8,29 @@ import (
 	"unicode"
 )
 
+// TagWithIndex provides the fully qualified tag for the given index of an array.
+func TagWithIndex(name string, index int) string {
+	// Array tags can be read by adding the index to the string, e.g. "EXAMPLE[0]"
+	// Perhaps this should have error checking on index<0.
+	return fmt.Sprintf("%s[%d]", name, index)
+}
+
 type Tag struct {
-	name        string
-	tagType     uint16
-	elementSize uint16
-	dimensions  []int
-}
-
-func (tag *Tag) Name() string {
-	return tag.name
-}
-
-func (tag *Tag) addDimension(dim int) {
-	if dim <= 0 {
-		return
-	}
-	tag.dimensions = append(tag.dimensions, dim)
+	Name        string
+	TagType     uint16
+	ElementSize uint16
+	Dimensions  []int
 }
 
 func (tag Tag) String() string {
-	name := fmt.Sprintf("%s{%04X}", tag.name, int(tag.tagType))
+	name := fmt.Sprintf("%s{%04X}", tag.Name, int(tag.TagType))
 
-	if len(tag.dimensions) == 0 {
+	if len(tag.Dimensions) == 0 {
 		return name
 	}
 
-	strs := make([]string, len(tag.dimensions))
-	for i, v := range tag.dimensions {
+	strs := make([]string, len(tag.Dimensions))
+	for i, v := range tag.Dimensions {
 		strs[i] = strconv.Itoa(v)
 	}
 	return name + "[" + strings.Join(strs, ",") + "]"
@@ -42,7 +38,7 @@ func (tag Tag) String() string {
 
 func (tag Tag) ElemCount() int {
 	count := 1
-	for _, dim := range tag.dimensions {
+	for _, dim := range tag.Dimensions {
 		if dim != 0 {
 			count *= dim
 		}

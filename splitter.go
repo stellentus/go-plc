@@ -40,7 +40,7 @@ func (rd SplitReader) ReadTag(name string, value interface{}) error {
 func (rd SplitReader) readTagAsync(name string, value interface{}, as asyncer) {
 	v := reflect.ValueOf(value)
 	if v.Kind() != reflect.Ptr {
-		as.AddError(newErrNonPointerRead(name, v.Kind()))
+		as.AddError(ErrNonPointerRead{TagName: name, Kind: v.Kind()})
 		return
 	}
 

@@ -1,6 +1,6 @@
 // +build !stub
 
-package plc
+package libplctag
 
 /*
 #cgo LDFLAGS: -lplctag
@@ -17,7 +17,7 @@ const (
 
 func init() {
 	// Ensure the linked library uses the correct version
-	err := newLibplctagError(C.plc_tag_check_lib_version(
+	err := errorFromLibplctagReturnCode(C.plc_tag_check_lib_version(
 		C.int(REQ_VER_MAJOR),
 		C.int(REQ_VER_MINOR),
 		C.int(REQ_VER_PATCH)))
